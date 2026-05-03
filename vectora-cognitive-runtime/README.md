@@ -1,10 +1,10 @@
 # Vectora Cognitive Runtime
 
-Vectora Cognitive Runtime é um encoder de texto especializado em decisão contextual que intercepta queries do usuário, enriquece com contexto estruturado, decide qual estratégia usar (Agent Mode vs Tool Mode vs Web Search), e orquestra toda a pipeline de RAG. Usa XLM-RoBERTa-small como base pré-treinada multilíngue, fine-tuned com LoRA para classificação binária/multiclasse. Integrado ao backend Go via subprocess (Phase 1) ou gRPC (Phase 4+).
+Vectora Cognitive Runtime é o **pre-thinking layer** da aplicação. Funciona como um sistema de análise contextual que intercepta queries do usuário, enriquece com chunks de LanceDB, memória estruturada, e contexto relevante, preparando uma base sólida para o Agent com thinking ativo processar melhor. Usa XLM-RoBERTa-small como base pré-treinada multilíngue, fine-tuned com LoRA para enriquecimento contextual profundo. Não é um router de estratégias — é um **thinking auxiliar que otimiza o que o Agent vai pensar**. Integrado ao backend Python via subprocess (Phase 1) ou gRPC (Phase 4+).
 
 ## Stack
 
-Vectora Cognitive Runtime usa PyTorch como framework de deep learning, Hugging Face Transformers para carregar e fine-tunar modelos, PEFT (LoRA) para efficient fine-tuning sem armazenar pesos completos duplicados. Modelo base é XLM-RoBERTa-small (24M parâmetros, multilíngue nativo para 101 idiomas incluindo PT-BR), fine-tuned com dados sintéticos (Phase 1) e traces reais em produção (Phase 2+).
+VCR usa PyTorch para inferência local, Hugging Face Transformers para carregar modelos, PEFT com LoRA para fine-tuning eficiente (apenas ~2M params adicionais sem duplicar pesos). Modelo base é XLM-RoBERTa-small (24M parâmetros, 101 idiomas), fine-tuned com dados sintéticos (Phase 1) e traces reais de produção (Phase 2+). XLM-RoBERTa é ideal para essa tarefa porque: (1) roda localmente sem API, (2) suporta 101 idiomas nativamente, (3) 24M params é pequeno o suficiente para latência baixa, (4) fine-tuning com LoRA é rápido e reproducível.
 
 - **Framework:** PyTorch 2.1+ (training + inference Phase 1)
 - **Model Base:** XLM-RoBERTa-small (24M params, 101 langs)
@@ -16,41 +16,45 @@ Vectora Cognitive Runtime usa PyTorch como framework de deep learning, Hugging F
 
 ## Mapa Mental
 
-Pipeline completo: recebe query → enriquece com chunks de LanceDB + contexto de memory → XLM-RoBERTa-small + classification head → output JSON `{action, parameters, confidence, recovery_hint}`. Decision pode ser Agent Mode (full RAG), Tool Mode (retorna chunks), Web Search, ou Recovery (expand context). Se confidence baixa, fallback automático.
+VCR roda como **pre-thinking** antes do Agent LangChain processar. Pipeline: query bruta → enriquecimento (chunks relevantes + memória) → XLM-RoBERTa-small analisa contexto → retorna contexto estruturado + análise de confiança. Agent depois recebe tudo pré-processado e pode fazer seu próprio thinking ativo com base sólida.
 
 ```
-User Query (multilíngue)
-    |
-    +-- Enrich: LanceDB chunks + memory context
+User Query (bruta, multilíngue)
     |
     V
-[XLM-RoBERTa-small encoder]
+[VCR: PRE-THINKING LAYER]
     |
-    +-- [Classification Head]
-    |    └─ 4 outputs: Agent Mode | Tool Mode | Web Search | Recovery
-    |
-    +-- Output: {action, params, confidence}
-    |
-    V
-Confidence >= threshold?
-    |
-    +-- YES: Execute strategy
-    |
-    +-- NO: Recovery (expand_search, retry LLM, fallback)
+    +-- Search LanceDB: chunks relevantes
+    +-- Query memory: contexto histórico
+    +-- XLM-RoBERTa encoder: análise profunda
     |
     V
-Cache decision + store in memory
+Output: {
+    "enriched_context": [...],
+    "relevant_chunks": [...],
+    "memory_context": {...},
+    "confidence": 0.92,
+    "analysis": {...}
+}
     |
     V
-Response to Backend (JSON)
+[AGENT COM THINKING ATIVO - LangChain]
+    |
+    +-- Recebe contexto pré-enriquecido
+    +-- Pensa melhor (reformula, analisa, sintetiza)
+    +-- Gera resposta otimizada
+    |
+    V
+Response ao usuário
 ```
 
-**Decisões suportadas:**
+**O que VCR Entrega:**
 
-- `agent_mode`: Full RAG pipeline (busca → rerank → contexto → LLM)
-- `tool_mode`: Retorna chunks + ferramentas estruturadas (knowledge.store, memory.query, rerank)
-- `web_search`: Integra web search (SerpAPI) antes de RAG
-- `recovery`: Expande busca, retenta com contexto diferente, fallback para padrão
+- `enriched_context`: Contexto estruturado e analisado
+- `confidence`: Confiabilidade da análise VCR
+- `relevant_chunks`: Top-K chunks de LanceDB rankeados por relevância
+- `memory_context`: Memória estruturada relevante para a query
+- `analysis`: Análise contextual profunda (tokens, entidades, similaridades)
 
 ## Estrutura
 
@@ -65,9 +69,9 @@ vectora/vectora-cognitive-runtime/
 │   ├── eval.py                        (Evaluate accuracy, confidence calibration)
 │   └── export_onnx.py                 (Export to ONNX — Phase 4+ optional)
 ├── src/
-│   ├── model.py                       (XLM-RoBERTa-small + classification head)
-│   ├── decision.py                    (Decision logic: Agent/Tool/Web/Recovery)
-│   ├── recovery.py                    (Fallback strategies quando confidence < threshold)
+│   ├── model.py                       (XLM-RoBERTa-small encoder + analysis head)
+│   ├── enrichment.py                  (Context enrichment logic)
+│   ├── analysis.py                    (Contextual analysis: relevância, confiança, etc)
 │   ├── inference.py                   (Inference loop — Phase 1)
 │   ├── server.py                      (gRPC server — Phase 4+)
 │   └── __init__.py
@@ -177,9 +181,9 @@ python scripts/eval.py --model models/checkpoints/lora_r8_a16_final/
 
 ## Inference: Backend Integration
 
-### Phase 1: Python Subprocess
+VCR roda como subprocess que enriquece contexto. Backend Python chama VCR e integra output no LangChain RAG handler.
 
-Backend Go chama VCR via subprocess.
+### Phase 1: Python Subprocess
 
 ```python
 # vectora-cognitive-runtime/src/inference.py
@@ -198,8 +202,13 @@ model.eval()
 # Read input from stdin (JSON)
 input_data = json.loads(sys.stdin.read())
 query = input_data["query"]
-context = " ".join(input_data["context"])
-combined = f"{query} [SEP] {context}"
+chunks = input_data["chunks"]  # Pre-fetched from LanceDB
+memory = input_data["memory"]   # Estrutured memory context
+
+# Enrich: combine all context
+context_text = " ".join([c["text"] for c in chunks])
+memory_text = json.dumps(memory, ensure_ascii=False)
+combined = f"{query} [SEP] {context_text} [SEP] {memory_text}"
 
 # Tokenize
 inputs = tokenizer(
@@ -210,74 +219,101 @@ inputs = tokenizer(
     max_length=512
 )
 
-# Inference
+# Inference: deep contextual analysis
 with torch.no_grad():
     outputs = model(**inputs)
-    cls_output = outputs.last_hidden_state[:, 0, :]  # [CLS] token
-    logits = classifier(cls_output)
+    embeddings = outputs.last_hidden_state
 
-    decision_id = logits.argmax(dim=-1).item()
-    confidence = logits.softmax(dim=-1).max().item()
-
-    # Map decision_id to action
-    action_map = {
-        0: "agent_mode",
-        1: "tool_mode",
-        2: "web_search",
-        3: "recovery"
+    # Analysis: relevância, entidades, similaridades
+    analysis = {
+        "embedding_mean": embeddings.mean(dim=1).tolist(),
+        "chunk_scores": compute_relevance_scores(embeddings, chunks),
+        "memory_relevance": compute_memory_relevance(embeddings, memory),
     }
 
-# Output to stdout (JSON)
+    confidence = calculate_confidence(analysis)
+
+# Output: enriched context for Agent
 output = {
-    "action": action_map[decision_id],
+    "enriched_context": {
+        "query": query,
+        "chunks": chunks,
+        "memory": memory,
+        "analysis": analysis,
+    },
     "confidence": float(confidence),
-    "decision_id": decision_id
+    "vcr_embedding": embeddings.mean(dim=1)[0].tolist()
 }
 print(json.dumps(output))
 ```
 
-Backend Go integration:
+### Backend Python Integration (LangChain)
 
-```go
-// backend/internal/core/vcr/service.go
-func (s *VCRService) Decide(ctx context.Context, query string, context []string) (*Decision, error) {
-	cmd := exec.CommandContext(ctx, "python", "vectora-cognitive-runtime/src/inference.py")
+```python
+# backend/core/vcr_service.py
+from langchain.callbacks import BaseCallbackHandler
+import subprocess
+import json
 
-	input := map[string]interface{}{
-		"query":   query,
-		"context": context,
-	}
+class VCREnrichmentHandler(BaseCallbackHandler):
+    """Pre-thinking enrichment before Agent processes"""
 
-	inputJSON, _ := json.Marshal(input)
-	cmd.Stdin = bytes.NewReader(inputJSON)
+    def __init__(self, vcr_subprocess_path):
+        self.vcr_path = vcr_subprocess_path
 
-	output, err := cmd.Output()
-	if err != nil {
-		return nil, err
-	}
+    def enrich_context(self, query: str, chunks: list, memory: dict) -> dict:
+        """Call VCR to enrich context"""
+        input_data = {
+            "query": query,
+            "chunks": chunks,
+            "memory": memory
+        }
 
-	var result Decision
-	json.Unmarshal(output, &result)
-	return &result, nil
-}
+        result = subprocess.run(
+            ["python", self.vcr_path],
+            input=json.dumps(input_data),
+            capture_output=True,
+            text=True
+        )
+
+        return json.loads(result.stdout)
+
+# Use in RAG handler
+vcr = VCREnrichmentHandler("vectora-cognitive-runtime/src/inference.py")
+enriched = vcr.enrich_context(query, top_chunks, user_memory)
+
+# Pass enriched context to Agent
+agent.invoke({
+    "query": enriched["enriched_context"]["query"],
+    "context": enriched["enriched_context"],
+    "confidence": enriched["confidence"]
+})
 ```
 
 ### Phase 4+: gRPC Server (Optional)
 
-Para melhor performance em produção, VCR roda como servidor gRPC separado.
+Para melhor performance em produção, VCR roda como servidor gRPC separado (menos overhead que subprocess).
 
 ```bash
 python src/server.py --port 50051
 ```
 
-Backend Go chama via gRPC:
+Backend Python chama via gRPC:
 
-```go
-client := pb.NewVCRServiceClient(conn)
-response, err := client.Decide(ctx, &pb.DecideRequest{
-	Query:   "React hooks",
-	Context: []string{"useState", "useEffect"},
-})
+```python
+from vcr_pb2 import EnrichmentRequest, EnrichmentResponse
+import grpc
+
+channel = grpc.aio.secure_channel("localhost:50051", ...)
+stub = VCRServiceStub(channel)
+
+response = await stub.Enrich(EnrichmentRequest(
+    query="Como uso React hooks?",
+    chunks=[...],  # Pre-fetched chunks
+    memory={...}   # Structured memory
+))
+
+# response.enriched_context, response.confidence, response.vcr_embedding
 ```
 
 ---

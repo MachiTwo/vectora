@@ -652,9 +652,14 @@ docker-compose.prod.yml (VPS)
 
 ## Vectora Cognitive Runtime
 
-**Componente externo** (pode rodar como subprocess ou separado).
+**Pre-Thinking Layer** — Enriquecimento contextual profundo que roda antes do Agent LangChain processar.
 
-**Papel:** Decidir qual estratégia usar (agent_mode, tool_mode, web_search, recovery).
+**Papel:**
+
+- Analisa query em profundidade usando XLM-RoBERTa-small fine-tuned
+- Enriquece contexto (chunks LanceDB + memória estruturada)
+- Entrega contexto otimizado para Agent com thinking ativo
+- Não é um "router" — é um **cognitive layer** que melhora a qualidade do contexto
 
 **Stack:**
 
@@ -664,12 +669,12 @@ transformers==4.35+
 peft==0.7+
 ```
 
-**Modelo:** XLM-RoBERTa-small (24M params) + LoRA (r=8, alpha=16)
+**Modelo:** XLM-RoBERTa-small (24M params, 101 idiomas) + LoRA fine-tuning (r=8, alpha=16, ~2M params adicionais)
 
 **Deployment:**
 
-- Phase 1: Subprocess (backend chama via stdin/stdout)
-- Phase 4+: gRPC server separado (opcional)
+- Phase 1: Subprocess (backend Python chama via stdin/stdout JSON)
+- Phase 4+: gRPC server separado para latência ultra-baixa (opcional)
 
 ---
 
