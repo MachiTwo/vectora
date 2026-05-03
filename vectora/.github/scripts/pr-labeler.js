@@ -3,14 +3,14 @@
 // Usage from actions/github-script (requires actions/checkout first):
 //   const { h } = require('./.github/scripts/pr-labeler.js').loadAndInit(github, owner, repo, core);
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 function loadConfig() {
-  const configPath = path.join(__dirname, 'pr-labeler-config.json');
+  const configPath = path.join(__dirname, "pr-labeler-config.json");
   let raw;
   try {
-    raw = fs.readFileSync(configPath, 'utf8');
+    raw = fs.readFileSync(configPath, "utf8");
   } catch (e) {
     throw new Error(`Failed to read ${configPath}: ${e.message}`);
   }
@@ -21,20 +21,30 @@ function loadConfig() {
     throw new Error(`Failed to parse pr-labeler-config.json: ${e.message}`);
   }
   const required = [
-    'labelColor', 'sizeThresholds', 'fileRules', 'branchRules',
-    'typeToLabel', 'scopeToLabel', 'trustedThreshold',
-    'excludedFiles', 'excludedPaths',
+    "labelColor",
+    "sizeThresholds",
+    "fileRules",
+    "branchRules",
+    "typeToLabel",
+    "scopeToLabel",
+    "trustedThreshold",
+    "excludedFiles",
+    "excludedPaths",
   ];
-  const missing = required.filter(k => !(k in config));
+  const missing = required.filter((k) => !(k in config));
   if (missing.length > 0) {
-    throw new Error(`pr-labeler-config.json missing required keys: ${missing.join(', ')}`);
+    throw new Error(
+      `pr-labeler-config.json missing required keys: ${missing.join(", ")}`,
+    );
   }
   return config;
 }
 
 function init(github, owner, repo, config, core) {
   if (!core) {
-    throw new Error('init() requires a `core` parameter (e.g., from actions/github-script)');
+    throw new Error(
+      "init() requires a `core` parameter (e.g., from actions/github-script)",
+    );
   }
   const {
     trustedThreshold,
@@ -48,9 +58,9 @@ function init(github, owner, repo, config, core) {
     excludedPaths,
   } = config;
 
-  const sizeLabels = sizeThresholds.map(t => t.label);
+  const sizeLabels = sizeThresholds.map((t) => t.label);
   const allTypeLabels = [...new Set(Object.values(typeToLabel))];
-  const tierLabels = ['new-contributor', 'trusted-contributor'];
+  const tierLabels = ["new-contributor", "trusted-contributor"];
 
   // ── Label management ──────────────────────────────────────────────
 
@@ -64,7 +74,9 @@ function init(github, owner, repo, config, core) {
       } catch (createErr) {
         // 422 = label created by a concurrent run between our get and create
         if (createErr.status !== 422) throw createErr;
-        core.info(`Label "${name}" creation returned 422 (likely already exists)`);
+        core.info(
+          `Label "${name}" creation returned 422 (likely already exists)`,
+        );
       }
     }
   }
@@ -82,8 +94,8 @@ function init(github, owner, repo, config, core) {
   function computeSize(files) {
     const excluded = new Set(excludedFiles);
     const totalChanged = files.reduce((sum, f) => {
-      const p = f.filename ?? '';
-      const base = p.split('/').pop();
+      const p = f.filename ?? "";
+      const base = p.split("/").pop();
       if (excluded.has(base)) return sum;
       for (const prefix of excludedPaths) {
         if (p.startsWith(prefix)) return sum;
@@ -98,19 +110,23 @@ function init(github, owner, repo, config, core) {
   function buildFileRules() {
     return fileRulesDef.map((rule, i) => {
       let test;
-      if (rule.prefix) test = p => p.startsWith(rule.prefix);
-      else if (rule.suffix) test = p => p.endsWith(rule.suffix);
-      else if (rule.exact) test = p => p === rule.exact;
+      if (rule.prefix) test = (p) => p.startsWith(rule.prefix);
+      else if (rule.suffix) test = (p) => p.endsWith(rule.suffix);
+      else if (rule.exact) test = (p) => p === rule.exact;
       else if (rule.pattern) {
         const re = new RegExp(rule.pattern);
-        test = p => re.test(p);
+        test = (p) => re.test(p);
       } else {
         throw new Error(
           `fileRules[${i}] (label: "${rule.label}") has no recognized matcher ` +
-          `(expected one of: prefix, suffix, exact, pattern)`
+            `(expected one of: prefix, suffix, exact, pattern)`,
         );
       }
-      return { label: rule.label, test, skipExcluded: !!rule.skipExcludedFiles };
+      return {
+        label: rule.label,
+        test,
+        skipExcluded: !!rule.skipExcludedFiles,
+      };
     });
   }
 
@@ -123,9 +139,11 @@ function init(github, owner, repo, config, core) {
       // "excludedFiles" list (e.g. uv.lock) so lockfile-only changes
       // don't trigger package labels.
       const candidates = rule.skipExcluded
-        ? files.filter(f => !excluded.has((f.filename ?? '').split('/').pop()))
+        ? files.filter(
+            (f) => !excluded.has((f.filename ?? "").split("/").pop()),
+          )
         : files;
-      if (candidates.some(f => rule.test(f.filename ?? ''))) {
+      if (candidates.some((f) => rule.test(f.filename ?? ""))) {
         labels.add(rule.label);
       }
     }
@@ -136,7 +154,7 @@ function init(github, owner, repo, config, core) {
 
   function matchBranchLabels(headRef) {
     const labels = new Set();
-    const ref = headRef ?? '';
+    const ref = headRef ?? "";
     if (!ref) return labels;
     for (const rule of branchRulesDef) {
       let matched = false;
@@ -147,7 +165,7 @@ function init(github, owner, repo, config, core) {
       else {
         throw new Error(
           `branchRules entry (label: "${rule.label}") has no recognized matcher ` +
-          `(expected one of: prefix, suffix, exact, pattern)`,
+            `(expected one of: prefix, suffix, exact, pattern)`,
         );
       }
       if (matched) labels.add(rule.label);
@@ -159,18 +177,28 @@ function init(github, owner, repo, config, core) {
 
   function matchTitleLabels(title) {
     const labels = new Set();
-    const m = (title ?? '').match(/^(\w+)(?:\(([^)]+)\))?(!)?:/);
-    if (!m) return { labels, type: null, typeLabel: null, scopes: [], breaking: false };
+    const m = (title ?? "").match(/^(\w+)(?:\(([^)]+)\))?(!)?:/);
+    if (!m)
+      return {
+        labels,
+        type: null,
+        typeLabel: null,
+        scopes: [],
+        breaking: false,
+      };
 
     const type = m[1].toLowerCase();
-    const scopeStr = m[2] ?? '';
+    const scopeStr = m[2] ?? "";
     const breaking = !!m[3];
 
     const typeLabel = typeToLabel[type] || null;
     if (typeLabel) labels.add(typeLabel);
-    if (breaking) labels.add('breaking');
+    if (breaking) labels.add("breaking");
 
-    const scopes = scopeStr.split(',').map(s => s.trim()).filter(Boolean);
+    const scopes = scopeStr
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
     for (const scope of scopes) {
       const sl = scopeToLabel[scope];
       if (sl) labels.add(sl);
@@ -182,17 +210,17 @@ function init(github, owner, repo, config, core) {
   // ── Org membership ────────────────────────────────────────────────
 
   async function checkMembership(author, userType) {
-    if (userType === 'Bot') {
+    if (userType === "Bot") {
       console.log(`${author} is a Bot — treating as internal`);
       return { isExternal: false };
     }
 
     try {
       const membership = await github.rest.orgs.getMembershipForUser({
-        org: 'langchain-ai',
+        org: "langchain-ai",
         username: author,
       });
-      const isExternal = membership.data.state !== 'active';
+      const isExternal = membership.data.state !== "active";
       console.log(
         isExternal
           ? `${author} has pending membership — treating as external`
@@ -240,7 +268,11 @@ function init(github, owner, repo, config, core) {
 
   // ── Tier label resolution ───────────────────────────────────────────
 
-  async function applyTierLabel(issueNumber, author, { skipNewContributor = false } = {}) {
+  async function applyTierLabel(
+    issueNumber,
+    author,
+    { skipNewContributor = false } = {},
+  ) {
     let mergedCount;
     try {
       const result = await github.rest.search.issuesAndPullRequests({
@@ -255,20 +287,28 @@ function init(github, owner, repo, config, core) {
     }
 
     if (mergedCount == null) {
-      core.warning(`Search response missing total_count for ${author}; skipping tier label.`);
+      core.warning(
+        `Search response missing total_count for ${author}; skipping tier label.`,
+      );
       return;
     }
 
     let tierLabel = null;
-    if (mergedCount >= trustedThreshold) tierLabel = 'trusted-contributor';
-    else if (mergedCount === 0 && !skipNewContributor) tierLabel = 'new-contributor';
+    if (mergedCount >= trustedThreshold) tierLabel = "trusted-contributor";
+    else if (mergedCount === 0 && !skipNewContributor)
+      tierLabel = "new-contributor";
 
     if (tierLabel) {
       await ensureLabel(tierLabel);
       await github.rest.issues.addLabels({
-        owner, repo, issue_number: issueNumber, labels: [tierLabel],
+        owner,
+        repo,
+        issue_number: issueNumber,
+        labels: [tierLabel],
       });
-      console.log(`Applied '${tierLabel}' to #${issueNumber} (${mergedCount} merged PRs)`);
+      console.log(
+        `Applied '${tierLabel}' to #${issueNumber} (${mergedCount} merged PRs)`,
+      );
     } else {
       console.log(`No tier label for ${author} (${mergedCount} merged PRs)`);
     }
@@ -280,20 +320,29 @@ function init(github, owner, repo, config, core) {
 
   async function labelPR(prNumber, { title } = {}) {
     if (!prNumber) {
-      throw new Error('labelPR() requires a valid prNumber');
+      throw new Error("labelPR() requires a valid prNumber");
     }
     const toAdd = new Set();
 
-    const prTitle = title ?? (await github.rest.pulls.get({
-      owner, repo, pull_number: prNumber,
-    })).data.title;
+    const prTitle =
+      title ??
+      (
+        await github.rest.pulls.get({
+          owner,
+          repo,
+          pull_number: prNumber,
+        })
+      ).data.title;
 
     // Title-based labels
     for (const l of matchTitleLabels(prTitle).labels) toAdd.add(l);
 
     // File-based labels + size
     const files = await github.paginate(github.rest.pulls.listFiles, {
-      owner, repo, pull_number: prNumber, per_page: 100,
+      owner,
+      repo,
+      pull_number: prNumber,
+      per_page: 100,
     });
     toAdd.add(computeSize(files).sizeLabel);
     for (const l of matchFileLabels(files)) toAdd.add(l);
@@ -302,7 +351,10 @@ function init(github, owner, repo, config, core) {
     const labels = [...toAdd];
     if (labels.length) {
       await github.rest.issues.addLabels({
-        owner, repo, issue_number: prNumber, labels,
+        owner,
+        repo,
+        issue_number: prNumber,
+        labels,
       });
     }
     return labels;

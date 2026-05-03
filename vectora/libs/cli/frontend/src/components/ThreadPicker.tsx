@@ -39,11 +39,14 @@ const ThreadPicker: FC<ThreadPickerProps> = ({
     setLoadError(null);
 
     try {
-      const query: { limit: number; metadata?: Record<string, unknown> } = { limit: 20 };
+      const query: { limit: number; metadata?: Record<string, unknown> } = {
+        limit: 20,
+      };
       if (isAnonymous) {
         query.metadata = { dap_anon_id: userIdentity };
       }
-      const result = await client.threads.search<ThreadSummary["values"]>(query);
+      const result =
+        await client.threads.search<ThreadSummary["values"]>(query);
       setThreads(result);
     } catch (error) {
       setLoadError(getErrorMessage(error, "Failed to load threads."));
@@ -72,7 +75,13 @@ const ThreadPicker: FC<ThreadPickerProps> = ({
         onClick={() => setOpen((value) => !value)}
         className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
       >
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          className="h-3.5 w-3.5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
         {currentThreadId ? `${currentThreadId.slice(0, 8)}...` : "Threads"}
@@ -99,7 +108,13 @@ const ThreadPicker: FC<ThreadPickerProps> = ({
                 }}
                 className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--muted)]"
               >
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  className="h-3.5 w-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M5 12h14" />
                   <path d="M12 5v14" />
                 </svg>

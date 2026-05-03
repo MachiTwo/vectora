@@ -308,7 +308,6 @@ jobs:
         env:
           EVAL_MODELS: ${{ inputs.models_override || inputs.models || 'all' }}
 
-
   # Per-provider serialization: each provider runs as its own matrix job with
   # max-parallel: 1 so calls to a single provider queue rather than fan out
   # (avoids rate-limit failures). Different providers run in parallel.

@@ -4,17 +4,17 @@ This document describes the release process for packages in the Deep Agents mono
 
 ## Managed Packages
 
-| Package | Path | Component | PyPI |
-| ------- | ---- | --------- | ---- |
-| `deepagents` (SDK) | `libs/deepagents` | `deepagents` | [`deepagents`](https://pypi.org/project/deepagents/) |
-| `deepagents-cli` | `libs/cli` | `deepagents-cli` | [`deepagents-cli`](https://pypi.org/project/deepagents-cli/) |
-| `deepagents-acp` | `libs/acp` | `deepagents-acp` | [`deepagents-acp`](https://pypi.org/project/deepagents-acp/) |
-| `deepagents-code` | `libs/code` | `deepagents-code` | [`deepagents-code`](https://pypi.org/project/deepagents-code/) |
+| Package             | Path                    | Component           | PyPI                                                               |
+| ------------------- | ----------------------- | ------------------- | ------------------------------------------------------------------ |
+| `deepagents` (SDK)  | `libs/deepagents`       | `deepagents`        | [`deepagents`](https://pypi.org/project/deepagents/)               |
+| `deepagents-cli`    | `libs/cli`              | `deepagents-cli`    | [`deepagents-cli`](https://pypi.org/project/deepagents-cli/)       |
+| `deepagents-acp`    | `libs/acp`              | `deepagents-acp`    | [`deepagents-acp`](https://pypi.org/project/deepagents-acp/)       |
+| `deepagents-code`   | `libs/code`             | `deepagents-code`   | [`deepagents-code`](https://pypi.org/project/deepagents-code/)     |
 | `langchain-daytona` | `libs/partners/daytona` | `langchain-daytona` | [`langchain-daytona`](https://pypi.org/project/langchain-daytona/) |
-| `langchain-modal` | `libs/partners/modal` | `langchain-modal` | [`langchain-modal`](https://pypi.org/project/langchain-modal/) |
+| `langchain-modal`   | `libs/partners/modal`   | `langchain-modal`   | [`langchain-modal`](https://pypi.org/project/langchain-modal/)     |
 | `langchain-runloop` | `libs/partners/runloop` | `langchain-runloop` | [`langchain-runloop`](https://pypi.org/project/langchain-runloop/) |
 | `langchain-quickjs` | `libs/partners/quickjs` | `langchain-quickjs` | [`langchain-quickjs`](https://pypi.org/project/langchain-quickjs/) |
-| `langchain-repl` | `libs/repl` | `langchain-repl` | [`langchain-repl`](https://pypi.org/project/langchain-repl/) |
+| `langchain-repl`    | `libs/repl`             | `langchain-repl`    | [`langchain-repl`](https://pypi.org/project/langchain-repl/)       |
 
 ## Overview
 
@@ -45,20 +45,19 @@ To release a package:
 3. Review the generated changelog in the PR and make any edits as needed
 4. Merge the release PR — this triggers the pre-release checks, PyPI publish, and GitHub release
 
-> [!IMPORTANT]
-> **(CLI only)** The CLI pins an exact `deepagents==` version in `libs/cli/pyproject.toml`. Bump this pin as part of any PR that depends on new SDK functionality — don't defer it to release time. The pin should always reflect the minimum SDK version the CLI actually requires. See [Release Failed: CLI SDK Pin Mismatch](#release-failed-cli-sdk-pin-mismatch) for recovery if a mismatch slips through.
+> [!IMPORTANT] > **(CLI only)** The CLI pins an exact `deepagents==` version in `libs/cli/pyproject.toml`. Bump this pin as part of any PR that depends on new SDK functionality — don't defer it to release time. The pin should always reflect the minimum SDK version the CLI actually requires. See [Release Failed: CLI SDK Pin Mismatch](#release-failed-cli-sdk-pin-mismatch) for recovery if a mismatch slips through.
 
 ### Version Bumping
 
 Version bumps are determined by commit types. All packages are currently pre-1.0, so the effective bumps are shifted down one level:
 
-| Commit Type                    | Standard (≥ 1.0) | Pre-1.0 (current) | Example                                  |
-| ------------------------------ | ----------------- | ------------------ | ---------------------------------------- |
-| `fix:`                         | Patch (0.0.x)     | Patch (0.0.x)      | `fix(cli): resolve config loading issue` |
-| `perf:`                        | Patch (0.0.x)     | Patch (0.0.x)      | `perf(sdk): reduce graph compile time`   |
-| `revert:`                      | Patch (0.0.x)     | Patch (0.0.x)      | `revert(cli): undo config change`        |
-| `feat:`                        | Minor (0.x.0)     | Patch (0.0.x)      | `feat(cli): add new export command`      |
-| `feat!:`                       | Major (x.0.0)     | Minor (0.x.0)      | `feat(cli)!: redesign config format`     |
+| Commit Type | Standard (≥ 1.0) | Pre-1.0 (current) | Example                                  |
+| ----------- | ---------------- | ----------------- | ---------------------------------------- |
+| `fix:`      | Patch (0.0.x)    | Patch (0.0.x)     | `fix(cli): resolve config loading issue` |
+| `perf:`     | Patch (0.0.x)    | Patch (0.0.x)     | `perf(sdk): reduce graph compile time`   |
+| `revert:`   | Patch (0.0.x)    | Patch (0.0.x)     | `revert(cli): undo config change`        |
+| `feat:`     | Minor (0.x.0)    | Patch (0.0.x)     | `feat(cli): add new export command`      |
+| `feat!:`    | Major (x.0.0)    | Minor (0.x.0)     | `feat(cli)!: redesign config format`     |
 
 ### Changelog Inclusion
 
@@ -80,12 +79,12 @@ Not every commit type lands in the generated changelog. The set is configured in
 
 Breaking changes are additionally surfaced under a `⚠ BREAKING CHANGES` section at the top of the release notes — see [Breaking Changes](#breaking-changes).
 
-A few rules of thumb for picking a type that respects what *should* end up in user-facing notes:
+A few rules of thumb for picking a type that respects what _should_ end up in user-facing notes:
 
 - A change is **release-note-worthy** if a downstream user could observe it: new API, changed behavior, fixed bug, perceptible perf delta. Use `feat`, `fix`, or `perf`.
 - Internal-only work (refactors, test-only changes, CI tweaks, dependency bumps with no behavior change, comment/docstring updates) belongs in a hidden type. These still trigger a release PR rebase if one is open, but never appear in the changelog.
 - Don't smuggle user-visible changes into hidden types (e.g., a `chore:` that adds a feature). The change won't appear in release notes and users will be surprised by undocumented behavior.
-- You may manually edit the generated `CHANGELOG.md` in the release PR before merging to add, polish, or reorder entries — see [Triggering a Release](#triggering-a-release). Edits made *after* the release PR is merged will be regenerated by release-please on the next run.
+- You may manually edit the generated `CHANGELOG.md` in the release PR before merging to add, polish, or reorder entries — see [Triggering a Release](#triggering-a-release). Edits made _after_ the release PR is merged will be regenerated by release-please on the next run.
 
 ## Commit Format
 
@@ -191,10 +190,10 @@ The [release workflow (`.github/workflows/release.yml`)](https://github.com/lang
 
 Release-please uses labels to track the state of release PRs:
 
-| Label | Meaning |
-| ----- | ------- |
+| Label                  | Meaning                                                |
+| ---------------------- | ------------------------------------------------------ |
 | `autorelease: pending` | Release PR has been merged but not yet tagged/released |
-| `autorelease: tagged` | Release PR has been successfully tagged and released |
+| `autorelease: tagged`  | Release PR has been successfully tagged and released   |
 
 Because `skip-github-release: true` is set in the release-please config (we create releases via our own workflow instead of using the one built into release-please), our `release.yml` workflow must update these labels manually for state management! After successfully creating the GitHub release and tag, the `mark-release` job updates the label from `pending` to `tagged`.
 
@@ -214,7 +213,7 @@ For hotfixes or exceptional cases, you can trigger a release manually. Use the `
 > [!WARNING]
 > Manual releases should be rare. Prefer the standard release-please flow for managed packages. Manual dispatch bypasses the changelog detection in `release-please.yml` and skips the lockfile update job. Only use it for recovery scenarios (e.g., the release workflow failed after the release PR was already merged).
 >
-> **Why `release-sha` is required:** when the auto-triggered release fails (e.g., at `pre-release-checks`) and you re-run via `workflow_dispatch`, `github.sha` resolves to whatever HEAD is at dispatch time — *not* the original release commit. Without `release-sha`, the GitHub release tag would land on an unrelated commit, which breaks release-please's tag-anchored changelog generation on the next run. release-please walks history back from the most recent tag for each package; if the tag sits on the wrong commit, the next run either includes commits that already shipped or treats the package as un-released and (incorrectly) regenerates the full changelog. The `setup` job's `Resolve and validate release SHA` step enforces this and refuses to run when the input is missing or doesn't match a `release(<package>): <version>` commit.
+> **Why `release-sha` is required:** when the auto-triggered release fails (e.g., at `pre-release-checks`) and you re-run via `workflow_dispatch`, `github.sha` resolves to whatever HEAD is at dispatch time — _not_ the original release commit. Without `release-sha`, the GitHub release tag would land on an unrelated commit, which breaks release-please's tag-anchored changelog generation on the next run. release-please walks history back from the most recent tag for each package; if the tag sits on the wrong commit, the next run either includes commits that already shipped or treats the package as un-released and (incorrectly) regenerates the full changelog. The `setup` job's `Resolve and validate release SHA` step enforces this and refuses to run when the input is missing or doesn't match a `release(<package>): <version>` commit.
 
 ## Alpha / Beta / Pre-release Versions
 
@@ -365,6 +364,7 @@ If the `pre-release-checks` job fails (unit tests, integration tests, or import 
 **To fix:**
 
 1. **Inspect the failure** in the workflow run logs. Pre-release checks install the built wheel into a fresh venv (no cache) and run:
+
    - Package import verification (`python -c "import <pkg>"`)
    - Unit tests (`make test`)
    - Integration tests (`make integration_test`, if the target exists)
@@ -372,6 +372,7 @@ If the `pre-release-checks` job fails (unit tests, integration tests, or import 
 2. **Fix the issue on `main`** — open a PR titled `hotfix(<scope>): <description>`. This won't re-trigger the release because the commit doesn't modify the package's `CHANGELOG.md`.
 
 3. **Manually trigger the release:**
+
    - Go to **Actions** > `⚠️ Manual Package Release`
    - Click **Run workflow**
    - Select `main` branch and the affected package
@@ -441,6 +442,7 @@ This means the CLI's pinned `deepagents` dependency in `libs/cli/pyproject.toml`
    ```
 
 2. **Manually trigger the release** (the push to `main` won't re-trigger the release because the commit doesn't modify `libs/cli/CHANGELOG.md`):
+
    - Go to **Actions** > `⚠️ Manual Package Release`
    - Click **Run workflow**
    - Select `main` branch and `deepagents-cli` package

@@ -10,6 +10,7 @@ GPU-accelerated machine learning using NVIDIA RAPIDS cuML. cuML provides a sciki
 ## When to Use This Skill
 
 Use this skill when:
+
 - Training classification models (predict categories, detect fraud, classify text)
 - Training regression models (forecast values, predict prices, estimate quantities)
 - Clustering data (segment customers, group documents, find patterns)
@@ -187,17 +188,18 @@ df["category_encoded"] = le.fit_transform(df["category"])
 
 ## Gotchas
 
-| Issue | Fix |
-|-------|-----|
-| `TypeError: sparse input` | Convert to dense: `X.toarray()` or don't use sparse |
-| PCA `solver='randomized'` fails | Use `solver='full'` or omit (cuML auto-selects) |
-| UMAP not available on CPU | Skip UMAP in CPU mode or `pip install umap-learn` |
-| Float64 slower than float32 | Cast to float32: `X.astype("float32")` |
-| Large dataset OOM | Reduce features or sample data before fitting |
+| Issue                           | Fix                                                 |
+| ------------------------------- | --------------------------------------------------- |
+| `TypeError: sparse input`       | Convert to dense: `X.toarray()` or don't use sparse |
+| PCA `solver='randomized'` fails | Use `solver='full'` or omit (cuML auto-selects)     |
+| UMAP not available on CPU       | Skip UMAP in CPU mode or `pip install umap-learn`   |
+| Float64 slower than float32     | Cast to float32: `X.astype("float32")`              |
+| Large dataset OOM               | Reduce features or sample data before fitting       |
 
 ## Output Guidelines
 
 When reporting ML results:
+
 - Include dataset shape (rows × features) and target distribution
 - Show train/test split sizes
 - Report key metrics in a formatted table (accuracy, R², MSE, etc.)

@@ -1,6 +1,10 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
+import {
+  createClient,
+  type Session,
+  type SupabaseClient,
+} from "@supabase/supabase-js";
 import {
   createContext,
   useContext,
@@ -37,7 +41,9 @@ function detectRecoveryInUrl(): boolean {
 function SupabaseProvider({ children }: { children: ReactNode }) {
   const cfg = getRuntimeConfig();
   if (cfg.auth !== "supabase") {
-    throw new Error("SupabaseProvider mounted with non-supabase runtime config");
+    throw new Error(
+      "SupabaseProvider mounted with non-supabase runtime config",
+    );
   }
 
   const supabase = useMemo(
@@ -49,7 +55,8 @@ function SupabaseProvider({ children }: { children: ReactNode }) {
   // Must be set before any effect runs: `createClient({ detectSessionInUrl: true })`
   // parses the hash synchronously and emits PASSWORD_RECOVERY before any
   // listener can attach. Detecting from the URL directly is the only reliable path.
-  const [recoveryMode, setRecoveryMode] = useState<boolean>(detectRecoveryInUrl);
+  const [recoveryMode, setRecoveryMode] =
+    useState<boolean>(detectRecoveryInUrl);
 
   useEffect(() => {
     let active = true;
@@ -65,21 +72,21 @@ function SupabaseProvider({ children }: { children: ReactNode }) {
         console.error("Failed to load Supabase session", err);
         setLoading(false);
       });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, nextSession) => {
-        if (!active) return;
-        setSession(nextSession);
-        setLoading(false);
-        // Cross-tab: another tab enters recovery, mirror that here.
-        if (event === "PASSWORD_RECOVERY") {
-          setRecoveryMode(true);
-        }
-        // updateUser({ password }) succeeded — recovery flow is complete.
-        if (event === "USER_UPDATED") {
-          setRecoveryMode(false);
-        }
-      },
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (!active) return;
+      setSession(nextSession);
+      setLoading(false);
+      // Cross-tab: another tab enters recovery, mirror that here.
+      if (event === "PASSWORD_RECOVERY") {
+        setRecoveryMode(true);
+      }
+      // updateUser({ password }) succeeded — recovery flow is complete.
+      if (event === "USER_UPDATED") {
+        setRecoveryMode(false);
+      }
+    });
     return () => {
       active = false;
       subscription.unsubscribe();
@@ -139,7 +146,11 @@ function SupabaseAuthUI() {
   useEffect(() => {
     if (!recoveryMode) {
       if (typeof window !== "undefined" && detectRecoveryInUrl()) {
-        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search,
+        );
       }
     }
   }, [recoveryMode]);
@@ -149,7 +160,9 @@ function SupabaseAuthUI() {
       <div className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
         <div className="flex items-center gap-2">
           <img
-            src={theme === "dark" ? "/app/logo-dark.svg" : "/app/logo-light.svg"}
+            src={
+              theme === "dark" ? "/app/logo-dark.svg" : "/app/logo-light.svg"
+            }
             alt="Deep Agents"
             className="h-8 w-8 rounded"
           />

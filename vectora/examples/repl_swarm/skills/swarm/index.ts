@@ -97,5 +97,8 @@ export async function runSwarm(opts: RunSwarmOptions): Promise<SwarmSummary> {
 // REPL's PTC layer injects `tools` as a global — oxidase strips this
 // at install time, so it never actually ships to QuickJS.
 declare const tools: {
-  task: (args: { description: string; subagent_type?: string }) => Promise<unknown>;
+  task: (args: {
+    description: string;
+    subagent_type?: string;
+  }) => Promise<unknown>;
 };

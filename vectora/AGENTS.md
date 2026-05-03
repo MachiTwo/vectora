@@ -49,7 +49,7 @@ make format
 
 #### Suppressing ruff lint rules
 
-Prefer inline `# noqa: RULE` over `[tool.ruff.lint.per-file-ignores]` for individual exceptions. `per-file-ignores` silences a rule for the *entire* file — If you add it for one violation, all future violations of that rule in the same file are silently ignored. Inline `# noqa` is precise to the line, self-documenting, and keeps the safety net intact for the rest of the file. Add comments to justify silencing. If you can't make a good justification for the ignore, it is probably code smell and should be re-evaluated.
+Prefer inline `# noqa: RULE` over `[tool.ruff.lint.per-file-ignores]` for individual exceptions. `per-file-ignores` silences a rule for the _entire_ file — If you add it for one violation, all future violations of that rule in the same file are silently ignored. Inline `# noqa` is precise to the line, self-documenting, and keeps the safety net intact for the rest of the file. Add comments to justify silencing. If you can't make a good justification for the ignore, it is probably code smell and should be re-evaluated.
 
 Reserve `per-file-ignores` for **categorical policy** that applies to a whole class of files (e.g., `"tests/**" = ["D1", "S101"]` — tests don't need docstrings, `assert` is expected). These are not exceptions; they are different rules for a different context.
 
@@ -90,7 +90,7 @@ See [PR labeling and linting](#pr-labeling-and-linting) for more info.
 
 #### PR descriptions
 
-The description *is* the summary — do not add a `# Summary` header.
+The description _is_ the summary — do not add a `# Summary` header.
 
 - When the PR closes an issue, lead with the closing keyword on its own line at the very top, followed by a horizontal rule and then the body:
 
@@ -104,7 +104,7 @@ The description *is* the summary — do not add a `# Summary` header.
 
   Only `Closes`, `Fixes`, and `Resolves` auto-close the referenced issue on merge. `Related:` or similar labels are informational and do not close anything.
 
-- Explain the *why*: the motivation and why this solution is the right one. Limit prose.
+- Explain the _why_: the motivation and why this solution is the right one. Limit prose.
 - Write for readers who may be unfamiliar with this area of the codebase. Avoid insider shorthand and prefer language that is friendly to public viewers — this aids interpretability.
 - Do **not** cite line numbers; they go stale as soon as the file changes.
 - Rarely include full file paths or filenames. Reference the affected symbol, class, or subsystem by name instead.

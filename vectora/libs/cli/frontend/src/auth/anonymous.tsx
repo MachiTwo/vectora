@@ -15,7 +15,9 @@ function writeCookie(name: string, value: string): void {
   if (typeof document === "undefined") return;
   // 1 year, path=/, SameSite=Lax. Not Secure (must work over http on localhost).
   // Not httpOnly — JS needs to read it.
-  document.cookie = `${name}=${encodeURIComponent(value)}; max-age=31536000; path=/; SameSite=Lax`;
+  document.cookie = `${name}=${encodeURIComponent(
+    value,
+  )}; max-age=31536000; path=/; SameSite=Lax`;
 }
 
 function getOrMintAnonId(): string {

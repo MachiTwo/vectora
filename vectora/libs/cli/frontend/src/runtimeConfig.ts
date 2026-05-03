@@ -27,7 +27,9 @@ export type RuntimeConfig =
 
 declare global {
   interface Window {
-    __DEEPAGENTS_CONFIG__?: Partial<RuntimeConfig> & { __PLACEHOLDER__?: boolean };
+    __DEEPAGENTS_CONFIG__?: Partial<RuntimeConfig> & {
+      __PLACEHOLDER__?: boolean;
+    };
   }
 }
 

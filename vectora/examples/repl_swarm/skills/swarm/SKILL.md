@@ -38,8 +38,8 @@ const { results, completed, failed } = await runSwarm({
     { description: "Summarize /notes/beta.md" },
     { description: "Summarize /notes/gamma.md" },
   ],
-  concurrency: 3,           // optional, defaults to 5, capped at 10
-  subagentType: "general-purpose",  // optional; per-task override wins
+  concurrency: 3, // optional, defaults to 5, capped at 10
+  subagentType: "general-purpose", // optional; per-task override wins
 });
 
 console.log(`${completed} ok, ${failed} failed`);

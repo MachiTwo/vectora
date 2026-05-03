@@ -55,14 +55,14 @@ Try these prompts:
 
 These are the Agent Protocol endpoints the DeepAgents async subagent middleware calls (via the LangGraph SDK):
 
-| Endpoint | Purpose |
-| -------------------------------------------- | -------------------------------- |
-| `POST /threads` | Create a thread for a new task |
-| `POST /threads/{thread_id}/runs` | Start or interrupt+restart a run |
-| `GET /threads/{thread_id}/runs/{run_id}` | Poll run status |
-| `GET /threads/{thread_id}` | Fetch thread state (`values.messages`) |
-| `POST /threads/{thread_id}/runs/{run_id}/cancel` | Cancel a run |
-| `GET /ok` | Health check |
+| Endpoint                                         | Purpose                                |
+| ------------------------------------------------ | -------------------------------------- |
+| `POST /threads`                                  | Create a thread for a new task         |
+| `POST /threads/{thread_id}/runs`                 | Start or interrupt+restart a run       |
+| `GET /threads/{thread_id}/runs/{run_id}`         | Poll run status                        |
+| `GET /threads/{thread_id}`                       | Fetch thread state (`values.messages`) |
+| `POST /threads/{thread_id}/runs/{run_id}/cancel` | Cancel a run                           |
+| `GET /ok`                                        | Health check                           |
 
 ## Swap in your own agent
 

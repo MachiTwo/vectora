@@ -15,20 +15,20 @@
 
 ### Agents
 
-| Agent          | Role  | Reports To |
-| -------------- | ----- | ---------- |
-| ai-backend     | Agent | cto        |
-| ai-ml          | Agent | cto        |
-| backend        | Agent | cto        |
-| cdo            | Agent | ceo        |
-| ceo            | CEO   | -          |
-| cmo            | CMO   | ceo        |
-| cto            | CTO   | ceo        |
-| devops         | Agent | cto        |
-| frontend       | Agent | cto        |
-| integrations   | Agent | cto        |
-| qa-engineer    | Agent | cto        |
-| security       | Agent | cto        |
+| Agent        | Role  | Reports To |
+| ------------ | ----- | ---------- |
+| ai-backend   | Agent | cto        |
+| ai-ml        | Agent | cto        |
+| backend      | Agent | cto        |
+| cdo          | Agent | ceo        |
+| ceo          | CEO   | -          |
+| cmo          | CMO   | ceo        |
+| cto          | CTO   | ceo        |
+| devops       | Agent | cto        |
+| frontend     | Agent | cto        |
+| integrations | Agent | cto        |
+| qa-engineer  | Agent | cto        |
+| security     | Agent | cto        |
 
 ### Projects
 

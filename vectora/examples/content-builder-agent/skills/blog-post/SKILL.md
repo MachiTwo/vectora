@@ -20,6 +20,7 @@ task(
 ```
 
 Example:
+
 ```
 task(
     subagent_type="researcher",
@@ -43,6 +44,7 @@ blogs/
 Example: A post about "AI Agents in 2025" → `blogs/ai-agents-2025/`
 
 **You MUST complete both steps:**
+
 1. Write the post to `blogs/<slug>/post.md`
 2. Generate a cover image using `generate_image` and save to `blogs/<slug>/hero.png`
 
@@ -53,27 +55,32 @@ Example: A post about "AI Agents in 2025" → `blogs/ai-agents-2025/`
 Every blog post should follow this structure:
 
 ### 1. Hook (Opening)
+
 - Start with a compelling question, statistic, or statement
 - Make the reader want to continue
 - Keep it to 2-3 sentences
 
 ### 2. Context (The Problem)
+
 - Explain why this topic matters
 - Describe the problem or opportunity
 - Connect to the reader's experience
 
 ### 3. Main Content (The Solution)
+
 - Break into 3-5 main sections with H2 headers
 - Each section covers one key point
 - Include code examples, diagrams, or screenshots where helpful
 - Use bullet points for lists
 
 ### 4. Practical Application
+
 - Show how to apply the concepts
 - Include step-by-step instructions if applicable
 - Provide code snippets or templates
 
 ### 5. Conclusion & CTA
+
 - Summarize key takeaways (3 bullets max)
 - End with a clear call-to-action
 - Link to related resources
@@ -102,16 +109,19 @@ Structure your prompt with these elements:
 ### Example Prompts
 
 **For a technical blog post:**
+
 ```
 Isometric 3D illustration of interconnected glowing cubes representing AI agents, each cube has subtle circuit patterns. Cubes connected by luminous data streams. Deep navy background (#0a192f) with electric blue (#64ffda) and soft purple (#c792ea) accents. Clean minimal style, lots of negative space at top for title. Professional tech aesthetic.
 ```
 
 **For a tutorial/how-to:**
+
 ```
 Clean flat illustration of hands typing on a keyboard with abstract code symbols floating upward, transforming into lightbulbs and gears. Warm gradient background from soft coral to light peach. Friendly, approachable style. Centered composition with space for text overlay.
 ```
 
 **For thought leadership:**
+
 ```
 Abstract visualization of a human silhouette profile merging with geometric neural network patterns. Split composition - organic watercolor texture on left transitioning to clean vector lines on right. Muted sage green and warm terracotta color scheme. Contemplative, forward-thinking mood.
 ```
@@ -126,6 +136,7 @@ Abstract visualization of a human silhouette profile merging with geometric neur
 ## Quality Checklist
 
 Before finishing:
+
 - [ ] Post saved to `blogs/<slug>/post.md`
 - [ ] Hero image generated at `blogs/<slug>/hero.png`
 - [ ] Hook grabs attention in first 2 sentences

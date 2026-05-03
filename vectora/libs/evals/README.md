@@ -8,9 +8,9 @@ The suite also includes [Harbor](https://github.com/laude-institute/harbor) inte
 
 ## Results
 
-| Suite | CI | LangSmith |
-|---|---|---|
-| Evals | [evals.yml](https://github.com/langchain-ai/deepagents/actions/workflows/evals.yml) | [deepagents-evals](https://smith.langchain.com/public/d4245855-4e15-48dc-a39d-8631780a9aeb/d) |
+| Suite  | CI                                                                                    | LangSmith                                                                                      |
+| ------ | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Evals  | [evals.yml](https://github.com/langchain-ai/deepagents/actions/workflows/evals.yml)   | [deepagents-evals](https://smith.langchain.com/public/d4245855-4e15-48dc-a39d-8631780a9aeb/d)  |
 | Harbor | [harbor.yml](https://github.com/langchain-ai/deepagents/actions/workflows/harbor.yml) | [deepagents-harbor](https://smith.langchain.com/public/e5f44462-4615-49ba-a0a1-194892dd5837/d) |
 
 ## Contributing

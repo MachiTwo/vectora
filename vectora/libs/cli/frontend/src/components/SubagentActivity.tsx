@@ -10,7 +10,13 @@ const StatusIcon: FC<{ status: SubagentStatus }> = ({ status }) => {
     case "pending":
       return (
         <span className="text-gray-400">
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <circle cx="12" cy="12" r="10" />
           </svg>
         </span>
@@ -18,7 +24,13 @@ const StatusIcon: FC<{ status: SubagentStatus }> = ({ status }) => {
     case "running":
       return (
         <span className="animate-spin text-[var(--accent)]">
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
         </span>
@@ -26,7 +38,13 @@ const StatusIcon: FC<{ status: SubagentStatus }> = ({ status }) => {
     case "complete":
       return (
         <span className="text-emerald-500">
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </span>
@@ -34,7 +52,13 @@ const StatusIcon: FC<{ status: SubagentStatus }> = ({ status }) => {
     case "error":
       return (
         <span className="text-red-500">
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <circle cx="12" cy="12" r="10" />
             <line x1="15" x2="9" y1="9" y2="15" />
             <line x1="9" x2="15" y1="9" y2="15" />
@@ -53,7 +77,9 @@ const StatusBadge: FC<{ status: SubagentStatus }> = ({ status }) => {
   };
 
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${styles[status]}`}>
+    <span
+      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${styles[status]}`}
+    >
       {status}
     </span>
   );
@@ -112,7 +138,9 @@ const SubagentCard: FC<{
         <div className="flex min-w-0 items-center gap-2.5">
           <StatusIcon status={subagent.status} />
           <div className="min-w-0">
-            <h4 className="truncate text-xs font-semibold capitalize">{title}</h4>
+            <h4 className="truncate text-xs font-semibold capitalize">
+              {title}
+            </h4>
             {description && (
               <p className="truncate text-[11px] text-[var(--muted-foreground)]">
                 {description}
@@ -151,7 +179,9 @@ const SubagentCard: FC<{
               >
                 <span>Task</span>
                 <svg
-                  className={`h-2.5 w-2.5 transition-transform ${taskExpanded ? "rotate-180" : ""}`}
+                  className={`h-2.5 w-2.5 transition-transform ${
+                    taskExpanded ? "rotate-180" : ""
+                  }`}
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -180,7 +210,11 @@ const SubagentCard: FC<{
                 className="h-64 min-h-32 max-h-[80vh] resize-y overflow-y-auto"
               >
                 <div className="markdown-body prose prose-sm max-w-none text-xs leading-relaxed">
-                  <Streamdown animated isAnimating={isStreaming} parseIncompleteMarkdown>
+                  <Streamdown
+                    animated
+                    isAnimating={isStreaming}
+                    parseIncompleteMarkdown
+                  >
                     {displayContent}
                   </Streamdown>
                 </div>
@@ -196,7 +230,9 @@ const SubagentCard: FC<{
 const SubagentProgress: FC<{ subagents: AgentSubagent[] }> = ({
   subagents,
 }) => {
-  const completed = subagents.filter((subagent) => subagent.status === "complete").length;
+  const completed = subagents.filter(
+    (subagent) => subagent.status === "complete",
+  ).length;
   const total = subagents.length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
@@ -252,7 +288,13 @@ export const SynthesisIndicator: FC<{
 
   return (
     <div className="anim-fade-in flex items-center gap-2 rounded-lg bg-[var(--accent-bg)] px-3 py-2 text-xs text-[var(--foreground)]">
-      <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg
+        className="h-3.5 w-3.5 animate-spin"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
         <path d="M21 12a9 9 0 1 1-6.219-8.56" />
       </svg>
       Synthesizing results from {subagents.length} subagent

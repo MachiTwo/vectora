@@ -233,6 +233,209 @@ LINK_KNOWLEDGE_BASE = {
         "Metrics for evaluating context-faithful LLM responses",
         "https://arxiv.org/abs/2305.11747",
     ),
+    # Vectora Stack Components
+    r"\bFastAPI\b": (
+        "FastAPI",
+        "Modern Python web framework for building APIs",
+        "https://fastapi.tiangolo.com/",
+    ),
+    r"\bLangChain\b": [
+        (
+            "LangChain Official",
+            "LangChain Framework and Documentation",
+            "https://www.langchain.com/",
+        ),
+        (
+            "LangChain Docs",
+            "LangChain Official Documentation",
+            "https://docs.langchain.com/",
+        ),
+    ],
+    r"\bLangGraph\b": [
+        (
+            "LangGraph",
+            "Agent Orchestration Framework for Reliable AI Agents",
+            "https://www.langchain.com/langgraph",
+        ),
+        (
+            "LangGraph Docs",
+            "LangGraph Official Documentation",
+            "https://docs.langchain.com/oss/python/langgraph/",
+        ),
+    ],
+    r"\bLangSmith\b": (
+        "LangSmith",
+        "AI Agent & LLM Observability Platform",
+        "https://www.langchain.com/langsmith/observability",
+    ),
+    r"\bDeep Agents\b": [
+        (
+            "Deep Agents",
+            "Deep Agents: Build Agents for Complex, Multi-Step Tasks",
+            "https://www.langchain.com/deep-agents",
+        ),
+        (
+            "Deep Agents Docs",
+            "Deep Agents Overview Documentation",
+            "https://docs.langchain.com/oss/python/deepagents/overview",
+        ),
+    ],
+    r"\bPostgreSQL\b|\bPostgres\b": (
+        "PostgreSQL",
+        "PostgreSQL Official Documentation",
+        "https://www.postgresql.org/docs/",
+    ),
+    r"\bpg8000\b": (
+        "pg8000",
+        "Pure-Python PostgreSQL Driver",
+        "https://pybrary.net/pg8000/",
+    ),
+    r"\bRedis\b": [
+        (
+            "Redis Official",
+            "Redis Official Documentation",
+            "https://redis.io/docs/",
+        ),
+        (
+            "redis-py",
+            "Redis Python Client Documentation",
+            "https://redis.io/docs/latest/develop/clients/redis-py/",
+        ),
+    ],
+    r"\bLanceDB\b": [
+        (
+            "LanceDB Docs",
+            "LanceDB Official Documentation",
+            "https://docs.lancedb.com/",
+        ),
+        (
+            "LanceDB GitHub",
+            "LanceDB Open Source Repository",
+            "https://github.com/lancedb/lancedb",
+        ),
+    ],
+    r"\bVoyage Embeddings\b": (
+        "Voyage Embeddings",
+        "Text Embeddings API Reference",
+        "https://docs.voyageai.com/reference/embeddings-api",
+    ),
+    r"\bVoyage Reranker\b": (
+        "Voyage Reranker",
+        "Reranker API Reference",
+        "https://docs.voyageai.com/reference/reranker-api",
+    ),
+    r"\bJenkins\b": [
+        (
+            "Jenkins Official",
+            "Jenkins Continuous Integration Server",
+            "https://www.jenkins.io/",
+        ),
+        (
+            "Jenkins Pipeline",
+            "Jenkins Pipeline as Code",
+            "https://www.jenkins.io/doc/book/pipeline/",
+        ),
+    ],
+    r"\bGitHub Actions\b": (
+        "GitHub Actions",
+        "GitHub Actions Workflows Documentation",
+        "https://docs.github.com/en/actions",
+    ),
+    r"\bDocker Compose\b": (
+        "Docker Compose",
+        "Docker Compose Documentation",
+        "https://docs.docker.com/compose/",
+    ),
+    r"\bVCR\b|\bVectora Cognitive Runtime\b": (
+        "VCR",
+        "Vectora Cognitive Runtime (XLM-RoBERTa + LoRA)",
+        "https://github.com/vectora/vectora/docs/vcr",
+    ),
+    r"\bXLM-RoBERTa\b": (
+        "XLM-RoBERTa",
+        "Facebook's XLM-RoBERTa Multilingual Model",
+        "https://huggingface.co/FacebookAI/xlm-roberta-base",
+    ),
+    r"\bLoRA\b|\bLow-Rank Adaptation\b": (
+        "LoRA",
+        "LoRA: Low-Rank Adaptation of Large Language Models",
+        "https://arxiv.org/abs/2106.09685",
+    ),
+    r"\bPaperclip\b": (
+        "Paperclip",
+        "Paperclip Agent Company Framework",
+        "https://paperclip.ing/",
+    ),
+    r"\bACP\b|\bAgent Client Protocol\b": (
+        "ACP",
+        "Agent Client Protocol Specification",
+        "https://agentclientprotocol.com/",
+    ),
+    r"\bJWT\b|\bJSON Web Token\b": (
+        "JWT",
+        "RFC 7519: JSON Web Token Standard",
+        "https://datatracker.ietf.org/doc/html/rfc7519",
+    ),
+    r"\bRBAC\b|\bRole-Based Access Control\b": (
+        "RBAC",
+        "NIST Role-Based Access Control Standard",
+        "https://csrc.nist.gov/projects/rbac",
+    ),
+    r"\bVectora Asset Library\b|\bVAL\b": (
+        "VAL",
+        "Vectora Asset Library - Registry de Datasets",
+        "https://github.com/vectora/vectora-asset-library",
+    ),
+    r"\bVectora Integrations\b": (
+        "Vectora Integrations",
+        "@vectora-integrations TypeScript Monorepo",
+        "https://github.com/vectora/vectora-integrations",
+    ),
+    r"\bClaude Code\b": (
+        "Claude Code",
+        "Claude Code IDE Integration",
+        "https://claude.ai/code",
+    ),
+    r"\bCursor\b": (
+        "Cursor",
+        "The AI Code Editor",
+        "https://www.cursor.com/",
+    ),
+    r"\bAnthropicAI\b|\bAnthropic\b": (
+        "Anthropic",
+        "Anthropic Official Website",
+        "https://www.anthropic.com/",
+    ),
+    r"\bTurborepo\b": (
+        "Turborepo",
+        "Monorepo build system",
+        "https://turbo.build/repo",
+    ),
+    r"\bpnpm\b": (
+        "pnpm",
+        "Fast, disk space efficient package manager",
+        "https://pnpm.io/",
+    ),
+    r"\bnpm\b|\bNode Package Manager\b": (
+        "npm",
+        "Node Package Manager Official",
+        "https://www.npmjs.com/",
+    ),
+    r"\bPyTest\b": (
+        "Pytest",
+        "The pytest Testing Framework",
+        "https://docs.pytest.org/",
+    ),
+    r"\bOpenTelemetry\b": (
+        "OpenTelemetry",
+        "OpenTelemetry Observability Framework",
+        "https://opentelemetry.io/",
+    ),
+    r"\bPrometheus\b": (
+        "Prometheus",
+        "Prometheus Monitoring System",
+        "https://prometheus.io/docs/introduction/overview/",
+    ),
 }
 
 

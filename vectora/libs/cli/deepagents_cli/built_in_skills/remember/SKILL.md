@@ -12,12 +12,14 @@ Review our conversation and capture valuable knowledge. Focus especially on **be
 Scan the conversation for:
 
 ### Best Practices (highest priority)
+
 - **Patterns that worked well** - approaches, techniques, or solutions we found effective
 - **Anti-patterns to avoid** - mistakes, gotchas, or approaches that caused problems
 - **Quality standards** - criteria we established for good code, documentation, or processes
 - **Decision rationale** - why we chose one approach over another
 
 ### Other Valuable Knowledge
+
 - Coding conventions and style preferences
 - Project architecture decisions
 - Workflows and processes we developed
@@ -29,7 +31,9 @@ Scan the conversation for:
 For each best practice or learning, choose the right destination:
 
 ### -> Memory (AGENTS.md) for preferences and guidelines
+
 Use memory when the knowledge is:
+
 - A preference or guideline (not a multi-step process)
 - Something to always keep in mind
 - A simple rule or pattern
@@ -38,7 +42,9 @@ Use memory when the knowledge is:
 **Project** (`.deepagents/AGENTS.md`): Project-specific conventions and decisions
 
 ### -> Skill for reusable workflows and methodologies
+
 **Create a skill when** we developed:
+
 - A multi-step process worth reusing
 - A methodology for a specific type of task
 - A workflow with best practices baked in
@@ -53,9 +59,11 @@ If we established best practices around a workflow or process, capture them in a
 **Example:** If we discussed best practices for code review, create a `code-review` skill that encodes those practices into a reusable workflow.
 
 ### Skill Location
+
 `~/.deepagents/agent/skills/<skill-name>/SKILL.md`
 
 ### Skill Structure
+
 ```
 skill-name/
 ├── SKILL.md          (required - main instructions with best practices)
@@ -65,6 +73,7 @@ skill-name/
 ```
 
 ### SKILL.md Format
+
 ```markdown
 ---
 name: skill-name
@@ -74,25 +83,32 @@ description: "What this skill does AND when to use it. Include triggers like 'wh
 # Skill Name
 
 ## Overview
+
 Brief explanation of what this skill accomplishes.
 
 ## Best Practices
+
 Capture the key best practices upfront:
+
 - Best practice 1: explanation
 - Best practice 2: explanation
 
 ## Process
+
 Step-by-step instructions (imperative form):
+
 1. First, do X
 2. Then, do Y
 3. Finally, do Z
 
 ## Common Pitfalls
+
 - Pitfall to avoid and why
 - Another anti-pattern we discovered
 ```
 
 ### Key Principles
+
 1. **Encode best practices prominently** - Put them near the top so they guide the entire workflow
 2. **Concise is key** - Only include non-obvious knowledge. Every paragraph should justify its token cost.
 3. **Clear triggers** - The description determines when the skill activates. Be specific.
@@ -105,6 +121,7 @@ For preferences, guidelines, and simple rules that don't warrant a full skill:
 
 ```markdown
 ## Best Practices
+
 - When doing X, always Y because Z
 - Avoid A because it leads to B
 ```
@@ -114,5 +131,6 @@ Use `edit_file` to update existing files or `write_file` to create new ones.
 ## Step 5: Summarize Changes
 
 List what you captured and where you stored it:
+
 - Skills created (with key best practices encoded)
 - Memory entries added (with location)

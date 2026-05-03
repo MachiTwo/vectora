@@ -181,7 +181,7 @@ GitHub Actions automatically builds and deploys on push to main:
 # .github/workflows/build-deploy.yml
 - name: Build with Hugo
   run: hugo --gc --minify
-  
+
 - name: Deploy to GitHub Pages
   uses: peaceiris/actions-gh-pages@v3
   with:

@@ -23,12 +23,8 @@
       "label": "size: XL"
     }
   ],
-  "excludedFiles": [
-    "uv.lock"
-  ],
-  "excludedPaths": [
-    "docs/"
-  ],
+  "excludedFiles": ["uv.lock"],
+  "excludedPaths": ["docs/"],
   "typeToLabel": {
     "feat": "feature",
     "fix": "fix",

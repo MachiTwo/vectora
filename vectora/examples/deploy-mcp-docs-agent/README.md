@@ -4,8 +4,8 @@ A documentation research agent deployed with `deepagents deploy`. It answers dev
 
 ## Prerequisites
 
-| Variable | Description |
-|----------|-------------|
+| Variable            | Description         |
+| ------------------- | ------------------- |
 | `ANTHROPIC_API_KEY` | Claude model access |
 | `LANGSMITH_API_KEY` | Required for deploy |
 

@@ -6,10 +6,10 @@ This example demonstrates the sync/async subagent pattern: market research block
 
 ## Prerequisites
 
-| Variable | Description |
-|----------|-------------|
-| `OPENAI_API_KEY` | Model access (gpt-5.4-nano) |
-| `LANGSMITH_API_KEY` | Required for deploy |
+| Variable            | Description                 |
+| ------------------- | --------------------------- |
+| `OPENAI_API_KEY`    | Model access (gpt-5.4-nano) |
+| `LANGSMITH_API_KEY` | Required for deploy         |
 
 Copy `.env` and fill in your keys.
 

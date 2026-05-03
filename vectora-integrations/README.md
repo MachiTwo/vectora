@@ -4,7 +4,7 @@ Vectora Integrations é um monorepo Turborepo que contém todos os SDKs e adapta
 
 ## Stack
 
-O stack de integrations usa TypeScript como linguagem única, Turborepo para gerenciar múltiplos packages interdependentes, e pnpm para package management. Cada integração é um package NPM independente (@vectora/sdk-*) que pode ser instalado via npm. Shared package fornece tipos, autenticação, e utilitários HTTP para evitar duplicação. Todas as integrações comunicam com o Vectora backend via REST ou MCP protocol.
+O stack de integrations usa TypeScript como linguagem única, Turborepo para gerenciar múltiplos packages interdependentes, e pnpm para package management. Cada integração é um package NPM independente (@vectora/sdk-\*) que pode ser instalado via npm. Shared package fornece tipos, autenticação, e utilitários HTTP para evitar duplicação. Todas as integrações comunicam com o Vectora backend via REST ou MCP protocol.
 
 - **Monorepo:** Turborepo (caching, parallel builds)
 - **Package Manager:** pnpm (workspace, faster)

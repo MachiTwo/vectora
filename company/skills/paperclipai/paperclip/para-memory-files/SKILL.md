@@ -4,8 +4,7 @@ description: ">"
 slug: "para-memory-files"
 metadata:
   sources:
-    -
-      kind: "github-dir"
+    - kind: "github-dir"
       commit: null
       path: "skills/para-memory-files"
       repo: "paperclipai/paperclip"
@@ -13,4 +12,3 @@ metadata:
       url: "https://github.com/paperclipai/paperclip/tree/master/skills/para-memory-files"
 key: "paperclipai/paperclip/para-memory-files"
 ---
-

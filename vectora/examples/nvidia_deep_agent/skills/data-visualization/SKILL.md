@@ -10,6 +10,7 @@ Create publication-quality analytical charts using matplotlib and seaborn in a h
 ## When to Use This Skill
 
 Use this skill when:
+
 - Visualizing results from cuDF analysis or cuML models
 - Creating charts (bar, line, scatter, heatmap, histogram, box plot)
 - Building multi-panel analysis summaries

@@ -4,9 +4,9 @@ An autonomous coding agent deployed with `deepagents deploy`. Given a task descr
 
 ## Prerequisites
 
-| Variable | Description |
-|----------|-------------|
-| `ANTHROPIC_API_KEY` | Claude model access |
+| Variable            | Description                                   |
+| ------------------- | --------------------------------------------- |
+| `ANTHROPIC_API_KEY` | Claude model access                           |
 | `LANGSMITH_API_KEY` | Required for deploy and the LangSmith sandbox |
 
 Copy `.env.example` to `.env` and fill in both keys.

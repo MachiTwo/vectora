@@ -4,8 +4,7 @@ description: ">"
 slug: "paperclip-create-agent"
 metadata:
   sources:
-    -
-      kind: "github-dir"
+    - kind: "github-dir"
       commit: null
       path: "skills/paperclip-create-agent"
       repo: "paperclipai/paperclip"
@@ -13,4 +12,3 @@ metadata:
       url: "https://github.com/paperclipai/paperclip/tree/master/skills/paperclip-create-agent"
 key: "paperclipai/paperclip/paperclip-create-agent"
 ---
-

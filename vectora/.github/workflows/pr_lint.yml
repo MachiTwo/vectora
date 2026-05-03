@@ -55,7 +55,7 @@ on:
     # appears (or gets cleaned up) the moment a maintainer toggles
     # `ignore-lint-pr-title`. Without them, the warning would only update on
     # the next title edit or push.
-    types: [ opened, edited, synchronize, labeled, unlabeled ]
+    types: [opened, edited, synchronize, labeled, unlabeled]
 
 jobs:
   # Validates that PR title follows Conventional Commits 1.0.0 specification

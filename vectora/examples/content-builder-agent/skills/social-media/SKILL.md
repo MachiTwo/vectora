@@ -20,6 +20,7 @@ task(
 ```
 
 Example:
+
 ```
 task(
     subagent_type="researcher",
@@ -34,6 +35,7 @@ task(
 **Every social media post MUST have both content AND an image:**
 
 **LinkedIn posts:**
+
 ```
 linkedin/
 └── <slug>/
@@ -42,6 +44,7 @@ linkedin/
 ```
 
 **Twitter/X threads:**
+
 ```
 tweets/
 └── <slug>/
@@ -52,6 +55,7 @@ tweets/
 Example: A LinkedIn post about "prompt engineering" → `linkedin/prompt-engineering/`
 
 **You MUST complete both steps:**
+
 1. Write the content to the appropriate path
 2. Generate an image using `generate_image` and save alongside the post
 
@@ -62,18 +66,21 @@ Example: A LinkedIn post about "prompt engineering" → `linkedin/prompt-enginee
 ### LinkedIn
 
 **Format:**
+
 - 1,300 character limit (show more after ~210 chars)
 - First line is crucial - make it hook
 - Use line breaks for readability
 - 3-5 hashtags at the end
 
 **Tone:**
+
 - Professional but personal
 - Share insights and learnings
 - Ask questions to drive engagement
 - Use "I" and share experiences
 
 **Structure:**
+
 ```
 [Hook - 1 compelling line]
 
@@ -95,11 +102,13 @@ Example: A LinkedIn post about "prompt engineering" → `linkedin/prompt-enginee
 ### Twitter/X
 
 **Format:**
+
 - 280 character limit per tweet
 - Threads for longer content (use 1/🧵 format)
 - No more than 2 hashtags per tweet
 
 **Thread Structure:**
+
 ```
 1/🧵 [Hook - the main insight]
 
@@ -125,6 +134,7 @@ The tool saves the image to `<platform>/<slug>/image.png`.
 ### Social Image Best Practices
 
 Social images need to work at small sizes in crowded feeds:
+
 - **Bold, simple compositions** - one clear focal point
 - **High contrast** - stands out when scrolling
 - **No text in image** - too small to read, platforms add their own
@@ -142,16 +152,19 @@ Include these elements:
 ### Example Prompts
 
 **For an insight/tip post:**
+
 ```
 Single glowing lightbulb floating against a deep purple gradient background, lightbulb made of interconnected golden geometric lines, rays of soft light emanating outward. Minimal, striking, high contrast. Square composition.
 ```
 
 **For announcements/news:**
+
 ```
 Abstract rocket ship made of colorful geometric shapes launching upward with a trail of particles. Bright coral and teal color scheme against clean white background. Energetic, celebratory mood. Bold flat illustration style.
 ```
 
 **For thought-provoking content:**
+
 ```
 Two overlapping translucent circles, one blue one orange, creating a glowing intersection in the center. Represents collaboration or intersection of ideas. Dark charcoal background, soft ethereal glow. Minimalist and contemplative.
 ```
@@ -159,16 +172,19 @@ Two overlapping translucent circles, one blue one orange, creating a glowing int
 ## Content Types
 
 ### Announcement Posts
+
 - Lead with the news
 - Explain the impact
 - Include link or next step
 
 ### Insight Posts
+
 - Share one specific learning
 - Explain the context briefly
 - Make it actionable
 
 ### Question Posts
+
 - Ask a genuine question
 - Provide your take first
 - Keep it focused on one topic
@@ -176,6 +192,7 @@ Two overlapping translucent circles, one blue one orange, creating a glowing int
 ## Quality Checklist
 
 Before finishing:
+
 - [ ] Post saved to `linkedin/<slug>/post.md` or `tweets/<slug>/thread.md`
 - [ ] Image generated alongside the post
 - [ ] First line hooks attention

@@ -1,4 +1,11 @@
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Client } from "@langchain/langgraph-sdk";
 import type { BaseMessage } from "@langchain/core/messages";
 
@@ -193,9 +200,7 @@ function NewChatApp({
     // (BaseMessage[]) is satisfied without sending the lc/id/kwargs envelope.
     await stream.submit(
       {
-        messages: [
-          { type: "human", content: text } as unknown as BaseMessage,
-        ],
+        messages: [{ type: "human", content: text } as unknown as BaseMessage],
       },
       { streamSubgraphs: true },
     );
@@ -256,7 +261,10 @@ function NewChatApp({
               onChange={(event) => {
                 setInput(event.target.value);
                 event.target.style.height = "auto";
-                event.target.style.height = `${Math.min(event.target.scrollHeight, 200)}px`;
+                event.target.style.height = `${Math.min(
+                  event.target.scrollHeight,
+                  200,
+                )}px`;
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
@@ -281,7 +289,13 @@ function NewChatApp({
                         : "text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
                     }`}
                   >
-                    <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="h-3 w-3"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M12 20h9" />
                       <path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838.838-2.872a2 2 0 0 1 .506-.855z" />
                     </svg>
@@ -301,7 +315,13 @@ function NewChatApp({
                         : "text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
                     }`}
                   >
-                    <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="h-3 w-3"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
                       <path d="M14 2v4a2 2 0 0 0 2 2h4" />
                     </svg>
@@ -323,11 +343,23 @@ function NewChatApp({
                 }`}
               >
                 {isLoading ? (
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <svg
+                    className="h-3.5 w-3.5"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
                     <rect x="6" y="6" width="12" height="12" rx="1" />
                   </svg>
                 ) : (
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    className="h-3.5 w-3.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="m5 12 7-7 7 7" />
                     <path d="M12 19V5" />
                   </svg>

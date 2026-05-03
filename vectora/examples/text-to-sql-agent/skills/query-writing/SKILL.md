@@ -20,16 +20,20 @@ For straightforward questions about a single table:
 For questions requiring multiple tables:
 
 ### 1. Plan Your Approach
+
 **Use `write_todos` to break down the task:**
+
 - Identify all tables needed
 - Map relationships (foreign keys)
 - Plan JOIN structure
 - Determine aggregations
 
 ### 2. Examine Schemas
+
 Use `sql_db_schema` for EACH table to find join columns and needed fields.
 
 ### 3. Construct Query
+
 - SELECT - Columns and aggregates
 - FROM/JOIN - Connect tables on FK = PK
 - WHERE - Filters before aggregation
@@ -38,9 +42,11 @@ Use `sql_db_schema` for EACH table to find join columns and needed fields.
 - LIMIT - Default 5 rows
 
 ### 4. Validate and Execute
+
 Check all JOINs have conditions, GROUP BY is correct, then run query.
 
 ## Example: Revenue by Country
+
 ```sql
 SELECT
     c.Country,
@@ -55,13 +61,14 @@ LIMIT 5;
 ## Error Recovery
 
 If a query fails or returns unexpected results:
+
 1. **Empty results** — Verify column names and WHERE conditions against the schema; check for case sensitivity or NULL values
 2. **Syntax error** — Re-examine JOINs, GROUP BY completeness, and alias references
 3. **Timeout** — Add stricter WHERE filters or LIMIT to reduce result set, then refine
 
 ## Quality Guidelines
 
-- Query only relevant columns (not SELECT *)
+- Query only relevant columns (not SELECT \*)
 - Always apply LIMIT (5 default)
 - Use table aliases for clarity
 - For complex queries: use write_todos to plan

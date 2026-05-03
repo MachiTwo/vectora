@@ -8,12 +8,15 @@ description: Lists tables, describes columns and data types, identifies foreign 
 ## Workflow
 
 ### 1. List All Tables
+
 Use `sql_db_list_tables` tool to see all available tables in the database.
 
 This returns the complete list of tables you can query.
 
 ### 2. Get Schema for Specific Tables
+
 Use `sql_db_schema` tool with table names to examine:
+
 - **Column names** - What fields are available
 - **Data types** - INTEGER, TEXT, DATETIME, etc.
 - **Sample data** - 3 example rows to understand content
@@ -21,13 +24,17 @@ Use `sql_db_schema` tool with table names to examine:
 - **Foreign keys** - Relationships to other tables
 
 ### 3. Map Relationships
+
 Identify how tables connect:
+
 - Look for columns ending in "Id" (e.g., CustomerId, ArtistId)
 - Foreign keys link to primary keys in other tables
 - Document parent-child relationships
 
 ### 4. Answer the Question
+
 Provide clear information about:
+
 - Available tables and their purpose
 - Column names and what they contain
 - How tables relate to each other
@@ -38,6 +45,7 @@ Provide clear information about:
 **Step 1:** Use `sql_db_list_tables`
 
 **Response:**
+
 ```
 The Chinook database has 11 tables:
 1. Artist - Music artists
@@ -58,6 +66,7 @@ The Chinook database has 11 tables:
 **Step 1:** Use `sql_db_schema` with table name "Customer"
 
 **Response:**
+
 ```
 The Customer table has these columns:
 
@@ -80,6 +89,7 @@ Sample data shows customers like:
 ## Example: "How do I find revenue by artist?"
 
 **Step 1:** Identify tables needed
+
 - Artist (has artist names)
 - Album (links artists to tracks)
 - Track (links albums to sales)
@@ -87,6 +97,7 @@ Sample data shows customers like:
 - Invoice (has revenue totals)
 
 **Step 2:** Map relationships
+
 ```
 Artist (ArtistId)
   ↓ 1:many
@@ -98,6 +109,7 @@ InvoiceLine (TrackId, UnitPrice, Quantity)
 ```
 
 **Response:**
+
 ```
 To find revenue by artist, you'll need to:
 1. Start with the Artist table
@@ -113,11 +125,13 @@ This requires the query-writing skill to execute.
 ## Quality Guidelines
 
 **For "list tables" questions:**
+
 - Show all table names
 - Add brief descriptions of what each contains
 - Group related tables (e.g., music catalog, transactions, people)
 
 **For "describe table" questions:**
+
 - List all columns with data types
 - Explain what each column contains
 - Show sample data for context
@@ -125,8 +139,8 @@ This requires the query-writing skill to execute.
 - Explain relationships to other tables
 
 **For "how do I query X" questions:**
+
 - Identify required tables
 - Map the JOIN path
 - Explain the relationship chain
 - Suggest next steps (use query-writing skill)
-

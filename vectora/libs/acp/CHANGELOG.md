@@ -4,11 +4,11 @@
 
 ### Features
 
-* Add Opus 4.7 and Baseten to demo agent ([#2787](https://github.com/langchain-ai/deepagents/issues/2787)) ([bfb16a6](https://github.com/langchain-ai/deepagents/commit/bfb16a645178f8134611d90b4aca4ddd43e2fdb9))
+- Add Opus 4.7 and Baseten to demo agent ([#2787](https://github.com/langchain-ai/deepagents/issues/2787)) ([bfb16a6](https://github.com/langchain-ai/deepagents/commit/bfb16a645178f8134611d90b4aca4ddd43e2fdb9))
 
 ### Bug Fixes
 
-* Restore passing tests after acp v0.9 schema bump ([#2813](https://github.com/langchain-ai/deepagents/issues/2813)) ([29a351a](https://github.com/langchain-ai/deepagents/commit/29a351a8f5de8c460a3eeaadd76a3c2ace0072e0))
+- Restore passing tests after acp v0.9 schema bump ([#2813](https://github.com/langchain-ai/deepagents/issues/2813)) ([29a351a](https://github.com/langchain-ai/deepagents/commit/29a351a8f5de8c460a3eeaadd76a3c2ace0072e0))
 
 ## Changelog
 

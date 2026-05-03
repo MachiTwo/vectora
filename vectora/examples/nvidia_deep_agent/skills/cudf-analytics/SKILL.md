@@ -10,6 +10,7 @@ GPU-accelerated data analysis using NVIDIA RAPIDS cuDF. cuDF provides a pandas-l
 ## When to Use This Skill
 
 Use this skill when:
+
 - Analyzing CSV files, datasets, or tabular data
 - Computing statistical summaries (mean, median, std, quartiles)
 - Performing groupby aggregations
@@ -54,11 +55,13 @@ def to_pd(df):
 cuDF mirrors the pandas API. Common operations:
 
 ### Read Data
+
 ```python
 df = read_csv("data.csv")
 ```
 
 ### Statistical Summary
+
 ```python
 # Use to_pd() when you need pandas output
 summary = to_pd(df[["value", "score"]].describe())
@@ -72,6 +75,7 @@ corr = float(df["value"].corr(df["score"]))
 ```
 
 ### Groupby Aggregation
+
 ```python
 result = df.groupby("category").agg({
     "revenue": ["sum", "mean", "count"],
@@ -81,6 +85,7 @@ result_pd = to_pd(result)
 ```
 
 ### Anomaly Detection (IQR Method)
+
 ```python
 col = "value"
 Q1 = float(df[col].quantile(0.25))
@@ -92,6 +97,7 @@ outliers = to_pd(df[(df[col] < lower) | (df[col] > upper)])
 ```
 
 ### Anomaly Detection (Z-Score Method)
+
 ```python
 mean = float(df[col].mean())
 std = float(df[col].std())
@@ -100,6 +106,7 @@ anomalies = to_pd(df[df["z_score"].abs() > 3])
 ```
 
 ### Filtering and Selection
+
 ```python
 # Filter rows
 filtered = df[df["status"] == "active"]
@@ -117,6 +124,7 @@ result_pd = to_pd(sorted_df)
 ## Data Type Requirements
 
 cuDF requires explicit type specification for optimal performance:
+
 - Use `float32` or `float64` for numeric data
 - Use `int32` or `int64` for integer data
 - String columns use cuDF's string dtype automatically
@@ -124,6 +132,7 @@ cuDF requires explicit type specification for optimal performance:
 ## Output Guidelines
 
 When reporting analysis results:
+
 - Include dataset dimensions (rows x columns)
 - Show key statistics in formatted tables
 - Highlight notable patterns, trends, or anomalies

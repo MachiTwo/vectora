@@ -22,11 +22,15 @@ const TOOL_RENDERERS: Record<string, FC<ToolRendererProps>> = {
   think_tool: ThinkCard,
 };
 
-export function getToolRenderer(toolName: string): FC<ToolRendererProps> | null {
+export function getToolRenderer(
+  toolName: string,
+): FC<ToolRendererProps> | null {
   return TOOL_RENDERERS[toolName] ?? null;
 }
 
-export function getToolIcon(toolName: string): { icon: string; label: string } | null {
+export function getToolIcon(
+  toolName: string,
+): { icon: string; label: string } | null {
   switch (toolName) {
     case "write_file":
       return { icon: "file-plus", label: "Write" };

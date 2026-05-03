@@ -12,7 +12,7 @@ on:
       python-versions:
         required: true
         type: string
-        description: "JSON array of Python versions (must be quoted strings; e.g. '[\"3.11\",\"3.12\"]' — NOT '[3.11, 3.12]') to test on the primary OS"
+        description: 'JSON array of Python versions (must be quoted strings; e.g. ''["3.11","3.12"]'' — NOT ''[3.11, 3.12]'') to test on the primary OS'
       os:
         required: false
         type: string
@@ -22,7 +22,7 @@ on:
         required: false
         type: string
         default: "[]"
-        description: "JSON array of additional {python-version, os} legs (e.g. '[{\"python-version\":\"3.13\",\"os\":\"windows-latest\"}]')"
+        description: 'JSON array of additional {python-version, os} legs (e.g. ''[{"python-version":"3.13","os":"windows-latest"}]'')'
       coverage-python-version:
         required: false
         type: string

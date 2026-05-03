@@ -61,10 +61,7 @@
       "component": "deepagents-cli",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
-      "extra-files": [
-        "pyproject.toml",
-        "deepagents_cli/_version.py"
-      ],
+      "extra-files": ["pyproject.toml", "deepagents_cli/_version.py"],
       "changelog-path": "CHANGELOG.md"
     },
     "libs/deepagents": {
@@ -73,10 +70,7 @@
       "component": "deepagents",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
-      "extra-files": [
-        "pyproject.toml",
-        "deepagents/_version.py"
-      ],
+      "extra-files": ["pyproject.toml", "deepagents/_version.py"],
       "changelog-path": "CHANGELOG.md"
     },
     "libs/acp": {
@@ -85,10 +79,7 @@
       "component": "deepagents-acp",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
-      "extra-files": [
-        "pyproject.toml",
-        "deepagents_acp/_version.py"
-      ],
+      "extra-files": ["pyproject.toml", "deepagents_acp/_version.py"],
       "changelog-path": "CHANGELOG.md"
     },
     "libs/code": {
@@ -97,10 +88,7 @@
       "component": "deepagents-code",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
-      "extra-files": [
-        "pyproject.toml",
-        "deepagents_code/_version.py"
-      ],
+      "extra-files": ["pyproject.toml", "deepagents_code/_version.py"],
       "changelog-path": "CHANGELOG.md"
     },
     "libs/partners/daytona": {
@@ -109,10 +97,7 @@
       "component": "langchain-daytona",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
-      "extra-files": [
-        "pyproject.toml",
-        "langchain_daytona/_version.py"
-      ],
+      "extra-files": ["pyproject.toml", "langchain_daytona/_version.py"],
       "changelog-path": "CHANGELOG.md"
     },
     "libs/partners/modal": {
@@ -121,10 +106,7 @@
       "component": "langchain-modal",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
-      "extra-files": [
-        "pyproject.toml",
-        "langchain_modal/_version.py"
-      ],
+      "extra-files": ["pyproject.toml", "langchain_modal/_version.py"],
       "changelog-path": "CHANGELOG.md"
     },
     "libs/partners/runloop": {
@@ -133,10 +115,7 @@
       "component": "langchain-runloop",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
-      "extra-files": [
-        "pyproject.toml",
-        "langchain_runloop/_version.py"
-      ],
+      "extra-files": ["pyproject.toml", "langchain_runloop/_version.py"],
       "changelog-path": "CHANGELOG.md"
     },
     "libs/partners/quickjs": {
@@ -145,10 +124,7 @@
       "component": "langchain-quickjs",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
-      "extra-files": [
-        "pyproject.toml",
-        "langchain_quickjs/_version.py"
-      ],
+      "extra-files": ["pyproject.toml", "langchain_quickjs/_version.py"],
       "changelog-path": "CHANGELOG.md"
     },
     "libs/repl": {
@@ -157,10 +133,7 @@
       "component": "langchain-repl",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
-      "extra-files": [
-        "pyproject.toml",
-        "langchain_repl/_version.py"
-      ],
+      "extra-files": ["pyproject.toml", "langchain_repl/_version.py"],
       "changelog-path": "CHANGELOG.md"
     }
   },

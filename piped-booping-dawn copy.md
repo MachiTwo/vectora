@@ -879,6 +879,7 @@ vectora dataset publish --name godot-4.6-docs
 ### `vectora/` (6 Frentes)
 
 1. **Frente 1: Backend Core (Go Tier-Based)**
+
    - Tier-based architecture (8 camadas)
    - RAG orchestrator, vector search, reranking
    - LLM integration (Claude, OpenAI, Google)
@@ -886,6 +887,7 @@ vectora dataset publish --name godot-4.6-docs
    - Repo: `vectora/backend`
 
 2. **Frente 2: Storage Layer (LanceDB + PostgreSQL)**
+
    - LanceDB integration (vector storage)
    - PostgreSQL/SQLite schema
    - Database migrations
@@ -893,6 +895,7 @@ vectora dataset publish --name godot-4.6-docs
    - Repo: `vectora/backend/internal/storage` + `migrations/`
 
 3. **Frente 3: API Layer (REST + MCP)**
+
    - REST API handlers (Agent Mode, Tool Mode, etc)
    - 6+ middlewares (auth, logging, recovery, cors, rate_limit, request_id)
    - MCP protocol handler
@@ -900,6 +903,7 @@ vectora dataset publish --name godot-4.6-docs
    - Repo: `vectora/backend/internal/api` + `mcp/`
 
 4. **Frente 4: Frontend Dashboard (React + Vite)**
+
    - Login, settings, memory viewer, dataset manager
    - Analytics dashboard (real-time metrics)
    - Real-time WebSocket updates
@@ -907,6 +911,7 @@ vectora dataset publish --name godot-4.6-docs
    - Repo: `vectora/frontend`
 
 5. **Frente 5: CLI (Go + Cobra)**
+
    - `vectora init`, `vectora start`, `vectora auth`, `vectora dataset`, `vectora memory`
    - Configuration management
    - Local daemon/service management
@@ -935,6 +940,7 @@ vectora dataset publish --name godot-4.6-docs
 ### `vectora-integrations/` (2 Frentes - Turborepo)
 
 8. **Frente 8: Shared SDK**
+
    - @vectora/shared (types, auth, HTTP client, errors)
    - Common utilities para todas integrações
    - Type definitions centralizadas
@@ -1384,10 +1390,10 @@ Later:
 | **Middlewares**      | Basic            | 6+ (auth, logging, recovery, cors, rate_limit, request_id)                |
 | **Error Handling**   | Simples          | Custom error types (VectoraError, ValidationError, AuthError)             |
 | **Memory Isolation** | Simples          | Per-user namespaces em LanceDB + metadata em PostgreSQL                   |
-| **System Tray**      | ❌                | ✅ Fase 2+ (Windows)                                                       |
+| **System Tray**      | ❌               | ✅ Fase 2+ (Windows)                                                      |
 | **Dashboard**        | Básico           | Com analytics (memory usage, query latency, tool success rate)            |
 | **CI/CD**            | Simples          | Multi-stage (lint → test → build → publish)                               |
-| **Pre-commit**       | ❌                | ✅ (gofmt, golangci-lint, go vet)                                          |
+| **Pre-commit**       | ❌               | ✅ (gofmt, golangci-lint, go vet)                                         |
 | **Docs**             | Markdown         | Hugo + Hextra (structured, searchable)                                    |
 | **Roadmap**          | 3 fases          | 5 fases (Foundation → Stabilization → Features → Performance → Ecosystem) |
 | **DB**               | SQLite           | PostgreSQL (default) + SQLite (fallback)                                  |
@@ -1593,8 +1599,7 @@ Site público + documentação completa:
 - Contributing guide
 - Blog (future)
 
-**Tech:** Hugo + Hextra theme (multilingual)
----
+## **Tech:** Hugo + Hextra theme (multilingual)
 
 ## Matriz de Dependências
 

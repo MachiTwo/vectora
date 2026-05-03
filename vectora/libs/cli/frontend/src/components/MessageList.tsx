@@ -1,10 +1,7 @@
 import type { FC, RefObject } from "react";
 import { Streamdown } from "streamdown";
 import { APP_NAME, APP_SUBTITLE, PROMPTS } from "../constants";
-import {
-  getErrorMessage,
-  getImageBlocks,
-} from "../lib/stream";
+import { getErrorMessage, getImageBlocks } from "../lib/stream";
 import type { AgentStream } from "../types";
 import { AIMessage } from "@langchain/core/messages";
 import type { AIMessage as SdkAIMessage } from "@langchain/langgraph-sdk";
@@ -43,7 +40,13 @@ const MessageList: FC<MessageListProps> = ({
       <div className="mx-auto max-w-4xl space-y-3">
         {messages.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <svg className="anim-stagger-1 mb-4 h-12 w-12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5">
+            <svg
+              className="anim-stagger-1 mb-4 h-12 w-12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth="1.5"
+            >
               <path d="M12 2L2 12l10 10 10-10L12 2z" />
               <path d="M12 8L8 12l4 4 4-4-4-4z" />
             </svg>
@@ -75,7 +78,10 @@ const MessageList: FC<MessageListProps> = ({
 
           if (message.getType() === "human") {
             return (
-              <div key={message.id ?? index} className="anim-msg flex justify-end">
+              <div
+                key={message.id ?? index}
+                className="anim-msg flex justify-end"
+              >
                 <div className="max-w-[90%] rounded-2xl rounded-br-sm bg-[var(--primary)] px-4 py-2.5 text-sm leading-relaxed text-[var(--primary-foreground)]">
                   {content}
                 </div>
@@ -86,11 +92,15 @@ const MessageList: FC<MessageListProps> = ({
           if (AIMessage.isInstance(message)) {
             // SDK's getToolCalls is parameterized over its own AIMessage<ToolCall>;
             // structurally identical to core's AIMessage but TS sees them as distinct.
-            const toolCalls = stream.getToolCalls(message as unknown as SdkAIMessage);
+            const toolCalls = stream.getToolCalls(
+              message as unknown as SdkAIMessage,
+            );
             const messageSubagents = message.id
               ? stream.getSubagentsByMessage(message.id)
               : [];
-            const subagentIds = new Set(messageSubagents.map((subagent) => subagent.id));
+            const subagentIds = new Set(
+              messageSubagents.map((subagent) => subagent.id),
+            );
             const nonSubagentToolCalls = toolCalls.filter(
               (toolCall) => !subagentIds.has(toolCall.id),
             );
@@ -99,12 +109,19 @@ const MessageList: FC<MessageListProps> = ({
             const isStreaming = isLastMessage && isLoading;
 
             return (
-              <div key={message.id ?? index} className="anim-msg flex flex-col items-start gap-2">
+              <div
+                key={message.id ?? index}
+                className="anim-msg flex flex-col items-start gap-2"
+              >
                 {content ? (
                   <div className="ai-bubble max-w-[90%] rounded-2xl rounded-bl-sm border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm leading-relaxed shadow-sm">
                     <div className="markdown-body">
                       <Streamdown
-                        animated={{ animation: "fadeIn", sep: "word", duration: 300 }}
+                        animated={{
+                          animation: "fadeIn",
+                          sep: "word",
+                          duration: 300,
+                        }}
                         isAnimating={isStreaming}
                         parseIncompleteMarkdown
                       >
@@ -116,10 +133,16 @@ const MessageList: FC<MessageListProps> = ({
                   <div className="rounded-2xl rounded-bl-sm border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--muted-foreground)] shadow-sm">
                     <span className="inline-flex items-center gap-1">
                       <span className="animate-pulse">●</span>
-                      <span className="animate-pulse" style={{ animationDelay: "150ms" }}>
+                      <span
+                        className="animate-pulse"
+                        style={{ animationDelay: "150ms" }}
+                      >
                         ●
                       </span>
-                      <span className="animate-pulse" style={{ animationDelay: "300ms" }}>
+                      <span
+                        className="animate-pulse"
+                        style={{ animationDelay: "300ms" }}
+                      >
                         ●
                       </span>
                     </span>

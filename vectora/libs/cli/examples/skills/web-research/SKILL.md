@@ -12,9 +12,11 @@ description: Searches multiple web sources, synthesizes findings, and produces c
 Before delegating to subagents, you MUST:
 
 1. **Create a research folder** - Organize all research files in a dedicated folder relative to the current working directory:
+
    ```
    mkdir research_[topic_name]
    ```
+
    This keeps files organized and prevents clutter in the working directory.
 
 2. **Analyze the research question** - Break it down into distinct, non-overlapping subtopics
@@ -26,6 +28,7 @@ Before delegating to subagents, you MUST:
    - How results will be synthesized
 
 **Planning Guidelines:**
+
 - **Simple fact-finding**: 1-2 subtopics
 - **Comparative analysis**: 1 subtopic per comparison element (max 3)
 - **Complex investigations**: 3-5 subtopics
@@ -35,6 +38,7 @@ Before delegating to subagents, you MUST:
 For each subtopic in your plan:
 
 1. **Use the `task` tool** to spawn a research subagent with:
+
    - Clear, specific research question (no acronyms)
    - Instructions to write findings to a file: `research_[topic_name]/findings_[subtopic].md`
    - Budget: 3-5 web searches maximum
@@ -42,6 +46,7 @@ For each subtopic in your plan:
 2. **Run up to 3 subagents in parallel** for efficient research
 
 **Subagent Instructions Template:**
+
 ```
 Research [SPECIFIC TOPIC]. Use the web_search tool to gather information.
 After completing your research, use write_file to save your findings to research_[topic_name]/findings_[subtopic].md.
@@ -54,11 +59,13 @@ Use 3-5 web searches maximum.
 After all subagents complete:
 
 1. **Review the findings files** that were saved locally:
+
    - First run `list_files research_[topic_name]` to see what files were created
    - Then use `read_file` with the **file paths** (e.g., `research_[topic_name]/findings_*.md`)
    - **Important**: Use `read_file` for LOCAL files only, not URLs
 
 2. **Synthesize the information** - Create a comprehensive response that:
+
    - Directly answers the original question
    - Integrates insights from all subtopics
    - Cites specific sources with URLs (from the findings files)

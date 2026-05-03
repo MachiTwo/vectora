@@ -6,11 +6,11 @@ This example also demonstrates **custom auth**: adding `[auth] provider = "supab
 
 ## Prerequisites
 
-| Variable | Description |
-|----------|-------------|
-| `OPENAI_API_KEY` | GPT-4.1 model access |
-| `LANGSMITH_API_KEY` | Required for deploy |
-| `SUPABASE_URL` | Your Supabase project URL (for auth) |
+| Variable            | Description                              |
+| ------------------- | ---------------------------------------- |
+| `OPENAI_API_KEY`    | GPT-4.1 model access                     |
+| `LANGSMITH_API_KEY` | Required for deploy                      |
+| `SUPABASE_URL`      | Your Supabase project URL (for auth)     |
 | `SUPABASE_ANON_KEY` | Your Supabase anon/public key (for auth) |
 
 Copy `.env.example` to `.env` and fill in your keys. The Supabase keys are only required if you keep the `[auth]` section in `deepagents.toml`. Remove it to deploy without authentication.

@@ -5,6 +5,7 @@
 A content writing agent for writing blog posts, LinkedIn posts, and tweets with cover images included.
 
 **This example demonstrates how to define an agent through three filesystem primitives:**
+
 - **Memory** (`AGENTS.md`) – persistent context like brand voice and style guidelines
 - **Skills** (`skills/*/SKILL.md`) – workflows for specific tasks, loaded on demand
 - **Subagents** (`subagents.yaml`) – specialized agents for delegated tasks like research
@@ -25,6 +26,7 @@ uv run python content_writer.py "Write a blog post about prompt engineering"
 ```
 
 **More examples:**
+
 ```bash
 uv run python content_writer.py "Create a LinkedIn post about AI agents"
 uv run python content_writer.py "Write a Twitter thread about the future of coding"
@@ -46,13 +48,14 @@ content-builder-agent/
 └── content_writer.py            # Wires it together (includes tools)
 ```
 
-| File | Purpose | When Loaded |
-|------|---------|-------------|
-| `AGENTS.md` | Brand voice, tone, writing standards | Always (system prompt) |
-| `subagents.yaml` | Research and other delegated tasks | Always (defines `task` tool) |
-| `skills/*/SKILL.md` | Content-specific workflows | On demand |
+| File                | Purpose                              | When Loaded                  |
+| ------------------- | ------------------------------------ | ---------------------------- |
+| `AGENTS.md`         | Brand voice, tone, writing standards | Always (system prompt)       |
+| `subagents.yaml`    | Research and other delegated tasks   | Always (defines `task` tool) |
+| `skills/*/SKILL.md` | Content-specific workflows           | On demand                    |
 
 **What's in the skills?** Each skill teaches the agent a specific workflow:
+
 - **Blog posts:** Structure (hook → context → main content → CTA), SEO best practices, research-first approach
 - **Social media:** Platform-specific formats (LinkedIn character limits, Twitter thread structure), hashtag usage
 - **Image generation:** Detailed prompt engineering guides with examples for different content types (technical posts, announcements, thought leadership)
@@ -86,6 +89,7 @@ subagents=[
 ```
 
 **Flow:**
+
 1. Agent receives task → loads relevant skill (blog-post or social-media)
 2. Delegates research to `researcher` subagent → saves to `research/`
 3. Writes content following skill workflow → saves to `blogs/` or `linkedin/`
@@ -113,16 +117,17 @@ research/
 **Change the voice:** Edit `AGENTS.md` to modify brand tone and style.
 
 **Add a content type:** Create `skills/<name>/SKILL.md` with YAML frontmatter:
+
 ```yaml
 ---
 name: newsletter
 description: Use this skill when writing email newsletters
 ---
 # Newsletter Skill
-...
 ```
 
 **Add a subagent:** Add to `subagents.yaml`:
+
 ```yaml
 editor:
   description: Review and improve drafted content

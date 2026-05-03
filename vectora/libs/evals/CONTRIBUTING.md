@@ -50,38 +50,38 @@ scorer = (
 
 ### Key modules
 
-| File | Purpose |
-|---|---|
-| `tests/evals/utils.py` | Core framework: `AgentTrajectory`, assertion classes, `TrajectoryScorer`, `run_agent` entry point |
-| `tests/evals/llm_judge.py` | LLM-as-judge `SuccessAssertion` — wraps [openevals](https://github.com/langchain-ai/openevals) to grade agent answers against human-readable criteria |
-| `tests/evals/conftest.py` | pytest fixtures: `--model` CLI option, `model` / `model_name` fixtures, LangSmith metadata |
-| `tests/evals/external_benchmarks.py` | Runner logic for curated external benchmarks (FRAMES, Nexus, BFCL v3) with state-comparison scoring |
-| `tests/evals/memory_agent_bench/` | MemoryAgentBench (ICLR 2026) runner: configs, data loading, and evaluation utils |
-| `tests/evals/pytest_reporter.py` | Custom pytest plugin: collects efficiency data and prints/writes a summary report |
-| `tests/evals/fixtures/` | Static test data |
-| `tests/evals/data/benchmark_samples/` | Curated case data for external benchmarks |
-| `tests/evals/data/bfcl_apis/` | Stateful Python API implementations for BFCL v3 tool-calling evals |
-| `tests/evals/tau2_airline/` | tau2-bench airline domain: task data, database state, policy, domain models, evaluation, and multi-turn runner (derived from [sierra-research/tau-bench](https://github.com/sierra-research/tau-bench), MIT License) |
+| File                                  | Purpose                                                                                                                                                                                                              |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/evals/utils.py`                | Core framework: `AgentTrajectory`, assertion classes, `TrajectoryScorer`, `run_agent` entry point                                                                                                                    |
+| `tests/evals/llm_judge.py`            | LLM-as-judge `SuccessAssertion` — wraps [openevals](https://github.com/langchain-ai/openevals) to grade agent answers against human-readable criteria                                                                |
+| `tests/evals/conftest.py`             | pytest fixtures: `--model` CLI option, `model` / `model_name` fixtures, LangSmith metadata                                                                                                                           |
+| `tests/evals/external_benchmarks.py`  | Runner logic for curated external benchmarks (FRAMES, Nexus, BFCL v3) with state-comparison scoring                                                                                                                  |
+| `tests/evals/memory_agent_bench/`     | MemoryAgentBench (ICLR 2026) runner: configs, data loading, and evaluation utils                                                                                                                                     |
+| `tests/evals/pytest_reporter.py`      | Custom pytest plugin: collects efficiency data and prints/writes a summary report                                                                                                                                    |
+| `tests/evals/fixtures/`               | Static test data                                                                                                                                                                                                     |
+| `tests/evals/data/benchmark_samples/` | Curated case data for external benchmarks                                                                                                                                                                            |
+| `tests/evals/data/bfcl_apis/`         | Stateful Python API implementations for BFCL v3 tool-calling evals                                                                                                                                                   |
+| `tests/evals/tau2_airline/`           | tau2-bench airline domain: task data, database state, policy, domain models, evaluation, and multi-turn runner (derived from [sierra-research/tau-bench](https://github.com/sierra-research/tau-bench), MIT License) |
 
 ### Test suites
 
-| File | Category | What it evaluates |
-|---|---|---|
-| `test_file_operations.py` | `file_operations`, `retrieval` | File tool usage (read/write/edit/ls), parallel reads & writes, grep/glob search, seeded file state |
-| `test_tool_selection.py` | `tool_use` | Picking the right tool from intent (direct, indirect, multi-step) with independent mock tools |
-| `test_tool_usage_relational.py` | `tool_use` | Multi-step tool chaining with dependent data lookups (user -> location -> weather) |
-| `test_todos.py` | `tool_use` | Todo list tool usage for task planning |
-| `test_external_benchmarks.py` | `retrieval`, `tool_use` | FRAMES (multi-hop retrieval), Nexus (nested function composition), BFCL v3 (multi-turn stateful tool calling) |
-| `test_memory.py` | `memory` | Memory recall and behavior guidance from `AGENTS.md` files, preference persistence, composite backends |
-| `test_memory_multiturn.py` | `memory` | Multi-turn memory: implicit preference extraction, explicit remember instructions, transient info filtering |
-| `memory_agent_bench/test_memory_agent_bench.py` | `memory` | MemoryAgentBench (ICLR 2026): long-context memory recall and QA over chunked context |
-| `test_followup_quality.py` | `conversation` | Followup question relevance for underspecified requests (LLM judge) |
-| `tau2_airline/test_tau2_airline.py` | `conversation` | [tau2-bench](https://github.com/sierra-research/tau-bench) airline tasks: multi-turn agent-user conversations scored on DB state accuracy and communicate info |
-| `test_summarization.py` | `summarization` | Summarization middleware triggers, post-summarization task continuation, history offload to filesystem |
-| `test_hitl.py` | `unit_test` | Human-in-the-loop via `interrupt_on` approvals, subagent HITL, custom interrupt configs |
-| `test_subagents.py` | `unit_test` | Subagent delegation behavior |
-| `test_system_prompt.py` | `unit_test` | System prompt adherence |
-| `test_skills.py` | `unit_test` | Skill discovery, reading, and application from `SKILL.md` files |
+| File                                            | Category                       | What it evaluates                                                                                                                                              |
+| ----------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test_file_operations.py`                       | `file_operations`, `retrieval` | File tool usage (read/write/edit/ls), parallel reads & writes, grep/glob search, seeded file state                                                             |
+| `test_tool_selection.py`                        | `tool_use`                     | Picking the right tool from intent (direct, indirect, multi-step) with independent mock tools                                                                  |
+| `test_tool_usage_relational.py`                 | `tool_use`                     | Multi-step tool chaining with dependent data lookups (user -> location -> weather)                                                                             |
+| `test_todos.py`                                 | `tool_use`                     | Todo list tool usage for task planning                                                                                                                         |
+| `test_external_benchmarks.py`                   | `retrieval`, `tool_use`        | FRAMES (multi-hop retrieval), Nexus (nested function composition), BFCL v3 (multi-turn stateful tool calling)                                                  |
+| `test_memory.py`                                | `memory`                       | Memory recall and behavior guidance from `AGENTS.md` files, preference persistence, composite backends                                                         |
+| `test_memory_multiturn.py`                      | `memory`                       | Multi-turn memory: implicit preference extraction, explicit remember instructions, transient info filtering                                                    |
+| `memory_agent_bench/test_memory_agent_bench.py` | `memory`                       | MemoryAgentBench (ICLR 2026): long-context memory recall and QA over chunked context                                                                           |
+| `test_followup_quality.py`                      | `conversation`                 | Followup question relevance for underspecified requests (LLM judge)                                                                                            |
+| `tau2_airline/test_tau2_airline.py`             | `conversation`                 | [tau2-bench](https://github.com/sierra-research/tau-bench) airline tasks: multi-turn agent-user conversations scored on DB state accuracy and communicate info |
+| `test_summarization.py`                         | `summarization`                | Summarization middleware triggers, post-summarization task continuation, history offload to filesystem                                                         |
+| `test_hitl.py`                                  | `unit_test`                    | Human-in-the-loop via `interrupt_on` approvals, subagent HITL, custom interrupt configs                                                                        |
+| `test_subagents.py`                             | `unit_test`                    | Subagent delegation behavior                                                                                                                                   |
+| `test_system_prompt.py`                         | `unit_test`                    | System prompt adherence                                                                                                                                        |
+| `test_skills.py`                                | `unit_test`                    | Skill discovery, reading, and application from `SKILL.md` files                                                                                                |
 
 ## Writing a new eval
 
@@ -335,13 +335,13 @@ LangSmith captures every LLM call, tool invocation, and performance metric. Comb
 
 #### Common failure patterns
 
-| Pattern | Symptom | Potential Fix |
-|---|---|---|
-| **Poor Planning** | Agent jumps into coding without reading requirements | Add upfront planning requirement to prompt |
-| **Incorrect Tool Usage** | Uses `bash cat` instead of `read_file` | Improve tool descriptions with examples |
-| **No Incremental Testing** | Writes 200 lines, then tests once | Prompt to test after each logical unit |
-| **Hallucinated Paths** | Reads files before checking existence | Add "always `ls` before read" rule |
-| **Wrong Model** | Model fails on complex reasoning | Use more capable model for hard tasks |
+| Pattern                    | Symptom                                              | Potential Fix                              |
+| -------------------------- | ---------------------------------------------------- | ------------------------------------------ |
+| **Poor Planning**          | Agent jumps into coding without reading requirements | Add upfront planning requirement to prompt |
+| **Incorrect Tool Usage**   | Uses `bash cat` instead of `read_file`               | Improve tool descriptions with examples    |
+| **No Incremental Testing** | Writes 200 lines, then tests once                    | Prompt to test after each logical unit     |
+| **Hallucinated Paths**     | Reads files before checking existence                | Add "always `ls` before read" rule         |
+| **Wrong Model**            | Model fails on complex reasoning                     | Use more capable model for hard tasks      |
 
 #### Agent-assisted analysis
 

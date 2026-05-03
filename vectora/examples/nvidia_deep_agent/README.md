@@ -101,7 +101,7 @@ The agent will delegate to the data-processor-agent, which reads the cuDF skill,
 Resume from human in the loop interrupts in Studio by pasting:
 
 ```json
-{"decisions": [{"type": "approve"}]}
+{ "decisions": [{ "type": "approve" }] }
 ```
 
 ## Example Queries

@@ -14,32 +14,34 @@ Thank you for contributing to Deep Agents! Follow these steps to have your pull 
 
 1. PR title: Should follow the format: TYPE(SCOPE): DESCRIPTION
 
-  - Examples:
-    - fix(sdk): resolve flag parsing error
-    - feat(cli): add multi-tenant support
-    - test(acp): update API usage tests
-  - Allowed TYPE and SCOPE values: https://github.com/langchain-ai/deepagents/blob/main/.github/workflows/pr_lint.yml
+- Examples:
+  - fix(sdk): resolve flag parsing error
+  - feat(cli): add multi-tenant support
+  - test(acp): update API usage tests
+- Allowed TYPE and SCOPE values: https://github.com/langchain-ai/deepagents/blob/main/.github/workflows/pr_lint.yml
 
 2. PR description:
 
-  - Write 1-2 sentences summarizing the change.
-  - If this PR addresses a specific issue, please include "Fixes #ISSUE_NUMBER" in the description to automatically close the issue when the PR is merged.
-  - If there are any breaking changes, please clearly describe them.
-  - If this PR depends on another PR being merged first, please include "Depends on #PR_NUMBER" in the description.
+- Write 1-2 sentences summarizing the change.
+- If this PR addresses a specific issue, please include "Fixes #ISSUE_NUMBER" in the description to automatically close the issue when the PR is merged.
+- If there are any breaking changes, please clearly describe them.
+- If this PR depends on another PR being merged first, please include "Depends on #PR_NUMBER" in the description.
 
 3. Run `make format`, `make lint` and `make test` from the root of the package(s) you've modified.
 
-  - We will not consider a PR unless these three are passing in CI.
+- We will not consider a PR unless these three are passing in CI.
 
 4. How did you verify your code works?
 
 Additional guidelines:
 
-  - We ask that if you use generative AI for your contribution, you include a disclaimer.
-  - PRs should not touch more than one package unless absolutely necessary.
-  - Do not update the `uv.lock` files or add dependencies to `pyproject.toml` files (even optional ones) unless you have explicit permission to do so by a maintainer.
+- We ask that if you use generative AI for your contribution, you include a disclaimer.
+- PRs should not touch more than one package unless absolutely necessary.
+- Do not update the `uv.lock` files or add dependencies to `pyproject.toml` files (even optional ones) unless you have explicit permission to do so by a maintainer.
 
 ## Social handles (optional)
+
 <!-- If you'd like a shoutout on release, add your socials below -->
+
 Twitter: @
 LinkedIn: https://linkedin.com/in/

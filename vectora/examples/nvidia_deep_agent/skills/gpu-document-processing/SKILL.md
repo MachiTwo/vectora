@@ -10,6 +10,7 @@ Process large documents and document collections using GPU-accelerated tools. Th
 ## When to Use This Skill
 
 Use this skill when:
+
 - Processing large PDF files (50+ pages)
 - Analyzing collections of documents (10+ files)
 - Extracting structured data from unstructured documents
@@ -26,6 +27,7 @@ This skill follows the **sandbox-as-tool pattern** for GPU execution:
 3. **Results returned to agent** - structured output for further analysis
 
 This separation ensures:
+
 - API keys stay outside the sandbox (security)
 - Agent state persists independently of processing jobs
 - Processing can be parallelized across documents
@@ -34,25 +36,33 @@ This separation ensures:
 ## Capabilities
 
 ### PDF Text Extraction
+
 Extract text content from PDF documents with layout preservation:
+
 - Headers, paragraphs, lists, and tables detected separately
 - Page numbers and section boundaries preserved
 - Multi-column layout handling
 
 ### Tabular Data Extraction
+
 Extract tables from documents into structured formats:
+
 - PDF tables to CSV/DataFrames using GPU-accelerated parsing
 - Automatic column type detection
 - Handles merged cells and multi-row headers
 
 ### Document Chunking
+
 Split large documents into meaningful chunks for analysis:
+
 - Semantic chunking (by topic/section boundaries)
 - Fixed-size chunking with overlap for embedding
 - Configurable chunk sizes (default: 512 tokens)
 
 ### Embedding Generation
+
 Generate vector embeddings for document chunks:
+
 - Uses NVIDIA NeMo Retriever NIM for GPU-accelerated embedding
 - Supports batch processing for large document sets
 - Compatible with standard vector stores (Milvus, ChromaDB)
@@ -68,6 +78,7 @@ Generate vector embeddings for document chunks:
 ## Processing Large Document Collections
 
 For multiple documents:
+
 1. Process documents in parallel batches (3-5 concurrent)
 2. Extract key metadata first (title, date, author, page count)
 3. Generate per-document summaries
@@ -77,6 +88,7 @@ For multiple documents:
 ## Output Format
 
 When reporting document processing results:
+
 - Include document metadata (filename, pages, size)
 - Structure extracted content by section/chapter
 - Format tables as markdown tables
@@ -86,6 +98,7 @@ When reporting document processing results:
 ## Integration with NVIDIA NIM
 
 For production deployments, GPU document processing can leverage:
+
 - **NVIDIA NeMo Retriever**: GPU-accelerated embedding and retrieval
 - **NVIDIA RAPIDS cuDF**: Tabular data processing from extracted tables
 - **NVIDIA Triton**: Scalable inference for document classification models

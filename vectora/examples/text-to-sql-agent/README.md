@@ -1,6 +1,6 @@
 # Text-to-SQL Deep Agent
 
-A natural language to SQL query agent powered by LangChain's **Deep Agents** framework.  This is an advanced version of a text-to-SQL agent with planning, filesystem, and subagent capabilities.
+A natural language to SQL query agent powered by LangChain's **Deep Agents** framework. This is an advanced version of a text-to-SQL agent with planning, filesystem, and subagent capabilities.
 
 ## What is Deep Agents?
 

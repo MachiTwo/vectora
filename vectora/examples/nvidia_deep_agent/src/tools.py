@@ -82,4 +82,3 @@ def tavily_search(
 {chr(10).join(result_texts)}"""
 
     return response
-

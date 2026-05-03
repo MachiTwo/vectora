@@ -1,0 +1,102 @@
+[
+  {
+    "title": "_index.pt",
+    "url": "/pt/",
+    "content": "{{< lang-toggle >}}\n\nAgentes de IA tradicionais operam em **contextos fragmentados**, gerando alucinações, desperdiçando tokens e expondo segredos acidentalmente. O **Vectora** resolve isso não sendo \"apenas mais um chat\", mas sim um **[Sub-Agente de Tier 2](/concepts/sub-agents/)** projetado exclusivamente para engenharia de software: ele intercepta chamadas via [Protocolo MCP](/protocols/mcp/), valida a segurança em tempo real com o [Guardian](/security/guardian/), orquestra a recuperação em m"
+  },
+  {
+    "title": "agentic-framework.pt",
+    "url": "/core/agentic-framework.pt/",
+    "content": "{{< lang-toggle >}}\n\n> [!IMPORTANT] > **Redefinição Crítica**: O Agentic Framework **não é um módulo isolado**, nem uma pasta específica no código. Ele é o **sistema nervoso distribuído** do Vectora — a inteligência que permeia cada camada, observando, validando, corrigindo e orquestrando o comportamento do modelo de IA em tempo real.\n\nDiferente de sistemas RAG tradicionais que apenas enviam dados para uma LLM, o Agentic Framework torna o Vectora auto-consciente e auto-corretivo, garantindo que "
+  },
+  {
+    "title": "context-engine.pt",
+    "url": "/core/context-engine.pt/",
+    "content": "{{< lang-toggle >}}\n\nO Context Engine é o coração da orquestração do Vectora. Ele decide **o quê, como e quando** buscar contexto em seu codebase, evitando ruído e overfetch.\n\n> [!IMPORTANT] Context Engine não é apenas busca. É um pipeline inteligente: **Embed → Search → Rerank → Compose → Validate**.\n\n## O Problema\n\nAgents genéricos retornam 50 arquivos irrelevantes para uma query simples. O Context Engine filtra por relevância, reduzindo para 5-10 chunks altamente úteis.\n\n## Estratégias de Bus"
+  },
+  {
+    "title": "_index.pt",
+    "url": "/core/pt/",
+    "content": "{{< lang-toggle >}}\n\nO Core é onde o Vectora \"pensa\" e age. Ele contém os componentes que tornam o Vectora um agente inteligente e auto-corrigível, indo além de um simples sistema de busca de código passivo.\n\nAo integrar raciocínio avançado com uma profunda consciência de contexto, o Core garante que cada interação seja fundamentada na realidade da sua base de código.\n\n## Componentes Principais\n\nA inteligência do Vectora é construída sobre dois motores principais que trabalham em conjunto para f"
+  },
+  {
+    "title": "Saída",
+    "url": "/models/gemini.pt/",
+    "content": "{{< lang-toggle >}}\n\n## O Cérebro do Vectora: Gemini 3 Flash\n\nToda a inteligência criativa e lógica do Vectora converge para um único ponto: **Gemini 3 Flash** da Google. Ele atua como o **Agente de Programação e Interação** primário — a entidade que conversa com o desenvolvedor, interpreta intenções e escreve código em tempo real.\n\nDiferente de um simples LLM, o Gemini no Vectora opera como uma peça central de uma arquitetura altamente otimizada, utilizando o contexto refinado pelas IAs especia"
+  },
+  {
+    "title": "vectora-cognitive-runtime.pt",
+    "url": "/models/vectora-cognitive-runtime.pt/",
+    "content": "{{< lang-toggle >}}\n\nO **Vectora Decision Engine (Vectora Cognitive Runtime)** é a camada cognitiva especializada em decisão contextual do Vectora. Ele atua como um **Policy Orchestrator & Observer**, interceptando prompts, enriquecendo-os com contexto estruturado e observando as saídas dos modelos externos para validar qualidade, detectar alucinações e orquestrar o ciclo de vida do agente.\n\n> [!IMPORTANT]\n> O Vectora Cognitive Runtime é um **Policy Model** especializado. Ele não substitui uma L"
+  },
+  {
+    "title": "voyage.pt",
+    "url": "/models/voyage.pt/",
+    "content": "{{< lang-toggle >}}\n\nEnquanto o **Gemini 3 Flash** atua como o agente de programação e interação, a precisão cirúrgica da busca do Vectora depende das IAs especializadas do **Voyage AI**. Utilizamos o **Voyage 4** para embeddings e o **Voyage Rerank 2.5** para garantir que apenas o contexto mais relevante alcance o motor principal.\n\n## A Infraestrutura de Recuperação: Voyage 4 & Rerank 2.5\n\nVectora utiliza estas IAs especializadas para garantir que o contexto enviado ao Gemini seja o mais precis"
+  },
+  {
+    "title": "_index.pt",
+    "url": "/models/pt/",
+    "content": "{{< lang-toggle >}}\n\nVectora funciona com modelos de AI específicos e otimizados para programação, interação com o usuário, busca semântica e decisões táticas.\n\n## Vectora Decision Engine (Vectora Cognitive Runtime)\n\nA inteligência decisiva local do Vectora. Baseado no SmolLM com fine-tuning proprietário, o Vectora Cognitive Runtime roda via **ONNX Runtime** diretamente no desktop do usuário. Ele decide o roteamento tático das consultas com latência zero, recorrendo à nuvem apenas em integrações"
+  },
+  {
+    "title": "rag.pt",
+    "url": "/patterns/rag.pt/",
+    "content": "{{< lang-toggle >}}\n\nVocê já perguntou a um agente de IA sobre uma função no seu projeto e ele respondeu algo que parecia certo, mas que ignorava completamente como aquela função era usada no resto do sistema? Isso é o sintoma clássico do **RAG fragmentado**.\n\nO Vectora resolve esse problema através do **Connected RAG**, uma abordagem que não apenas busca trechos de texto, mas reconstrói as relações lógicas e estruturais do seu código antes de enviá-las ao modelo de linguagem.\n\n## O que é RAG?\n\n"
+  },
+  {
+    "title": "sub-agents.pt",
+    "url": "/patterns/sub-agents.pt/",
+    "content": "{{< lang-toggle >}}\n\n> [!NOTE]\n> O MCP é um protocolo excelente para expor ferramentas, mas expor ferramentas não é a mesma coisa que entregar contexto governado. O Vectora é um Sub-Agent porque RAG de qualidade exige interceptação, validação e orquestração que ferramentas passivas não podem fornecer.\n\n## A Diferença Fundamental\n\nVocê provavelmente já viu o Model Context Protocol (MCP) funcionando: o Claude lê arquivos, busca na web e executa comandos no terminal. Funciona bem para casos simples"
+  },
+  {
+    "title": "trace.pt",
+    "url": "/patterns/trace.pt/",
+    "content": "{{< lang-toggle >}}\n\nO Trace é o registro sequencial e estruturado de todos os eventos que ocorrem durante a execução de um agente de inteligência artificial. Ele serve como a fonte de verdade para depuração, auditoria e otimização de fluxos de trabalho autônomos.\n\nEnquanto um modelo de linguagem (LLM) atua como o cérebro da operação, o Trace funciona como o diário de bordo da missão. Ele captura não apenas as entradas e saídas, mas todo o processo de raciocínio, chamadas de ferramentas e mudanç"
+  },
+  {
+    "title": "_index.pt",
+    "url": "/patterns/pt/",
+    "content": "{{< lang-toggle >}}\n\nOs padrões operacionais do Vectora definem como diferentes componentes do ecossistema se combinam para resolver problemas complexos de engenharia e inteligência artificial.\n\n## Paradigmas Arquiteturais Orquestrados pelo Vectora Cognitive Runtime\n\nO **[Vectora Cognitive Runtime (Decision Engine)](/models/vectora-decision-engine/)** é o motor que orquestra a execução desses padrões. Ele decide, em tempo real, quando disparar um sub-agente, como validar o RAG Conectado e quais "
+  },
+  {
+    "title": "acp.pt",
+    "url": "/protocols/acp.pt/",
+    "content": "{{< lang-toggle >}}\n\n**ACP** (Agent Communication Protocol) é um protocolo de comunicação entre Vectora e agents customizados ou outros sistemas. Está em **Beta** para early adopters.\n\n## O que é ACP?\n\nACP permite que:\n\n- **Vectora seja sub-agent** de um sistema maior (ex: IA orquestradora multi-agent)\n- **Múltiplos agents trabalhem juntos** compartilhando contexto\n- **Arquiteturas distribuídas** com Vectora em múltiplas instâncias\n\nDiferente de MCP (IDE ↔ Vectora), ACP é para **agent ↔ agent**."
+  },
+  {
+    "title": "Vectora inicia com:",
+    "url": "/protocols/mcp.pt/",
+    "content": "{{< lang-toggle >}}\n\n**Vectora funciona exclusivamente via MCP (Model Context Protocol).** Este documento descreve como Vectora implementa MCP, sua arquitetura, e como IDEs (Claude Code, Cursor, Zed) se integram.\n\n## O que é MCP?\n\n**MCP** é um protocolo aberto que permite que LLMs (Large Language Models) chamar \"ferramentas\" de um computador. Diferente de APIs REST genéricas, MCP é otimizado para:\n\n- **Tool Discovery**: IDE descobre quais ferramentas estão disponíveis\n- **Structured I/O**: Schem"
+  },
+  {
+    "title": "_index.pt",
+    "url": "/protocols/pt/",
+    "content": "{{< lang-toggle >}}\n\n> [!IMPORTANT] > **MCP é APENAS para Vectora Desktop**. Se você estiver usando Vectora Cloud (SaaS/HTTP API), use REST API ou integração específica (ChatGPT, Gemini). Este documento descreve protocolos de **Desktop**: MCP (to IDEs) e ACP (to agents).\n\nO Vectora Desktop implementa dois protocolos de comunicação: MCP (Model Context Protocol) para integração com IDEs, e ACP (Agent Communication Protocol) para comunicação entre sub-agents. O Vectora Cloud usa HTTP API com OpenAP"
+  },
+  {
+    "title": "embeddings.pt",
+    "url": "/search/embeddings.pt/",
+    "content": "{{< lang-toggle >}}\n\nEmbeddings genéricas, treinadas em textos aleatórios da internet, frequentemente falham ao lidar com código-fonte. Elas não compreendem a diferença semântica entre uma assinatura de função e seu corpo, ou como a posição de um `null check` altera a lógica do programa.\n\nO **Voyage 4** é um modelo de embedding de última geração, especificamente otimizado para código estruturado e documentação técnica, permitindo que o Vectora entenda o significado real do seu software.\n\n## O Pr"
+  },
+  {
+    "title": "reranker-local.pt",
+    "url": "/search/reranker-local.pt/",
+    "content": "{{< lang-toggle >}}\n\nReranker Local oferece recuperação inteligente sem dependência de vector databases, combinando busca determinística com reranking semântico. Ideal para dados mutáveis, arquivos dinâmicos e cenários onde custo de embedding é proibitivo.\n\n## O Problema: Por Que Embeddings Custam Caro\n\nEmbeddings são essenciais para busca semântica, mas têm overhead significativo em dados mutáveis. Cada mudança de arquivo requer re-embedding, re-indexação, e sincronização com vector DB. Para do"
+  },
+  {
+    "title": "Ruim: um por um",
+    "url": "/search/reranker.pt/",
+    "content": "{{< lang-toggle >}}\n\n## O Problema com Busca Vetorial Pura\n\nImagine que você faz uma pergunta ao Vectora:\n\n> \"Onde tratamos a autenticação JWT?\"\n\nO [Voyage 4](./embeddings) (nosso modelo de embeddings) retorna os 50 documentos mais similares:\n\n```text\n1. src/auth/jwt.ts (95% similidade)\n2. src/middleware/auth.ts (94% similidade)\n3. tests/auth.test.ts (93% similidade)\n4. docs/auth.md (92% similidade)\n5. src/utils/token-utils.ts (91% similidade)\n... e mais 45 documentos\n```\n\n**Problema**: Todos os"
+  },
+  {
+    "title": "vector-search.pt",
+    "url": "/search/vector-search.pt/",
+    "content": "{{< lang-toggle >}}\n\n## O Que é Busca Vetorial?\n\nA **Busca Vetorial** (ou Vector Search) é a tecnologia que permite encontrar informações não por palavras-chave exatas (como no SQL `LIKE %termino%`), mas pelo **significado semântico**.\n\nImagine que você quer encontrar no seu código onde o sistema lida com \"cancelamento de assinatura\".\n\n- **Busca Tradicional**: Procura por `cancel`, `subscription`, `unsub`. Se o programador usou `deactivateAccount`, a busca tradicional falha.\n- **Busca Vetorial**"
+  },
+  {
+    "title": "_index.pt",
+    "url": "/search/pt/",
+    "content": "{{< lang-toggle >}}\n\nO Search é como o Vectora entende \"o que você está procurando\" e encontra o código mais relevante no repositório do usuário. Ele implementa um pipeline de 4 estágios: Embedding → Busca Vetorial → Reranking → Composição.\n\nAo processar consultas em linguagem natural em representações matemáticas, o Vectora consegue unir a intenção humana com a realidade do código-fonte.\n\n## Componentes Principais\n\nO motor de busca do Vectora é composto por camadas especializadas que filtram e "
+  }
+]

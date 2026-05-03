@@ -13,26 +13,17 @@
                   "type": "string"
                 },
                 "status": {
-                  "enum": [
-                    "pending",
-                    "in_progress",
-                    "completed"
-                  ],
+                  "enum": ["pending", "in_progress", "completed"],
                   "type": "string"
                 }
               },
-              "required": [
-                "content",
-                "status"
-              ],
+              "required": ["content", "status"],
               "type": "object"
             },
             "type": "array"
           }
         },
-        "required": [
-          "todos"
-        ],
+        "required": ["todos"],
         "type": "object"
       }
     },
@@ -49,9 +40,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "path"
-        ],
+        "required": ["path"],
         "type": "object"
       }
     },
@@ -78,9 +67,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "file_path"
-        ],
+        "required": ["file_path"],
         "type": "object"
       }
     },
@@ -101,10 +88,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "file_path",
-          "content"
-        ],
+        "required": ["file_path", "content"],
         "type": "object"
       }
     },
@@ -134,11 +118,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "file_path",
-          "old_string",
-          "new_string"
-        ],
+        "required": ["file_path", "old_string", "new_string"],
         "type": "object"
       }
     },
@@ -160,9 +140,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "pattern"
-        ],
+        "required": ["pattern"],
         "type": "object"
       }
     },
@@ -189,11 +167,7 @@
           "output_mode": {
             "default": "files_with_matches",
             "description": "Output format: 'files_with_matches' (file paths only, default), 'content' (matching lines with context), 'count' (match counts per file).",
-            "enum": [
-              "files_with_matches",
-              "content",
-              "count"
-            ],
+            "enum": ["files_with_matches", "content", "count"],
             "type": "string"
           },
           "path": {
@@ -213,9 +187,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "pattern"
-        ],
+        "required": ["pattern"],
         "type": "object"
       }
     },
@@ -236,10 +208,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "description",
-          "subagent_type"
-        ],
+        "required": ["description", "subagent_type"],
         "type": "object"
       }
     },

@@ -5,7 +5,11 @@ type TodoArg = { content?: string; status?: string; id?: string };
 
 function parseTodos(args: unknown): TodoArg[] {
   if (typeof args === "string") {
-    try { args = JSON.parse(args); } catch { return []; }
+    try {
+      args = JSON.parse(args);
+    } catch {
+      return [];
+    }
   }
   if (!args || typeof args !== "object") return [];
   const record = args as Record<string, unknown>;
@@ -28,19 +32,37 @@ const TodosCard: FC<ToolRendererProps> = ({ toolCall, expanded }) => {
         >
           {todo.status === "completed" ? (
             <span className="mt-0.5 text-emerald-600">
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                className="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </span>
           ) : todo.status === "in_progress" ? (
             <span className="mt-0.5 text-blue-600">
-              <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                className="h-3.5 w-3.5 animate-spin"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
               </svg>
             </span>
           ) : (
             <span className="mt-0.5 text-[var(--muted-foreground)]">
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                className="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <circle cx="12" cy="12" r="10" />
               </svg>
             </span>

@@ -81,7 +81,7 @@ The REPL is module-flavoured: top-level `let`/`const`/`function` persist across 
 const fib = (n) => (n < 2 ? n : fib(n - 1) + fib(n - 2));
 
 // call 2
-fib(10)  // 55
+fib(10); // 55
 ```
 
 ### Sandbox
@@ -99,7 +99,7 @@ Escape hatches, if you want them, go through explicit middleware:
 
 ```js
 console.log("hi", 2);
-1 + 1
+1 + 1;
 ```
 
 ```xml
@@ -139,13 +139,13 @@ Top-level `await` works on the async path — the promise settles before the cal
 
 Every eval renders into one wire format consumed by the model:
 
-| Outcome | Rendered as |
-| --- | --- |
-| Marshalable value | `<result>{json-ish}</result>` |
-| Function or unmarshalable | `<result kind="handle">[Function] arity=2</result>` |
-| JS-level throw | `<error type="TypeError">{message}\n{stack}</error>` |
-| Timeout / deadlock / OOM | `<error type="Timeout" \| "Deadlock" \| "OutOfMemory">...</error>` |
-| `console.*` output | separate `<stdout>...</stdout>` block |
+| Outcome                   | Rendered as                                                        |
+| ------------------------- | ------------------------------------------------------------------ |
+| Marshalable value         | `<result>{json-ish}</result>`                                      |
+| Function or unmarshalable | `<result kind="handle">[Function] arity=2</result>`                |
+| JS-level throw            | `<error type="TypeError">{message}\n{stack}</error>`               |
+| Timeout / deadlock / OOM  | `<error type="Timeout" \| "Deadlock" \| "OutOfMemory">...</error>` |
+| `console.*` output        | separate `<stdout>...</stdout>` block                              |
 
 Results and stdout are independently truncated to `max_result_chars` (default 4000) before being sent back to the model.
 
@@ -167,7 +167,7 @@ const results = await Promise.all([
   tools.searchWeb({ query: "quickjs" }),
 ]);
 
-await tools.summarize({ text: results.join("\n\n") })
+await tools.summarize({ text: results.join("\n\n") });
 ```
 
 ...in **one** `eval` call — three tool invocations, zero round-trips to the model between them.
@@ -184,7 +184,7 @@ The REPL's own tool is always excluded from PTC; `tools.eval("tools.eval(...)")`
 
 ### What the model sees
 
-When PTC is on, the system-prompt snippet grows an *API Reference — `tools` namespace* section listing every exposed tool as a TypeScript-ish signature derived from the tool's args schema:
+When PTC is on, the system-prompt snippet grows an _API Reference — `tools` namespace_ section listing every exposed tool as a TypeScript-ish signature derived from the tool's args schema:
 
 ```ts
 /** Search the web for the given query. */
@@ -211,7 +211,7 @@ If your agent uses `SkillsMiddleware` (from `deepagents`), any skill whose front
 
 ```js
 const helpers = await import("@/skills/my-helpers");
-helpers.greet("world")
+helpers.greet("world");
 ```
 
 Under the hood:
@@ -247,15 +247,15 @@ REPLMiddleware(
 
 ## Errors the model can see
 
-| Type | Cause |
-| --- | --- |
-| `SyntaxError`, `TypeError`, `ReferenceError`, ... | User-code error. Re-surfaces the JS error name verbatim. |
-| `Timeout` | Call exceeded `timeout=`. |
-| `OutOfMemory` | Runtime hit `memory_limit=`. |
-| `PTCCallBudgetExceeded` | Uncaught `tools.*` call-budget overflow in one eval (`max_ptc_calls=`). |
-| `Deadlock` | Top-level promise never resolved with no async host work in flight. |
-| `ConcurrentEval` | Shouldn't happen under locks; defensive mapping for QuickJS `ConcurrentEvalError`. |
-| `SkillNotAvailable` | Source referenced `@/skills/<name>` we couldn't resolve or install. |
+| Type                                              | Cause                                                                              |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `SyntaxError`, `TypeError`, `ReferenceError`, ... | User-code error. Re-surfaces the JS error name verbatim.                           |
+| `Timeout`                                         | Call exceeded `timeout=`.                                                          |
+| `OutOfMemory`                                     | Runtime hit `memory_limit=`.                                                       |
+| `PTCCallBudgetExceeded`                           | Uncaught `tools.*` call-budget overflow in one eval (`max_ptc_calls=`).            |
+| `Deadlock`                                        | Top-level promise never resolved with no async host work in flight.                |
+| `ConcurrentEval`                                  | Shouldn't happen under locks; defensive mapping for QuickJS `ConcurrentEvalError`. |
+| `SkillNotAvailable`                               | Source referenced `@/skills/<name>` we couldn't resolve or install.                |
 
 `asyncio.CancelledError` propagates out cleanly when JS declines to catch a `HostCancellationError` — so LangGraph cancellation semantics work end-to-end.
 

@@ -1,95 +1,67 @@
-# Vectora: Agent Complete Local-First para Engenharia de Software
+# Vectora: Hub de Conhecimento Local-First para Ecossistemas de Agentes
 
 ## O que é o Vectora
 
-Vectora é um **Agent Complete** local-first projetado especificamente para engenharia de software. Ele opera como um agente autônomo acessível via MCP (Model Context Protocol) e ACP (Agent Client Protocol), permitindo integração com IDEs (Claude Code, Cursor, JetBrains) e orquestração por sistemas multi-agent (Paperclip). 
+Vectora é um **Hub de Conhecimento e Agente Especialista** local-first, projetado para servir como a camada de inteligência e memória para desenvolvedores e outros agentes de IA. Ele opera como um aplicativo de binário único (Go) que combina busca vetorial de alta performance, gerenciamento de dados estruturados e uma camada de pré-processamento cognitivo (VCR).
 
-Vectora combine três capacidades principais:
-1. **Contexto Governado** - Recuperação de conhecimento vetorizado via LanceDB + Voyage
-2. **Decisão Tática** - Pré-processamento via VCR (XLM-RoBERTa-small + LoRA fine-tuning)
-3. **Execução Confiável** - Framework LangChain + LangGraph para orquestração de agentes
+O Vectora é o "cérebro local" que permite que ferramentas como Claude Code, Cursor, Gemini e sistemas multi-agentes baseados em Paperclip operem com contexto profundo, sem alucinações e com total privacidade de dados.
 
-Diferentemente de sub-agentes, Vectora funciona como um agente principal que coordena suas próprias decisões e pode ser acionado por outros agentes via protocolo padrão.
+Vectora combina três pilares fundamentais:
+
+1. **Contexto Governado** - Recuperação semântica ultraveloz via LanceDB + Voyage AI, com reranking local.
+2. **Pré-Pensamento (VCR)** - Camada cognitiva especializada (XLM-RoBERTa + LoRA) que analisa a intenção e enriquece o contexto antes da execução.
+3. **Memória Persistente** - Sistema de armazenamento multi-camada (PostgreSQL + Redis) para histórico de sessões, aprendizado contínuo e isolamento por agente.
 
 ## Objetivo
 
-O objetivo do Vectora é eliminar alucinações e vazamentos de dados em operações de engenharia de software, fornecendo uma infraestrutura de decisão fundamentada em contexto real e governada por políticas locais. Através de embeddings precisos (Voyage), pré-pensamento especializado (VCR) e orquestração ativa (LangChain + Deep Agents), o Vectora transforma LLMs genéricas em agentes capazes de operar em repositórios complexos com precisão e segurança.
+O objetivo do Vectora é descentralizar a inteligência artificial, fornecendo uma infraestrutura de decisão fundamentada em contexto real e governada por políticas locais. Queremos eliminar a dependência de RAGs genéricos na nuvem e o risco de vazamento de segredos comerciais, transformando LLMs em agentes especialistas capazes de operar em repositórios complexos com precisão cirúrgica e segurança absoluta.
 
 ---
 
 ## O Ecossistema Vectora
 
-### Backend (Python FastAPI)
+### Backend (Go)
 
-Camada principal executando em Python via FastAPI. Responsável por:
-- APIs REST autenticadas (JWT + RBAC com 5 roles e 15 permissões)
-- Autenticação multi-user (local + VPS)
-- Roteamento inteligente
-- Integração com LangChain/LangGraph para orquestração
-- Middleware stack (CORS, rate limiting, security headers)
-
-### Storage Layer
-
-Persistência em três camadas:
-- **PostgreSQL** - Dados estruturados (sessões, users, metadata)
-- **Redis** - Cache e sessões em tempo real
-- **LanceDB** - Vector storage com formato .lance
-
-### AI/Embeddings (Voyage)
-
-Camada de recuperação de contexto:
-- **Voyage** para geração de embeddings (prime embedding model)
-- **Voyage Reranking** (remote ou local) para refinamento de resultados
-- Integração com LanceDB para vector search
-- Suporte a reranker-local (Voyage aplicado a arquivos locais vs dados do banco)
+O núcleo do sistema, construído em Go para máxima performance e baixa latência. Responsável por:
+- Daemon de alta concorrência e binário único.
+- Servidor MCP (Model Context Protocol) nativo para integração com agentes.
+- Orquestração de pipelines RAG e integração com LLMs (Claude, OpenAI, Gemini).
+- Gerenciamento de bancos de dados embedded e roteamento de APIs.
 
 ### Vectora Cognitive Runtime (VCR)
 
-O pré-processador especializado do sistema:
-- Modelo **XLM-RoBERTa-small** como base
-- Fine-tuning via **LoRA** em traces reais
-- Execução local para validação de contexto
-- Aplicação de regras de governança antes da decisão principal
+O motor de decisão tática, operando em Python para aproveitar bibliotecas de ML de última geração:
+- Execução de modelos XLM-RoBERTa-small fine-tuned para análise de contexto.
+- Pre-thinking layer que otimiza queries e seleciona ferramentas antes do agente principal agir.
+- Interface via JSON-RPC/Subprocess para latência mínima de inferência (4-8ms).
 
-### LangChain Ecosystem
+### Storage & Memory Layer
 
-Framework de orquestração:
-- **LangChain** - Framework unificado para chains e tools
-- **LangGraph** - Stateful agents com decision loops
-- **LangSmith** - Observability e tracing em produção
-- **Deep Agents** - CLI + TUI para execução
+Persistência local-first em três dimensões:
+- **LanceDB**: Armazenamento vetorial nativo em formato .lance para busca semântica.
+- **PostgreSQL (Embedded)**: Gerenciamento de metadados, usuários, permissões (RBAC) e histórico.
+- **Redis (Embedded)**: Cache de alta velocidade, gerenciamento de sessões e filas de background jobs.
 
-### Integrations (@vectora-integrations Monorepo)
+### Integrations (@vectora-integrations)
 
-SDKs TypeScript independentes para conectar diferentes agentes:
-- **@vectora/sdk-claude-code** - VSCode extension via MCP
-- **@vectora/sdk-gemini-cli** - Google Gemini CLI adapter
-- **@vectora/sdk-paperclip** - Paperclip agent plugin
-- **@vectora/sdk-hermes** - Hermes agent adapter
-- **@vectora/shared** - Types, auth, HTTP client compartilhado
+Uma suíte de SDKs e adaptadores que tornam o Vectora universal:
+- **MCP Bridge**: Conecta o Vectora ao Claude Code e outros clientes MCP.
+- **Paperclip Plugin**: Integração nativa para orquestração em empresas de agentes.
+- **Shared SDK**: Tipagem e clientes HTTP/RPC compartilhados para desenvolvimento de novos adaptadores.
 
 ### VAL (Vectora Asset Library)
 
-Registry público de datasets vetorizados:
-- Repositório GitHub com datasets
-- Releases para distribuição via npm/pip
-- CLI commands: `vectora val download <dataset-name>`
-- Comunidade contribui datasets (docs, code samples, etc)
-- Indexação automática via GitHub Actions
+O registry comunitário e governado de conhecimento:
+- Distribuição de datasets vetorizados e prontos para uso (documentação, padrões de código).
+- CLI commands para download e sincronização instantânea de conhecimento especializado.
 
-### Multi-User & Agent Orchestration
+### Multi-Agent Orchestration
 
-Suporte para deployments escaláveis:
-- Autenticação JWT com token generation por user/agent
-- VPS deployment com múltiplos usuários
-- Integração com Paperclip para orquestração de múltiplos agents
-- Buckets públicos e privados por sessão
+Suporte nativo para hierarquias de agentes:
+- Isolamento de dados por bucket privado para cada agente (CEO, CTO, Backend, etc).
+- Buckets públicos e organizacionais para compartilhamento controlado de conhecimento.
+- Autenticação robusta baseada em chaves de API derivadas para automação segura.
 
-### Documentation
+## Estratégia de Documentação
 
-Base de conhecimento em português (PT-BR):
-- Site oficial em Hugo/Markdown
-- Guias técnicos completos (65+ docs)
-- Arquitetura, patterns, deployment, development
-- Asset library guides
-- Integrations e SDKs documentation
+O Vectora mantém uma base de conhecimento rigorosa e multi-idioma (PT-BR canônico) em `vectora-website/`, utilizando Hugo e Hextra para fornecer guias técnicos, padrões de arquitetura e documentação de API para a comunidade global.

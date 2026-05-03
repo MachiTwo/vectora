@@ -12,7 +12,8 @@ function parseThought(args: unknown): string {
   }
   if (args && typeof args === "object") {
     const record = args as Record<string, unknown>;
-    const thought = record.thought ?? record.content ?? record.reflection ?? record.text;
+    const thought =
+      record.thought ?? record.content ?? record.reflection ?? record.text;
     if (typeof thought === "string") return thought;
     const firstString = Object.values(record).find(
       (v): v is string => typeof v === "string" && v.length > 0,

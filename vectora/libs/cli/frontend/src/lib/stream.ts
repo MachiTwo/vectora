@@ -1,4 +1,8 @@
-import { useStream, type UseDeepAgentStreamOptions, type UseStream } from "@langchain/react";
+import {
+  useStream,
+  type UseDeepAgentStreamOptions,
+  type UseStream,
+} from "@langchain/react";
 import type { DefaultToolCall } from "@langchain/react";
 import type { AgentState } from "../types";
 
@@ -6,9 +10,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function isImageContentBlock(
-  block: unknown,
-): block is {
+function isImageContentBlock(block: unknown): block is {
   type: "image" | "image_url";
   image_url?: string | { url: string };
   source?: { data?: string };
@@ -113,7 +115,9 @@ export function getErrorMessage(
   return fallback;
 }
 
-export function getToolSummary(args: DefaultToolCall["args"] | string | undefined): string {
+export function getToolSummary(
+  args: DefaultToolCall["args"] | string | undefined,
+): string {
   if (typeof args === "string") return args.slice(0, 60);
   if (!isRecord(args)) return "";
 
