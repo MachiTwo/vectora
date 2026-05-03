@@ -80,3 +80,4 @@ docs/.hugo_build.lock
 /vectora-cognitive-runtime/server/__pycache__
 __pycache__
 **/**/__pycache__
+/vectora-website/static

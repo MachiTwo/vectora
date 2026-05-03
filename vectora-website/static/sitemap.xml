@@ -5,10 +5,35 @@
   <url><loc>https://vectora.github.io/core/agentic-framework.pt/</loc><lastmod>2026-05-03</lastmod></url>
   <url><loc>https://vectora.github.io/core/context-engine.pt/</loc><lastmod>2026-05-03</lastmod></url>
   <url><loc>https://vectora.github.io/core/pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/getting-started/first-integration.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/getting-started/installation.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/getting-started/local-deployment.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/getting-started/pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/core-concepts.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/integration-patterns.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/deep-agents/cli.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/deep-agents/data-locations.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/deep-agents/memory.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/deep-agents/providers.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/deep-agents/streaming.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/deep-agents/tui.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/deep-agents/pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/langgraph/agent-loop.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/langgraph/error-handling.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/langgraph/graph-basics.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/langgraph/vectora-agent-example.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/langgraph/pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/langsmith/performance-monitoring.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/langsmith/setup.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/langsmith/trace-queries.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/langsmith/pt/</loc><lastmod>2026-05-03</lastmod></url>
   <url><loc>https://vectora.github.io/models/gemini.pt/</loc><lastmod>2026-05-03</lastmod></url>
   <url><loc>https://vectora.github.io/models/vectora-cognitive-runtime.pt/</loc><lastmod>2026-05-03</lastmod></url>
   <url><loc>https://vectora.github.io/models/voyage.pt/</loc><lastmod>2026-05-03</lastmod></url>
   <url><loc>https://vectora.github.io/models/pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/models/voyage/embeddings.pt/</loc><lastmod>2026-05-03</lastmod></url>
+  <url><loc>https://vectora.github.io/models/voyage/pt/</loc><lastmod>2026-05-03</lastmod></url>
   <url><loc>https://vectora.github.io/patterns/rag.pt/</loc><lastmod>2026-05-03</lastmod></url>
   <url><loc>https://vectora.github.io/patterns/sub-agents.pt/</loc><lastmod>2026-05-03</lastmod></url>
   <url><loc>https://vectora.github.io/patterns/trace.pt/</loc><lastmod>2026-05-03</lastmod></url>

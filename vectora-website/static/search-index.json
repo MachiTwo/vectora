@@ -20,6 +20,121 @@
     "content": "{{< lang-toggle >}}\n\nO Core é onde o Vectora \"pensa\" e age. Ele contém os componentes que tornam o Vectora um agente inteligente e auto-corrigível, indo além de um simples sistema de busca de código passivo.\n\nAo integrar raciocínio avançado com uma profunda consciência de contexto, o Core garante que cada interação seja fundamentada na realidade da sua base de código.\n\n## Componentes Principais\n\nA inteligência do Vectora é construída sobre dois motores principais que trabalham em conjunto para f"
   },
   {
+    "title": "Primeira Integração com Claude Code",
+    "url": "/getting-started/first-integration.pt/",
+    "content": "# Primeira Integração com Claude Code\n\n## External Linking\n\n| Conceito | Recurso | Link |\n|----------|---------|------|\n| Claude Code | Claude Code Extension | [https://claude.ai/code](https://claude.ai/code) |\n| VSCode | Visual Studio Code | [https://code.visualstudio.com/](https://code.visualstudio.com/) |\n| MCP Protocol | Model Context Protocol Docs | [https://modelcontextprotocol.io/docs](https://modelcontextprotocol.io/docs) |\n| Deep Agents CLI | Deep Agents Documentation | [https://docs.la"
+  },
+  {
+    "title": "Instalação do Vectora",
+    "url": "/getting-started/installation.pt/",
+    "content": "# Instalação do Vectora\n\n## External Linking\n\n| Conceito | Recurso | Link |\n|----------|---------|------|\n| Python Downloads | Python.org | [https://www.python.org/downloads/](https://www.python.org/downloads/) |\n| pip Documentation | pip Installer | [https://pip.pypa.io/](https://pip.pypa.io/) |\n| pipx Guide | pipx Installation | [https://pipx.pypa.io/latest/installation/](https://pipx.pypa.io/latest/installation/) |\n| Docker Install | Docker Desktop | [https://docs.docker.com/engine/install/]("
+  },
+  {
+    "title": "Deploy Local do Vectora",
+    "url": "/getting-started/local-deployment.pt/",
+    "content": "# Deploy Local do Vectora\n\n## External Linking\n\n| Conceito | Recurso | Link |\n|----------|---------|------|\n| Docker Compose | Docker Compose Guide | [https://docs.docker.com/compose/](https://docs.docker.com/compose/) |\n| PostgreSQL Docker | PostgreSQL Image | [https://hub.docker.com/_/postgres](https://hub.docker.com/_/postgres) |\n| Redis Docker | Redis Image | [https://hub.docker.com/_/redis](https://hub.docker.com/_/redis) |\n| FastAPI Local | FastAPI Development | [https://fastapi.tiangolo.c"
+  },
+  {
+    "title": "Começando com Vectora",
+    "url": "/getting-started/pt/",
+    "content": "# Começando com Vectora\n\n## External Linking\n\n| Conceito | Recurso | Link |\n|----------|---------|------|\n| Python | Python Official | [https://www.python.org/downloads/](https://www.python.org/downloads/) |\n| pip | Python Package Installer | [https://pip.pypa.io/](https://pip.pypa.io/) |\n| pipx | pipx Documentation | [https://pipx.pypa.io/](https://pipx.pypa.io/) |\n| Docker | Docker Get Started | [https://docs.docker.com/get-started/](https://docs.docker.com/get-started/) |\n| Git | Git Official"
+  },
+  {
+    "title": "core-concepts.pt",
+    "url": "/langchain/core-concepts.pt/",
+    "content": "{{< lang-toggle >}}\n\nOs conceitos principais do LangChain são os blocos de construção para qualquer aplicação com LLM. Eles podem ser compostos para criar workflows complexos.\n\n## Runnables\n\nRunnables são abstrações compostas que representam qualquer unidade de trabalho. Podem ser:\n- Prompts\n- LLMs\n- Chains (sequências de runnables)\n- Tools\n- Custom functions\n\n```python\nfrom langchain.runnables import RunnableSequence\n\nchain = prompt | llm | output_parser\nresult = chain.invoke({\"input\": \"data\"})"
+  },
+  {
+    "title": "Query → VCR Analysis → Tool Selection → LLM",
+    "url": "/langchain/integration-patterns.pt/",
+    "content": "{{< lang-toggle >}}\n\nLangChain permite integração avançada com sistemas Vectora através de padrões bem estabelecidos para routing, composição de tools e orquestração com a camada VCR.\n\n## Padrão: Routing Multi-LLM\n\nSelecionar o melhor LLM para cada tarefa:\n\n```python\nfrom langchain.runnables import RunnableBranch\n\ndef route_by_complexity(input_data):\n    if input_data[\"complexity\"] > 0.7:\n        return \"claude-opus\"\n    return \"claude-haiku\"\n\nrouter = RunnableBranch(\n    (lambda x: x[\"complexit"
+  },
+  {
+    "title": "_index.pt",
+    "url": "/langchain/pt/",
+    "content": "{{< lang-toggle >}}\n\nLangChain é um framework open-source que fornece uma arquitetura unificada para construir aplicações poderosas com LLMs. Ele simplifica o processo de desenvolvimento de agentes, chains e aplicações de busca-aumentada gerativa (RAG).\n\n## O que é LangChain?\n\nLangChain combina:\n- **Runnables** - Abstrações compostas para chains e workflows\n- **Tools** - Definição e execução de ferramentas para agentes\n- **Memory** - Sistemas de memória para conversas multi-turn\n- **Retrieval** "
+  },
+  {
+    "title": "cli.pt",
+    "url": "/langchain/deep-agents/cli.pt/",
+    "content": "{{< lang-toggle >}}\n\nDeep Agents inclui uma rich TUI (Terminal User Interface) para interação com agentes locais via CLI.\n\n## Instalação\n\n```bash\npip install deepagents\n```\n\n## Comandos Principais\n\n### Run Agent\nExecute um agente:\n\n```bash\ndeep-agents run research_agent --input \"Pesquise sobre AI\"\n```\n\n### List Agents\nListar agentes disponíveis:\n\n```bash\ndeep-agents list\n```\n\n### Create Agent\nCriar novo agente:\n\n```bash\ndeep-agents create --name my_agent --model claude-opus\n```\n\n### View State\nI"
+  },
+  {
+    "title": "Compacta e salva em ~/.deep-agents/backups/",
+    "url": "/langchain/deep-agents/data-locations.pt/",
+    "content": "{{< lang-toggle >}}\n\nDeep Agents armazena dados de estado, conversas e memória no filesystem local. Você pode configurar onde tudo fica.\n\n## Localizações Padrão\n\n```\n~/.deep-agents/                      # DEEPAGENTS_ROOT (padrão)\n├── agents/\n│   ├── research_agent/\n│   │   ├── state.json               # Estado atual\n│   │   ├── memory.db                # Memória persistida\n│   │   └── conversations/\n│   │       └── 2026-05-01.json\n│   └── chat_agent/\n└── config/\n    └── agents.yaml              "
+  },
+  {
+    "title": "Dentro desta conversa, lembra",
+    "url": "/langchain/deep-agents/memory.pt/",
+    "content": "{{< lang-toggle >}}\n\nDeep Agents oferece gerenciamento automático de memória com persistência no filesystem, ideal para agentes de longa duração.\n\n## Tipos de Memória\n\n### Short-term Memory\nContexto da conversa atual (context window):\n\n```python\nagent = Agent(\n    name=\"chat_agent\",\n    memory_type=\"short_term\",\n    context_window=4096  # tokens\n)\n\nresult = agent.execute(\"Qual é meu nome?\")\n# Dentro desta conversa, lembra\n```\n\n### Long-term Memory\nPersistida no filesystem:\n\n```python\nagent = Age"
+  },
+  {
+    "title": "providers.pt",
+    "url": "/langchain/deep-agents/providers.pt/",
+    "content": "{{< lang-toggle >}}\n\nDeep Agents suporta múltiplos provedores de LLM com configuração simples via variáveis de ambiente ou código.\n\n## Provedores Suportados\n\n### Anthropic Claude\nRecomendado para máxima performance em agentes:\n\n```python\nfrom deepagents import Agent\n\nagent = Agent(\n    name=\"research\",\n    model=\"claude-3-opus\",  # ou claude-3-sonnet, claude-3-haiku\n    api_key=os.getenv(\"ANTHROPIC_API_KEY\")\n)\n```\n\nVariáveis de ambiente:\n```bash\nexport ANTHROPIC_API_KEY=sk-ant-...\nexport DEEPAGE"
+  },
+  {
+    "title": "Streaming via generator",
+    "url": "/langchain/deep-agents/streaming.pt/",
+    "content": "{{< lang-toggle >}}\n\nDeep Agents suporta streaming nativo para respostas em tempo real, ideal para UIs responsivas e LLMs com respostas longas.\n\n## Streaming Básico\n\n```python\nfrom deepagents import Agent\n\nagent = Agent(name=\"writer\", model=\"claude-3-opus\")\n\n# Streaming via generator\nfor chunk in agent.stream(\"Escreva um artigo sobre IA\"):\n    print(chunk, end=\"\", flush=True)\n```\n\n## Streaming com Tools\n\nStreams enquanto executa tools:\n\n```python\nagent = Agent(\n    tools=[search, summarize],\n   "
+  },
+  {
+    "title": "~/.deep-agents/tui.yaml",
+    "url": "/langchain/deep-agents/tui.pt/",
+    "content": "{{< lang-toggle >}}\n\nDeep Agents inclui uma rich TUI (Terminal User Interface) para interação interativa com agentes locais via CLI. Útil para desenvolvimento, debugging e uso local.\n\n## Iniciando TUI\n\n```bash\ndeep-agents interactive\n```\n\nInicia a interface interativa no terminal:\n\n```\n╔════════════════════════════════════════╗\n║       Deep Agents TUI                  ║\n╠════════════════════════════════════════╣\n║                                        ║\n║  [1] Run Agent                         "
+  },
+  {
+    "title": "Agent automaticamente planeja",
+    "url": "/langchain/deep-agents/pt/",
+    "content": "{{< lang-toggle >}}\n\nDeep Agents é um framework open-source para construir agentes complexos com planejamento nativo, suporte a subagents e persistência de estado no filesystem. Ideal para tarefas que requerem planejamento multi-step.\n\n## O que é Deep Agents?\n\nDeep Agents fornece:\n- **Agent Harness** - Orquestração robusta de agentes\n- **Planning** - Planejamento automático de tarefas\n- **Filesystem Backend** - Persistência local de estado\n- **Subagents** - Hierarquia de agentes\n- **ACP Protocol"
+  },
+  {
+    "title": "agent-loop.pt",
+    "url": "/langchain/langgraph/agent-loop.pt/",
+    "content": "{{< lang-toggle >}}\n\nO agent loop é o coração de um agente inteligente. Ele percorre em loop: raciocínio → decisão → ação → observação → repeça.\n\n## O Ciclo Padrão\n\n```\n1. LLM Reasoning\n   - Observa estado e ferramentas disponíveis\n   - Reasoning sobre próximo passo\n\n2. Tool Selection\n   - LLM decide qual ferramenta chamar\n   - Ou termina se \"final_answer\"\n\n3. Tool Execution\n   - Executa ferramenta selecionada\n   - Captura resultado/erro\n\n4. State Update\n   - Atualiza estado com resultado\n   - A"
+  },
+  {
+    "title": "error-handling.pt",
+    "url": "/langchain/langgraph/error-handling.pt/",
+    "content": "{{< lang-toggle >}}\n\nAgentes falham. Tools podem timeout, APIs podem falhar, LLMs podem dar respostas inválidas. LangGraph fornece mecanismos para lidar com isso graciosamente.\n\n## Estratégias de Retry\n\n### Exponential Backoff\nAguarde mais tempo a cada retry:\n\n```python\ndef execute_with_retry(fn, max_retries=3):\n    for attempt in range(max_retries):\n        try:\n            return fn()\n        except Exception as e:\n            wait_time = 2 ** attempt  # 1s, 2s, 4s\n            time.sleep(wait_"
+  },
+  {
+    "title": "Define o estado",
+    "url": "/langchain/langgraph/graph-basics.pt/",
+    "content": "{{< lang-toggle >}}\n\nUm grafo em LangGraph é composto de nós (nodes) conectados por arestas (edges), com estado fluindo entre eles.\n\n## Estrutura Básica\n\n```python\nfrom langgraph.graph import StateGraph\nfrom typing import TypedDict\n\n# Define o estado\nclass State(TypedDict):\n    messages: list[str]\n    current_agent: str\n\n# Cria o grafo\ngraph = StateGraph(State)\n\n# Adiciona nós\ngraph.add_node(\"agent\", agent_fn)\ngraph.add_node(\"tools\", tools_fn)\ngraph.add_node(\"output\", output_fn)\n\n# Adiciona ares"
+  },
+  {
+    "title": "Estado do agente",
+    "url": "/langchain/langgraph/vectora-agent-example.pt/",
+    "content": "{{< lang-toggle >}}\n\nExemplo completo de um agente Vectora que usa LangGraph para orquestração, Voyage AI para embeddings e VCR para pré-pensamento.\n\n## Arquitetura\n\n```\nUser Query\n    ↓\n[VCR Pre-thinking]  ← Análise contextual\n    ↓\n[LangGraph Agent Loop]\n├─ [LLM Reasoning] + Vectora Search\n├─ [Tool Selection]\n├─ [Execution]\n└─ [Output Formatting]\n    ↓\nResponse\n```\n\n## Implementação\n\n```python\nfrom langgraph.graph import StateGraph, START, END\nfrom langchain.chat_models import ChatAnthropic\nfr"
+  },
+  {
+    "title": "_index.pt",
+    "url": "/langchain/langgraph/pt/",
+    "content": "{{< lang-toggle >}}\n\nLangGraph é um biblioteca que permite construir agentes complexos e stateful como grafos. Cada nó é um passo, cada aresta é uma transição, e o estado flui através do grafo.\n\n## Por que LangGraph?\n\nLangChain fornece abstrações de alto nível, mas às vezes você precisa de controle fino sobre:\n- Flow de controle (loops, condicionalismo)\n- Persistência de estado entre steps\n- Human-in-the-loop\n- Retry e error recovery\n\nLangGraph fornece essas garantias através do modelo de grafos"
+  },
+  {
+    "title": "Latência alta",
+    "url": "/langchain/langsmith/performance-monitoring.pt/",
+    "content": "{{< lang-toggle >}}\n\nLangSmith fornece métricas em tempo real sobre performance, custos e confiabilidade de agentes em produção.\n\n## Métricas Principais\n\n### Latência\n- **Total**: Tempo do início ao fim\n- **LLM**: Tempo da chamada ao modelo\n- **Tools**: Tempo de execução de tools\n- **Network**: Overhead de rede\n\n### Tokens\n- **Input Tokens**: Tokens enviados\n- **Output Tokens**: Tokens gerados\n- **Total**: Soma dos dois\n\n### Custos\n- **Por request**: Custo individual\n- **Agregado**: Total por pe"
+  },
+  {
+    "title": "Agora todos os runnables são automaticamente tracejados",
+    "url": "/langchain/langsmith/setup.pt/",
+    "content": "{{< lang-toggle >}}\n\nConfigurar LangSmith é simples: obtenha uma API key, defina variáveis de ambiente e ative o tracing.\n\n## Obter API Key\n\n1. Vá para [smith.langchain.com](https://smith.langchain.com/)\n2. Crie uma conta (use seu email da empresa)\n3. Copie a API key da seção Settings\n\n## Variáveis de Ambiente\n\n```bash\nexport LANGCHAIN_TRACING_V2=true\nexport LANGCHAIN_API_KEY=your_api_key_here\nexport LANGCHAIN_PROJECT=\"vectora-agents\"  # Nome do projeto\n```\n\n## Ativar Tracing no Código\n\n```pytho"
+  },
+  {
+    "title": "Isso cria um trace em LangSmith automaticamente",
+    "url": "/langchain/langsmith/trace-queries.pt/",
+    "content": "{{< lang-toggle >}}\n\nLangSmith captura automaticamente toda execução de agentes. Você pode inspecionar inputs, outputs, decisões LLM e chamadas de tools.\n\n## Traces Automáticos\n\nTodos os runnables são tracejados automaticamente:\n\n```python\n# Isso cria um trace em LangSmith automaticamente\nresult = agent.invoke({\n    \"user_input\": \"Qual é o preço do Bitcoin?\",\n    \"session_id\": \"user_123\"\n})\n\n# Acesso em: smith.langchain.com → Projects → vectora-agents → Traces\n```\n\n## Inspecionar Traces\n\nCada tr"
+  },
+  {
+    "title": "_index.pt",
+    "url": "/langchain/langsmith/pt/",
+    "content": "{{< lang-toggle >}}\n\nLangSmith é a plataforma de observabilidade nativa da LangChain para debug, tracing e monitoramento de agentes em produção. Ela fornece visibilidade completa sobre decisões de agentes, performance e custos.\n\n## O que é LangSmith?\n\nLangSmith oferece:\n- **Tracing** - Capture completo de execução de agents e chains\n- **Debugging** - Inspect detalhado de inputs/outputs\n- **Performance** - Métricas de latência, tokens e custos\n- **Testing** - Dataset management e evaluations\n- **"
+  },
+  {
     "title": "Saída",
     "url": "/models/gemini.pt/",
     "content": "{{< lang-toggle >}}\n\n## O Cérebro do Vectora: Gemini 3 Flash\n\nToda a inteligência criativa e lógica do Vectora converge para um único ponto: **Gemini 3 Flash** da Google. Ele atua como o **Agente de Programação e Interação** primário — a entidade que conversa com o desenvolvedor, interpreta intenções e escreve código em tempo real.\n\nDiferente de um simples LLM, o Gemini no Vectora opera como uma peça central de uma arquitetura altamente otimizada, utilizando o contexto refinado pelas IAs especia"
@@ -38,6 +153,16 @@
     "title": "_index.pt",
     "url": "/models/pt/",
     "content": "{{< lang-toggle >}}\n\nVectora funciona com modelos de AI específicos e otimizados para programação, interação com o usuário, busca semântica e decisões táticas.\n\n## Vectora Decision Engine (Vectora Cognitive Runtime)\n\nA inteligência decisiva local do Vectora. Baseado no SmolLM com fine-tuning proprietário, o Vectora Cognitive Runtime roda via **ONNX Runtime** diretamente no desktop do usuário. Ele decide o roteamento tático das consultas com latência zero, recorrendo à nuvem apenas em integrações"
+  },
+  {
+    "title": "Voyage Embeddings",
+    "url": "/models/voyage/embeddings.pt/",
+    "content": "# Voyage Embeddings\n\n## External Linking\n\n| Conceito | Recurso | Link |\n|----------|---------|------|\n| API Reference | Text Embeddings API | [https://docs.voyageai.com/reference/embeddings-api](https://docs.voyageai.com/reference/embeddings-api) |\n| Introduction | Embeddings Overview | [https://docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings) |\n| Models List | Available Models | [https://docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings) |"
+  },
+  {
+    "title": "Voyage AI: Embeddings e Reranking",
+    "url": "/models/voyage/pt/",
+    "content": "# Voyage AI: Embeddings e Reranking\n\n## External Linking\n\n| Conceito | Recurso | Link |\n|----------|---------|------|\n| Voyage Docs | Official Documentation | [https://docs.voyageai.com/](https://docs.voyageai.com/) |\n| Embeddings API | Text Embeddings Reference | [https://docs.voyageai.com/reference/embeddings-api](https://docs.voyageai.com/reference/embeddings-api) |\n| Reranker API | Reranker Reference | [https://docs.voyageai.com/reference/reranker-api](https://docs.voyageai.com/reference/rer"
   },
   {
     "title": "rag.pt",

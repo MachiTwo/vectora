@@ -1,5 +1,7 @@
 # Vectora: Hub de Conhecimento Local-First para Ecossistemas de Agentes
 
+Esta documentação detalha a visão estratégica e os objetivos fundamentais do projeto Vectora dentro do ecossistema de engenharia de software da empresa.
+
 ## O que é o Vectora
 
 Vectora é um **Hub de Conhecimento e Agente Especialista** local-first, projetado para servir como a camada de inteligência e memória para desenvolvedores e outros agentes de IA. Ele opera como um aplicativo de binário único (Go) que combina busca vetorial de alta performance, gerenciamento de dados estruturados e uma camada de pré-processamento cognitivo (VCR).
@@ -20,9 +22,12 @@ O objetivo do Vectora é descentralizar a inteligência artificial, fornecendo u
 
 ## O Ecossistema Vectora
 
+A arquitetura do Vectora é composta por diversos módulos integrados que trabalham em harmonia para fornecer uma experiência local-first robusta e escalável.
+
 ### Backend (Go)
 
 O núcleo do sistema, construído em Go para máxima performance e baixa latência. Responsável por:
+
 - Daemon de alta concorrência e binário único.
 - Servidor MCP (Model Context Protocol) nativo para integração com agentes.
 - Orquestração de pipelines RAG e integração com LLMs (Claude, OpenAI, Gemini).
@@ -31,6 +36,7 @@ O núcleo do sistema, construído em Go para máxima performance e baixa latênc
 ### Vectora Cognitive Runtime (VCR)
 
 O motor de decisão tática, operando em Python para aproveitar bibliotecas de ML de última geração:
+
 - Execução de modelos XLM-RoBERTa-small fine-tuned para análise de contexto.
 - Pre-thinking layer que otimiza queries e seleciona ferramentas antes do agente principal agir.
 - Interface via JSON-RPC/Subprocess para latência mínima de inferência (4-8ms).
@@ -38,6 +44,7 @@ O motor de decisão tática, operando em Python para aproveitar bibliotecas de M
 ### Storage & Memory Layer
 
 Persistência local-first em três dimensões:
+
 - **LanceDB**: Armazenamento vetorial nativo em formato .lance para busca semântica.
 - **PostgreSQL (Embedded)**: Gerenciamento de metadados, usuários, permissões (RBAC) e histórico.
 - **Redis (Embedded)**: Cache de alta velocidade, gerenciamento de sessões e filas de background jobs.
@@ -45,6 +52,7 @@ Persistência local-first em três dimensões:
 ### Integrations (@vectora-integrations)
 
 Uma suíte de SDKs e adaptadores que tornam o Vectora universal:
+
 - **MCP Bridge**: Conecta o Vectora ao Claude Code e outros clientes MCP.
 - **Paperclip Plugin**: Integração nativa para orquestração em empresas de agentes.
 - **Shared SDK**: Tipagem e clientes HTTP/RPC compartilhados para desenvolvimento de novos adaptadores.
@@ -52,12 +60,14 @@ Uma suíte de SDKs e adaptadores que tornam o Vectora universal:
 ### VAL (Vectora Asset Library)
 
 O registry comunitário e governado de conhecimento:
+
 - Distribuição de datasets vetorizados e prontos para uso (documentação, padrões de código).
 - CLI commands para download e sincronização instantânea de conhecimento especializado.
 
 ### Multi-Agent Orchestration
 
 Suporte nativo para hierarquias de agentes:
+
 - Isolamento de dados por bucket privado para cada agente (CEO, CTO, Backend, etc).
 - Buckets públicos e organizacionais para compartilhamento controlado de conhecimento.
 - Autenticação robusta baseada em chaves de API derivadas para automação segura.
