@@ -1,234 +1,201 @@
 # VECTORA — Executive Overview
 
-Vectora centraliza memoria, busca, contexto e permissoes para agents que precisam colaborar sem perder isolamento operacional.
+Vectora é um **Agent Completo especializado**, instalável localmente, que funciona como hub de conhecimento para outras aplicações e agents.
 
-## O que e Vectora?
+## O que é Vectora?
 
-Vectora e um hub de conhecimento inteligente open-source para agents, construido em Go e orquestrado com LangChainGo. Ele combina busca vetorial, reranking, integracao com LLMs, memoria persistente e permissoes separadas por agent.
+Vectora é um aplicativo **local-first, single binary** construído em Python (FastAPI) + React que combina:
 
-**Vectora** gerencia processamento e analise de dados com:
+- **Pre-thinking layer (VCR):** Enriquecimento contextual profundo via XLM-RoBERTa-small fine-tuned
+- **Agent completo (LangChain):** Raciocínio ativo, tools reais, capacidade de implementar código
+- **Bancos de dados integrados:** PostgreSQL (pg8000-embedded), Redis, LanceDB (vetorial)
+- **Embeddings:** VoyageAI para semantic search
+- **Protocolos:** REST API, MCP (Model Context Protocol), JSON-RPC 2.0
 
-- **Busca vetorial** - busca semantica em documentos com LanceDB e Voyage embeddings.
-- **Reranking local** - reordena resultados localmente com Voyage v2.5, sem API adicional.
-- **Busca web** - integra resultados da web via SerpAPI.
-- **Integracao com LLMs** - conecta Claude, OpenAI e Google por meio de LangChainGo.
-- **Sistema de memoria** - persiste conhecimento em vector db, PostgreSQL, Redis e buckets de contexto.
-- **Compatibilidade multi-agent** - integra com Claude Code, Gemini CLI, Paperclip e outros agents.
-- **Permissoes separadas por agent** - cada agent pode operar com API key propria e bucket privado completo.
-- **Contexto exportavel** - dados podem ser exportados e importados entre usuarios, organizacoes e agents autorizados.
+Não é um "RAG wrapper genérico" — é um **agente especialista** que Claude Code, Gemini e outros agents delegam trabalhos específicos.
+
+**Vectora** oferece capacidades reais de processamento inteligente:
+
+- **VCR (Vectora Cognitive Runtime):** Pre-thinking layer que enriquece contexto via XLM-RoBERTa-small fine-tuned em padrões de contexto
+- **Busca vetorial:** Busca semântica em documentos com LanceDB + VoyageAI embeddings
+- **Reranking local:** Reordena resultados localmente sem API adicional
+- **Busca web:** Integra SerpAPI quando contexto local é insuficiente
+- **Agent com tools reais:** File system access, terminal execution, MCPs externos, Redis/PostgreSQL queries
+- **Implementação de código:** Não é apenas "RAG" — faz refactoring, escrita, testes reais
+- **LangChain orchestration:** Thinking ativo, chain-of-thought, retry strategies
+- **Sistema de memória:** Redis (session) + PostgreSQL (persistent) + LanceDB (semantic)
+- **Multi-agent compatible:** Claude Code, Gemini CLI, Paperclip, custom agents via MCP
+- **Local-first:** Todos os dados em `~/.vectora/`, sem dependência de cloud
 
 **NÃO é:**
 
-- SaaS proprietary
-- Chat interface genérica
-- Apenas wrapper de RAG
-- Dependente de nuvem
+- ❌ SaaS proprietary
+- ❌ Chat interface genérica
+- ❌ "RAG wrapper" que só busca
+- ❌ Dependente de nuvem
+- ❌ Apenas um orchestrador (tem cognição própria via VCR)
 
-**E:**
+**É:**
 
-- Open-source, rode localmente em KVM1 (2 vCPU, 4GB RAM).
-- Knowledge hub com inteligencia reutilizavel.
-- Orquestrador com suporte a Agent Mode e Tool Mode.
-- Multi-agent com permissoes, memoria e contexto separados.
-- Exportavel entre agents quando a hierarquia de permissoes autorizar.
+- ✅ **Agent Completo:** Pensa (VCR), age (tools), implementa (código real)
+- ✅ **Open-source**, rodando localmente (pip install / pipx install / docker)
+- ✅ **Single app integrado:** CLI + daemon + frontend + todos bancos + VCR
+- ✅ **Local-first:** Dados em `~/.vectora/`, sem API externa necessária
+- ✅ **Multi-agent ready:** Claude Code, Gemini, Paperclip chamam via MCP/REST
+- ✅ **Especialista em contexto:** VCR fine-tuned apenas em enriquecimento contextual
+- ✅ **Production-ready:** Phase 1 tem synthetic data, Phase 2+ melhora com traces reais
 
 ---
 
 ## Mapa Mental Completo
 
-A visao abaixo resume os componentes principais e as relacoes entre modos de uso, backend e dados persistidos.
+Fluxo de uma chamada externa (Claude Code) até resposta final:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Vectora                                  │
-│          Knowledge Hub Inteligente                          │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-        ┌──────────────┼──────────────┐
-        │              │              │
-    ┌───▼──┐       ┌──▼──┐       ┌──▼────────┐
-    │AGENT │       │TOOL │       │Dashboard  │
-    │MODE  │       │MODE │       │ & CONFIG  │
-    │(LLM) │       │     │       │           │
-    │      │       │     │       │(Web UI)   │
-    └───┬──┘       └──┬──┘       └──┬────────┘
-        │              │             │
-        └──────────────┼─────────────┘
-                       │
-   ┌───────────────────▼────────────────────┐
-   │    Vectora Backend (Go)                 │
-   │                                        │
-   │  ┌─────────────────────────────────┐   │
-   │  │   RAG Orchestrator              │   │
-   │  │  ├─ Vector Search (LanceDB)     │   │
-   │  │  ├─ Rerank (Voyage v2.5)        │   │
-   │  │  ├─ Web Search (SerpAPI)        │   │
-   │  │  └─ LLM Integration (multi)     │   │
-   │  └─────────────────────────────────┘   │
-   │                                        │
-   │  ┌─────────────────────────────────┐   │
-   │  │   Memory Management             │   │
-   │  │  ├─ Knowledge Storage           │   │
-   │  │  ├─ Context Building            │   │
-   │  │  └─ Per-user Isolation          │   │
-   │  └─────────────────────────────────┘   │
-   │                                        │
-   │  ┌─────────────────────────────────┐   │
-   │  │   Protocol Handlers             │   │
-   │  │  ├─ REST API (/api/v1/*)        │   │
-   │  │  ├─ MCP (Model Context Proto)   │   │
-   │  │  └─ WebSocket (real-time)       │   │
-   │  └─────────────────────────────────┘   │
-   └────────┬────────────────────┬──────────┘
-            │                    │
-      ┌─────▼──┐          ┌──────▼────┐
-      │LanceDB │          │PostgreSQL │
-      │Vectors │          │Metadata   │
-      │(local) │          │+ Cache    │
-      └────────┘          └───────────┘
-            ▲                    ▲
-            │                    │
-      ┌─────┴────────────────────┴─────────┐
-      │                                    │
-   ┌──▼──┐  ┌───────────┐  ┌──────────┐  │
-   │Redis│  │Voyage API │  │SerpAPI   │  │
-   │Pub/ │  │(Embed +   │  │(Web      │  │
-   │Sub  │  │Rerank)    │  │Search)   │  │
-   └─────┘  └───────────┘  └──────────┘  │
-            │                             │
-            └─────────────────────────────┘
+┌──────────────────────────────┐
+│   Claude Code (Agent)        │
+│ "Implemente isso para mim"   │
+└────────────┬─────────────────┘
+             │ MCP/JSON-RPC call
+             │
+   ┌─────────▼──────────────────────────────────────┐
+   │   VECTORA (Local Single App)                    │
+   │                                                │
+   │  ┌──────────────────────────────────────────┐ │
+   │  │ 1. VCR: PRE-THINKING LAYER               │ │
+   │  │  ├─ XLM-RoBERTa-small + LoRA             │ │
+   │  │  ├─ Busca Redis: session history         │ │
+   │  │  ├─ Busca PostgreSQL: contexto relevante│ │
+   │  │  ├─ Busca LanceDB: chunks vetoriais     │ │
+   │  │  └─ Output: enriched_context + confidence
+   │  └──────────────────────────────────────────┘ │
+   │                                                │
+   │  ┌──────────────────────────────────────────┐ │
+   │  │ 2. LANGCHAIN AGENT (Thinking Ativo)     │ │
+   │  │  ├─ System Prompt: contexto enriquecido │ │
+   │  │  ├─ User Prompt: query do Claude Code   │ │
+   │  │  ├─ LLM (Anthropic/OpenAI/Google)      │ │
+   │  │  └─ Tools:                               │ │
+   │  │     ├─ File Read/Write                   │ │
+   │  │     ├─ Terminal Execute                  │ │
+   │  │     ├─ Redis Query                       │ │
+   │  │     ├─ PostgreSQL Query                  │ │
+   │  │     ├─ LanceDB Search (rerank)           │ │
+   │  │     ├─ MCP Externos                      │ │
+   │  │     └─ Web Search (SerpAPI)              │ │
+   │  │                                           │ │
+   │  │  Executa:                                 │ │
+   │  │  - Se pergunta → responde                │ │
+   │  │  - Se implemente → implementa real       │ │
+   │  │  - Se refactor → refatora                │ │
+   │  │  - Se test → testa                       │ │
+   │  │                                           │ │
+   │  │  Streaming: responde progressivamente    │ │
+   │  └──────────────────────────────────────────┘ │
+   │                                                │
+   │  ┌──────────────────────────────────────────┐ │
+   │  │ 3. Persistent Storage                    │ │
+   │  │  ├─ Redis (memory, session, cache)       │ │
+   │  │  ├─ PostgreSQL (metadata, history)       │ │
+   │  │  ├─ LanceDB (vector embeddings)          │ │
+   │  │  └─ File System (code, configs)          │ │
+   │  └──────────────────────────────────────────┘ │
+   │                                                │
+   │  ┌──────────────────────────────────────────┐ │
+   │  │ 4. Protocol Handlers                     │ │
+   │  │  ├─ REST API (/api/v1/*)                 │ │
+   │  │  ├─ MCP Server (stdio)                   │ │
+   │  │  ├─ JSON-RPC 2.0 (IPC)                   │ │
+   │  │  └─ WebSocket (frontend streaming)       │ │
+   │  └──────────────────────────────────────────┘ │
+   └────────────┬──────────────────────────────────┘
+                │ JSON-RPC streaming response
+                │
+   ┌────────────▼──────────────────┐
+   │ Claude Code (Agrega)          │
+   │ ├─ Recebe chunks Vectora      │
+   │ ├─ Processa resposta          │
+   │ ├─ Retorna ao usuário final   │
+   └───────────────────────────────┘
+```
+
+**Stack Interno:**
+
+- **Backend:** Python 3.10+ | FastAPI | LangChain
+- **Frontend:** React 18 | Vite | TypeScript
+- **CLI:** Python Click/Typer
+- **VCR:** PyTorch | XLM-RoBERTa-small | PEFT LoRA
+- **DBs:** PostgreSQL (pg8000-embedded) | Redis | LanceDB
+- **Embeddings:** VoyageAI
+- **DevOps:** Docker | GitHub Actions | pip/pipx
+
+---
+
+## Como Funciona: Fluxo Completo
+
+Vectora é sempre um Agent Completo. O fluxo muda conforme é chamado:
+
+### Cenário 1: Claude Code Chama Vectora (via MCP)
+
+```
+┌────────────────────────────────┐
+│  Claude Code (Agent Principal) │
+│  "Implemente esse hook"        │
+└────────────┬───────────────────┘
+             │ MCP call (stdio)
+             │ {query, context_prepared}
+             │
+   ┌─────────▼────────────────────────────┐
+   │   VECTORA (Agent Especialista)       │
+   │                                      │
+   │  1. VCR Pre-Thinking                 │
+   │     └─ Enriquece contexto            │
+   │        (Redis, PostgreSQL, LanceDB)  │
+   │                                      │
+   │  2. LangChain Agent                  │
+   │     ├─ System: contexto enriquecido  │
+   │     ├─ User: query do Claude Code    │
+   │     ├─ Thinking ativo                │
+   │     └─ Tools: file/terminal/db       │
+   │                                      │
+   │  3. Executa Implementação Real       │
+   │     ├─ Lê arquivos existentes        │
+   │     ├─ Escreve/modifica código       │
+   │     ├─ Testa a implementação         │
+   │     └─ Salva resultado               │
+   │                                      │
+   │  4. Streaming Response               │
+   │     └─ Responde progressivamente     │
+   └─────────┬────────────────────────────┘
+             │ JSON-RPC streaming chunks
+             │ {status, output, code, etc}
+             │
+   ┌─────────▼──────────────────┐
+   │ Claude Code (Agrega)       │
+   │ ├─ Recebe chunks Vectora   │
+   │ ├─ Processa informações    │
+   │ └─ Responde ao usuário     │
+   └────────────────────────────┘
 ```
 
 ---
 
-## 2 Modos Operacionais
+### Cenário 2: Usar Vectora Standalone (CLI)
 
-Os modos operacionais separam quando o Vectora decide a resposta e quando ele atua como ferramenta estruturada para outro agent.
+Vectora também pode ser usado diretamente pelo usuário via CLI/TUI:
 
-### Mode 1: Agent Mode (Full RAG — Modo Orquestrador)
+```bash
+vectora                    # Inicia daemon local
+# acesso em http://localhost:8000
 
-Nesse modo, o Vectora executa o ciclo completo de busca, reranking, contexto e chamada ao LLM.
+vectora chat               # Abre chat interativo no terminal
+> "Implemente um hook custom para React"
+> (Vectora faz o mesmo fluxo interno, mas retorna ao usuário direto)
 
-```
-┌─────────────────────────────────┐
-│  Agente Externo (Claude Code)   │
-│  "Ajude com React hooks"         │
-└──────────────┬──────────────────┘
-               │ POST /api/v1/chat/message
-               │
-   ┌───────────▼──────────────┐
-   │  Vectora Backend          │
-   │                          │
-   │  1. Vector Search        │
-   │     └─ encontra docs     │
-   │                          │
-   │  2. Rerank               │
-   │     └─ ordena top-5      │
-   │                          │
-   │  3. Web Search           │
-   │     └─ se necessário     │
-   │                          │
-   │  4. Build Context        │
-   │     └─ prepara prompt    │
-   │                          │
-   │  5. Call LLM             │
-   │     └─ Claude/OpenAI     │
-   │                          │
-   │  6. Return Response      │
-   │     └─ + save to memory  │
-   └───────────┬──────────────┘
-               │
-   ┌───────────▼──────────────────────┐
-   │ Response: JSON com resposta       │
-   │ + contexto + metadata             │
-   │                                  │
-   │ {                                │
-   │   "response": "React hooks ...",  │
-   │   "sources": [...],              │
-   │   "confidence": 0.92,            │
-   │   "tools_used": ["search"]       │
-   │ }                                │
-   └──────────────────────────────────┘
+vectora stop               # Para daemon
 ```
 
-**Quando usar Agent Mode:**
-
-- Agent precisa de resposta completa + contexto
-- Decisão é crítica (precisa de LLM)
-- Quer que Vectora decida qual LLM usar (routing)
-- Resultado é único e determinístico
-
-**Exemplo:**
-
-```
-Claude Code: "O que é o padrão Observer em TypeScript?"
-→ Vectora busca docs de design patterns
-→ Reranqueia, pega top-3
-→ Chama Claude API com contexto
-→ Responde com explicação + exemplos
-→ Salva em memory para futuras queries
-```
-
----
-
-### Mode 2: Tool Mode (Structured Integration — Modo Ferramenta)
-
-Nesse modo, o agent externo chama endpoints especificos e usa os dados retornados em sua propria analise.
-
-```
-┌─────────────────────────────────┐
-│  Agente Externo (Claude Code)   │
-│  (análise própria)              │
-└──────────────┬──────────────────┘
-               │
-     ┌─────────┴─────────┬───────────┬──────────┐
-     │                   │           │          │
-   ┌─▼──┐          ┌────▼──┐   ┌────▼───┐  ┌──▼──────┐
-   │POST │          │GET    │   │POST    │  │GET      │
-   │knowledge       │memory │   │tools/  │  │tools/   │
-   │/store          │/query │   │rerank  │  │websearch│
-   └─┬──┘          └────┬──┘   └────┬───┘  └──┬──────┘
-     │                  │           │         │
-   [1]              [2]           [3]       [4]
-   Save            Query          Rerank    Web
-   analyzed        embeddings     documents Search
-   results         (sem LLM)      locally   + Fetch
-
-     │                  │           │         │
-     └──────────────────┴───────────┴─────────┘
-                        │
-       ┌────────────────▼────────────────┐
-       │   Agent usa resultados          │
-       │   em sua própria análise        │
-       │                                │
-       │   (Vectora = storage +           │
-       │    retrieval, não decisão)      │
-       └────────────────────────────────┘
-```
-
-**Quando usar Tool Mode:**
-
-- Agent tem sua própria inteligência (faz análise)
-- Agent precisa **armazenar** conhecimento (knowledge.store)
-- Agent quer **buscar** contexto sem decisão (memory.query)
-- Agent quer **reranquear** documentos localmente
-- Agent quer **buscar na web** sem passar por LLM
-
-**Exemplo:**
-
-```
-Claude Code (análise própria):
-  1. Analisa código do usuário
-  2. POST /api/v1/knowledge/store
-     └─ salva "padrão Observer detectado em UserObserver.ts"
-  3. Depois, GET /api/v1/memory/query?q=observer
-     └─ encontra análise anterior
-  4. Usa contexto na próxima análise
-  5. POST /api/v1/tools/websearch?q=observer pattern
-     └─ busca web, fetch conteúdo, armazena
-```
-
----
+Nesse caso, você interactua diretamente com um Agent Completo sem intermediários.
 
 ---
 
