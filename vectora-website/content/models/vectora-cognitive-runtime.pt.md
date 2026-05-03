@@ -1,6 +1,6 @@
 ---
-title: "Vectora Decision Engine (Vectora Cognitive Runtime)"
-slug: vectora-decision-engine
+title: "Vectora Cognitive Runtime (VCR)"
+slug: vectora-cognitive-runtime
 date: "2026-04-27T10:15:00-03:00"
 draft: false
 categories:
