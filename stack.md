@@ -1,189 +1,614 @@
 # Documentação da Stack do Vectora
 
-Stack de tecnologia completa para o Vectora: todos os aplicativos internos, serviços externos, infraestrutura de DevOps e opções de implantação.
+**Vectora é um runtime local-first instalável, controlado por CLI, com interface web integrada.** Não é SaaS, não é cloud-native. É um produto que o usuário instala em sua máquina ou VPS e roda 24/7, como Paperclip.
+
+Stack de tecnologia completa: todas as aplicações internas, bibliotecas externas, infraestrutura local, CLI, distribuição e deployment em VPS.
 
 ---
 
 ## Índice
 
 1. [Visão Geral](#visão-geral)
-2. [Arquitetura](#arquitetura)
-3. [API Backend](#api-backend)
-4. [Vectora Cognitive Runtime](#vectora-cognitive-runtime)
-5. [SDK de Integrações](#sdk-de-integrações)
-6. [Site e Documentação](#site-e-documentação)
-7. [Banco de Dados e Armazenamento](#banco-de-dados-e-armazenamento)
-8. [Stack de Observabilidade](#stack-de-observabilidade)
-9. [DevOps e Infraestrutura](#devops-e-infraestrutura)
-10. [Segurança e Autenticação](#segurança-e-autenticação)
-11. [Testes e Qualidade](#testes-e-qualidade)
-12. [Ferramentas e Utilitários](#ferramentas-e-utilitários)
-13. [Alvos de Implantação](#alvos-de-implantação)
+2. [Protocolos de Comunicação](#protocolos-de-comunicação)
+3. [Instalação e Distribuição](#instalação-e-distribuição)
+4. [CLI Vectora](#cli-vectora)
+5. [Runtime Local](#runtime-local)
+6. [API Backend](#api-backend)
+7. [Frontend Web](#frontend-web)
+8. [Vectora Cognitive Runtime](#vectora-cognitive-runtime)
+9. [SDK de Integrações](#sdk-de-integrações)
+10. [Banco de Dados e Armazenamento](#banco-de-dados-e-armazenamento)
+11. [Pipeline de Ingestão](#pipeline-de-ingestão)
+12. [Background Jobs](#background-jobs)
+13. [Configuração Local](#configuração-local)
+14. [Segurança e Autenticação](#segurança-e-autenticação)
+15. [Observabilidade Local-First](#observabilidade-local-first)
+16. [DevOps e Deployment](#devops-e-deployment)
+17. [Website e Documentação](#website-e-documentação)
+18. [Testes e Qualidade](#testes-e-qualidade)
+19. [Release Engineering](#release-engineering)
 
 ---
 
 ## Visão Geral
 
-O Vectora é um sistema impulsionado por IA de múltiplos componentes com:
+**Vectora** é um sistema de IA local-first que roda em máquinas individuais ou VPS. Usuários instalam via CLI, gerenciam via `vectora` CLI, e acessam via interface web em `http://localhost:8000`.
 
-- **API Backend**: Microsserviço em Python FastAPI com integração LangChain
-- **Componente ML**: VCR (Vectora Cognitive Runtime) para classificação de decisões
-- **Integrações**: SDKs para Claude Code, Gemini, Paperclip e agentes customizados
-- **Documentação**: Site estático Hugo com o tema Hextra
-- **Infraestrutura**: Docker, Kubernetes, pipeline CI/CD completo
-- **Observabilidade**: LangSmith, Prometheus, Jaeger, Grafana, Sentry
-- **Bancos de Dados**: PostgreSQL, Redis, LanceDB
+### Arquitetura
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Usuario (Navegador → http://localhost:8000)                     │
+└────────────────────────┬─────────────────────────────────────────┘
+                         │
+         ┌───────────────┼───────────────┐
+         │               │               │
+    ┌────▼────┐     ┌───▼────┐     ┌──▼────────┐
+    │Frontend  │     │Backend  │     │  External │
+    │React+    │     │FastAPI  │     │  Agents   │
+    │Vite      │     │LangChain│     │(MCP REST) │
+    └────┬────┘     └────┬────┘     └──────────┘
+         │                │
+         └────────┬───────┘
+                  │
+    ┌─────────────┼──────────────────┐
+    │             │                  │
+┌───▼──┐    ┌────▼──┐    ┌──────┐  ┌▼────────┐
+│ VCR  │    │Postgres│   │Lance │  │  Redis  │
+│(Py)  │    │embedded│   │  DB  │  │embedded │
+└──────┘    └────────┘   └──────┘  └─────────┘
+    │
+    └─ ~/.vectora/ (config, models, data)
+
+┌──────────────────────────┐
+│  CLI: vectora start      │
+│  CLI: vectora status     │
+│  CLI: vectora logs       │
+│  CLI: vectora backup     │
+└──────────────────────────┘
+```
 
 ---
 
-## Arquitetura
+## Protocolos de Comunicação
+
+Vectora expõe múltiplas interfaces para Web UI, CLI, agentes externos e integrações. Os protocolos são camadas centrais da arquitetura, não detalhes secundários.
+
+### REST API
+
+REST é a interface principal para Web UI, CLI e integrações HTTP simples.
+
+| Aspecto           | Detalhes                             |
+| ----------------- | ------------------------------------ |
+| **Protocol**      | HTTP REST                            |
+| **Payload**       | JSON                                 |
+| **Streaming**     | Server-Sent Events (SSE) / WebSocket |
+| **Autenticação**  | JWT Bearer Token                     |
+| **Rate Limiting** | Por IP + por token                   |
+
+**Endpoints Principais:**
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    External Agents                              │
-│  (Claude Code, Gemini CLI, Paperclip, Custom, Hermes)          │
-└──────────────────┬──────────────────────────────────────────────┘
-                   │ HTTP REST + MCP Protocol
-                   ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              Vectora Backend API (Python/FastAPI)               │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ HTTP Router (Chi-like with FastAPI)                      │   │
-│  │ ├─ /api/v1/chat (POST)          → LLM pipeline          │   │
-│  │ ├─ /api/v1/memory (GET/POST)    → Memory store          │   │
-│  │ ├─ /api/v1/search (POST)        → Vector search         │   │
-│  │ ├─ /api/v1/datasets (GET/POST)  → Dataset management    │   │
-│  │ ├─ /api/v1/auth (POST)          → JWT tokens            │   │
-│  │ ├─ /api/v1/settings (GET/POST)  → User settings         │   │
-│  │ └─ /health, /ready              → Health checks         │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ Middleware Stack                                          │   │
-│  │ ├─ CORS (allowed origins)                                │   │
-│  │ ├─ HTTPBearer (JWT validation)                           │   │
-│  │ ├─ RateLimiting (slowapi)                                │   │
-│  │ ├─ RequestLogging (structured logs)                      │   │
-│  │ ├─ ErrorHandling (Sentry capture)                        │   │
-│  │ └─ Observability (OpenTelemetry tracing)                 │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ LangChain Integration                                     │   │
-│  │ ├─ LLM Provider: Claude (via Anthropic SDK)              │   │
-│  │ ├─ Vector Store: LanceDB (local)                         │   │
-│  │ ├─ Memory: Redis + SQLAlchemy (persistent)               │   │
-│  │ ├─ Tools: Knowledge.store, memory.query, web.search      │   │
-│  │ ├─ RAG Pipeline: retrieve → rerank → contextualize       │   │
-│  │ └─ Callbacks: LangSmith tracing (production)             │   │
-│  └──────────────────────────────────────────────────────────┘   │
-└──────────────────┬──────────────────────────────────────────────┘
-                   │
-    ┌──────────────┼──────────────┐
-    │              │              │
-    ▼              ▼              ▼
-┌─────────────┐  ┌──────────────┐  ┌─────────────────────┐
-│  VCR        │  │ Databases    │  │ Observability Stack │
-│  (Decision) │  │ (Persistence)│  │ (Monitoring)        │
-│             │  │              │  │                     │
-│ XLM-RoBERTa │  │ PostgreSQL   │  │ LangSmith (LLM)    │
-│ + LoRA      │  │ Redis        │  │ Prometheus         │
-│ + PyTorch   │  │ LanceDB      │  │ Jaeger (Tracing)   │
-│             │  │              │  │ Grafana (Viz)      │
-│ Python      │  │ SQLAlchemy   │  │ Sentry (Errors)    │
-│ subprocess  │  │ TypeORM      │  │ OpenTelemetry      │
-│ or gRPC     │  │              │  │                    │
-└─────────────┘  └──────────────┘  └─────────────────────┘
+# Health & Diagnostics
+GET    /health                     → Status básico
+GET    /ready                      → Readiness probe (DB, Redis, LanceDB)
+GET    /metrics                    → Prometheus format
+
+# Authentication
+POST   /api/v1/auth/login          → JWT token
+POST   /api/v1/auth/refresh        → Novo token
+POST   /api/v1/auth/logout         → Invalidar token
+
+# Chat & Search
+POST   /api/v1/chat                → Query com RAG
+GET    /api/v1/chat/:id            → Histórico sessão
+POST   /api/v1/search              → Vector search
+GET    /api/v1/search/:id/stream   → SSE streaming
+
+# Memory
+POST   /api/v1/memory              → Store custom memory
+GET    /api/v1/memory              → Retrieve memory
+DELETE /api/v1/memory/:id          → Delete memory
+
+# Datasets
+POST   /api/v1/datasets            → Upload/criar
+GET    /api/v1/datasets            → Listar
+GET    /api/v1/datasets/:id        → Details
+POST   /api/v1/datasets/:id/ingest → Ingestão assíncrona
+GET    /api/v1/datasets/:id/chunks → Listar chunks
+
+# Jobs
+GET    /api/v1/jobs/:id            → Job status
+GET    /api/v1/jobs/:id/stream     → SSE progress
+GET    /api/v1/jobs                → Listar jobs
+
+# Agentes & API Keys
+GET    /api/v1/agents              → Agentes conectados
+POST   /api/v1/agents/:name/key    → Criar API key
+GET    /api/v1/agents/:name/keys   → Listar chaves
+DELETE /api/v1/agents/:name/keys/:key_id → Revogar
+
+# Settings
+GET    /api/v1/settings            → User settings
+POST   /api/v1/settings            → Update settings
+
+# Admin
+POST   /api/v1/backup              → Trigger backup
+GET    /api/v1/backup/list         → Listar backups
+POST   /api/v1/restore             → Restore backup
+```
+
+**Consumidores:**
+
+- Web UI (React + Vite)
+- Vectora CLI
+- Custom HTTP agentes
+- Integrations (adapter via REST)
+
+---
+
+### MCP Server
+
+Vectora implementa **Model Context Protocol** para agentes compatíveis com MCP (Claude Code, Gemini, Paperclip, etc).
+
+| Aspecto            | Detalhes                         |
+| ------------------ | -------------------------------- |
+| **Protocol**       | MCP (Model Context Protocol)     |
+| **Message Format** | JSON-RPC 2.0                     |
+| **Transport**      | stdio (local), HTTP/SSE (remoto) |
+| **Server Role**    | Vectora expõe ferramentas MCP    |
+| **Client Role**    | Agentes consomem ferramentas     |
+
+**Ferramentas MCP Expostas:**
+
+```
+vectora.search_context
+  params: {query, dataset_id, user_id}
+  returns: {chunks: [{content, score, source}]}
+
+vectora.rerank
+  params: {query, chunks}
+  returns: {ranked_chunks: [...]}
+
+vectora.store_memory
+  params: {content, metadata}
+  returns: {id, stored_at}
+
+vectora.query_memory
+  params: {query}
+  returns: {results: [{content, score}]}
+
+vectora.ingest_dataset
+  params: {dataset_name, file_path}
+  returns: {job_id, status: "pending"}
+
+vectora.get_dataset
+  params: {dataset_id}
+  returns: {id, name, vector_count, metadata}
+
+vectora.web_search
+  params: {query}
+  returns: {results: [{title, url, snippet}]}
+
+vectora.get_user_context
+  params: {}
+  returns: {user_id, role, available_datasets}
+
+vectora.execute_tool
+  params: {tool_name, params}
+  returns: {result}
+```
+
+**Fluxo MCP:**
+
+```
+Claude Code / Gemini CLI / Paperclip
+    ↓ (stdio ou HTTP)
+Vectora MCP Server
+    ↓
+Vectora Backend (FastAPI)
+    ↓
+PostgreSQL + LanceDB + Redis + VCR
+    ↓
+Resultado JSON
+    ↓
+Agente recebe ferramentas + respostas
+```
+
+**Consumidores:**
+
+- Claude Code (MCP nativo)
+- Gemini CLI (via adapter MCP)
+- Paperclip (MCP ou REST bridge)
+- Agentes customizados (MCP SDK)
+
+---
+
+### JSON-RPC 2.0
+
+JSON-RPC é usado para comunicação leve entre processos, integrações internas e CLI local.
+
+| Aspecto          | Detalhes                 |
+| ---------------- | ------------------------ |
+| **Protocol**     | JSON-RPC 2.0             |
+| **Transport**    | HTTP, Unix socket, stdio |
+| **Autenticação** | Bearer token ou API key  |
+
+**Métodos Internos:**
+
+```
+vectora.runtime.status
+  → {uptime, version, databases: {postgres, redis, lancedb}}
+
+vectora.runtime.start
+  → {pid, port, status}
+
+vectora.runtime.stop
+  → {status: "stopped"}
+
+vectora.vcr.decide
+  params: {query, context}
+  → {action, confidence, parameters}
+
+vectora.vcr.model_info
+  → {model, params, trained_on, accuracy}
+
+vectora.storage.health
+  → {postgres: ok, redis: ok, lancedb: ok}
+
+vectora.jobs.status
+  params: {job_id}
+  → {id, status, progress, result}
+
+vectora.jobs.cancel
+  params: {job_id}
+  → {status: "cancelled"}
+
+vectora.config.get
+  params: {key}
+  → {value}
+
+vectora.config.set
+  params: {key, value}
+  → {updated: true}
+```
+
+**Exemplo Request:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "req_xyz_123",
+  "method": "vectora.search_context",
+  "params": {
+    "user_id": "user_abc",
+    "query": "Como funciona VCR?",
+    "dataset_id": "docs_main",
+    "limit": 5
+  }
+}
+```
+
+**Exemplo Response:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "req_xyz_123",
+  "result": {
+    "chunks": [
+      {
+        "content": "VCR usa XLM-RoBERTa-small...",
+        "score": 0.92,
+        "source": "README.md",
+        "chunk_id": 1
+      }
+    ],
+    "total_chunks": 5,
+    "query_time_ms": 45
+  }
+}
+```
+
+**Consumidores:**
+
+- Vectora CLI (controle local)
+- VCR processo separado (comunicação backend)
+- Adapter integrations (simplificar MCP via JSON-RPC)
+
+---
+
+### Streaming: SSE & WebSocket
+
+Para chat em tempo real e progresso de jobs, Vectora usa Server-Sent Events (SSE) ou WebSocket.
+
+**SSE (Recomendado para chat):**
+
+```bash
+curl -N -H "Authorization: Bearer TOKEN" \
+  http://localhost:8000/api/v1/chat?stream=true \
+  -d '{"query": "..."}' -X POST
+
+# Resposta (one event per chunk):
+data: {"chunk": "O Vectora é", "type": "token"}
+data: {"chunk": " um sistema", "type": "token"}
+data: {"chunk": " de IA local", "type": "token"}
+data: {"type": "done", "metadata": {...}}
+```
+
+**WebSocket (Bidirecional):**
+
+```javascript
+const ws = new WebSocket("ws://localhost:8000/api/v1/chat/stream");
+ws.send(
+  JSON.stringify({
+    query: "...",
+    session_id: "xyz",
+  }),
+);
+ws.onmessage = (e) => {
+  const data = JSON.parse(e.data);
+  console.log(data.chunk);
+};
+```
+
+---
+
+### Matriz de Protocolos por Consumidor
+
+| Consumidor                | REST         | MCP          | JSON-RPC   | SSE/WS           |
+| ------------------------- | ------------ | ------------ | ---------- | ---------------- |
+| **Web UI (React)**        | ✅           | -            | -          | ✅ (SSE)         |
+| **Vectora CLI**           | ✅           | -            | ✅ (local) | -                |
+| **Claude Code**           | -            | ✅           | -          | ✅ (via MCP)     |
+| **Gemini CLI**            | ✅ (adapter) | ✅ (adapter) | -          | ✅ (via adapter) |
+| **Paperclip**             | ✅ (REST)    | ✅ (native)  | -          | ✅               |
+| **Custom HTTP Agent**     | ✅           | -            | ✅         | ✅ (SSE)         |
+| **VCR (subprocess)**      | -            | -            | ✅         | -                |
+| **External Integrations** | ✅           | ✅           | ✅         | ✅               |
+
+---
+
+## Instalação e Distribuição
+
+### Canais de Instalação
+
+| Canal               | Comando                                        | Target                     |
+| ------------------- | ---------------------------------------------- | -------------------------- |
+| **PyPI**            | `pip install vectora`                          | Qualquer OS                |
+| **pipx**            | `pipx install vectora`                         | Isolated env (recomendado) |
+| **uv**              | `uv tool install vectora`                      | Fast, isolated             |
+| **Homebrew**        | `brew install vectora`                         | macOS, Linux               |
+| **WinGet**          | `winget install Vectora.Vectora`               | Windows 10+                |
+| **Scoop**           | `scoop install vectora`                        | Windows (dev-friendly)     |
+| **Chocolatey**      | `choco install vectora`                        | Windows (enterprise)       |
+| **Script**          | `curl -fsSL https://install.vectora.dev \| sh` | Linux/macOS one-liner      |
+| **GitHub Releases** | Download `.whl`, `.exe`, `.deb`, `.dmg`        | Manual install             |
+
+### Requisitos Mínimos
+
+| Requisito   | Versão                        | Notas                                |
+| ----------- | ----------------------------- | ------------------------------------ |
+| **Python**  | 3.10+                         | Para backend, CLI, VCR               |
+| **Node.js** | 20+ LTS                       | Para frontend dev (build time only)  |
+| **RAM**     | 2GB                           | Mínimo; 4GB+ recomendado             |
+| **Disco**   | 1GB                           | Para binários; +espaço para datasets |
+| **SO**      | Windows 10+, macOS 11+, Linux | x86_64 e ARM64                       |
+
+### Checksums e Verificação
+
+```bash
+# Após download, verificar integridade
+sha256sum -c vectora-1.0.0-checksums.txt
+
+# Verificar assinatura (opcional, com GPG)
+gpg --verify vectora-1.0.0.tar.gz.asc vectora-1.0.0.tar.gz
+```
+
+---
+
+## CLI Vectora
+
+### Comandos Principais
+
+```bash
+# Inicializar novo projeto
+vectora init [--path /custom/path]
+
+# Iniciar/parar/reiniciar
+vectora start
+vectora stop
+vectora restart
+vectora status
+
+# Gerenciar
+vectora logs [--follow] [--tail 100]
+vectora open                    # Abre UI no navegador
+vectora doctor                  # Valida instalação
+vectora config show
+vectora config edit
+
+# Banco de dados
+vectora migrate                 # Executa migrações Alembic
+vectora backup                  # Backup completo de dados
+vectora restore /path/to/backup # Restaurar backup
+vectora db reset                # DANGEROUS: limpa tudo
+
+# Modelos
+vectora model pull              # Baixa XLM-RoBERTa-small
+vectora model info
+vectora model remove
+
+# Segurança
+vectora token create [--name "API Key" --scopes "read,write"]
+vectora token list
+vectora token revoke <token_id>
+vectora key create [--agent "claude-code"]
+
+# Atualização
+vectora update                  # Atualiza para versão mais recente
+vectora version
+vectora uninstall               # Remove, preserva ~/.vectora/
+
+# Desenvolvimento
+vectora dev                     # Hot reload backend + frontend
+vectora build                   # Build production
+```
+
+### Exit Codes
+
+```
+0  - Sucesso
+1  - Erro genérico
+2  - Erro de configuração
+3  - Banco de dados inacessível
+4  - Porta em uso
+126 - Permissão negada
+```
+
+---
+
+## Runtime Local
+
+### Diretório `~/.vectora/`
+
+```
+~/.vectora/
+├── config.toml                 # Configuração principal
+├── .env                        # Variáveis de ambiente
+│
+├── postgres/                   # PostgreSQL embedded
+│   ├── data/                   # Database files (PGDATA)
+│   ├── logs/
+│   └── [postgres.pid](http://postgres.pid)
+│
+├── redis/                      # Redis embedded
+│   ├── data/
+│   ├── dump.rdb
+│   └── [redis.pid](http://redis.pid)
+│
+├── lancedb/                    # Vector database
+│   ├── datasets/
+│   ├── [...]_data
+│   └── [...]_lance
+│
+├── models/                     # ML models (cached)
+│   ├── xlm-roberta-small/
+│   │   ├── pytorch_model.bin
+│   │   ├── tokenizer.json
+│   │   └── config.json
+│   └── lora/
+│       └── lora_r8_a16_final/
+│
+├── uploads/                    # Arquivos temporários do usuário
+│   ├── session_xyz/
+│   └── [...]
+│
+├── backups/                    # Backups automáticos e manuais
+│   ├── 2026-05-03_backup.tar.gz
+│   └── [...]
+│
+├── logs/                       # Logs da aplicação
+│   ├── vectora.log
+│   ├── postgres.log
+│   ├── redis.log
+│   └── vcr.log
+│
+└── run/                        # PIDs e sockets
+    ├── [vectora.pid](http://vectora.pid)
+    ├── postgres.pid
+    ├── redis.pid
+    ├── postgres.sock
+    └── redis.sock
+```
+
+### Inicialização Automática
+
+**macOS/Linux (systemd):**
+
+```bash
+vectora service install
+vectora service start
+systemctl status vectora
+journalctl -u vectora -f
+```
+
+**Windows (Service):**
+
+```powershell
+vectora service install
+sc start vectora
+Get-EventLog -LogName Application -Source Vectora -Newest 10
+```
+
+**Docker Compose (dev/VPS):**
+
+```bash
+docker-compose up -d
+docker-compose logs -f
 ```
 
 ---
 
 ## API Backend
 
-### Framework e Núcleo
+### Framework e Core
 
-| Component             | Version | Purpose                           |
-| --------------------- | ------- | --------------------------------- |
-| **FastAPI**           | 0.104+  | Framework web assíncrono moderno  |
-| **Uvicorn**           | 0.24+   | Servidor ASGI (desenvolvimento)   |
-| **Gunicorn**          | 21+     | Servidor WSGI de produção         |
-| **Python**            | 3.10+   | Runtime                           |
-| **Pydantic**          | 2.5+    | Validação e serialização de dados |
-| **Pydantic Settings** | 2.5+    | Configuração de ambiente          |
+| Componente   | Versão | Propósito                                    |
+| ------------ | ------ | -------------------------------------------- |
+| **FastAPI**  | 0.104+ | Framework web assíncrono                     |
+| **Uvicorn**  | 0.24+  | ASGI server (dev)                            |
+| **Gunicorn** | 21+    | Process manager (prod/VPS com UvicornWorker) |
+| **Python**   | 3.10+  | Runtime                                      |
+| **Pydantic** | 2.5+   | Validação de dados                           |
+
+### Endpoints
+
+```
+GET    /health              → Status básico
+GET    /ready               → Ready probe (DB, Redis, etc)
+GET    /metrics             → Prometheus metrics
+GET    /swagger             → API docs (dev only)
+
+POST   /api/v1/chat         → Query com RAG
+GET    /api/v1/chat/:id     → Histórico da sessão
+POST   /api/v1/search       → Vector search
+
+POST   /api/v1/datasets     → Upload/ingestão
+GET    /api/v1/datasets     → Listar datasets
+GET    /api/v1/datasets/:id → Dataset details
+
+POST   /api/v1/memory       → Store custom memory
+GET    /api/v1/memory       → Retrieve memory
+DELETE /api/v1/memory/:id   → Delete memory
+
+POST   /api/v1/auth/login   → JWT token
+POST   /api/v1/auth/refresh → Novo token
+POST   /api/v1/auth/logout  → Invalidar token
+
+GET    /api/v1/agents       → Agentes conectados
+POST   /api/v1/agents/:id/key → Criar API key
+
+GET    /api/v1/settings     → User settings
+POST   /api/v1/settings     → Update settings
+
+POST   /api/v1/backup       → Trigger backup
+GET    /api/v1/backup/list  → List backups
+POST   /api/v1/restore      → Restore backup
+```
 
 ### Integração LangChain
 
-| Component               | Version | Purpose                    |
-| ----------------------- | ------- | -------------------------- |
-| **langchain**           | 0.1+    | Framework principal        |
-| **langchain-anthropic** | 0.1+    | Integração Claude          |
-| **langchain-core**      | 0.1+    | Tipos base e callbacks     |
-| **langchain-community** | 0.1+    | Ecossistema de ferramentas |
+| Componente              | Versão | Propósito         |
+| ----------------------- | ------ | ----------------- |
+| **langchain**           | 0.1+   | Orquestração LLM  |
+| **langchain-anthropic** | 0.1+   | Integração Claude |
+| **langchain-core**      | 0.1+   | Tipos base        |
+| **langchain-community** | 0.1+   | Tools ecosystem   |
 
-### Autenticação e Segurança
-
-| Component            | Version | Purpose                        |
-| -------------------- | ------- | ------------------------------ |
-| **python-jose**      | 3.3+    | Codificação/decodificação JWT  |
-| **passlib**          | 1.7+    | Hashing de senha (bcrypt)      |
-| **bcrypt**           | 4.0+    | Hashing criptográfico          |
-| **python-multipart** | 0.0.6+  | Análise de dados de formulário |
-
-### Banco de Dados e ORM
-
-| Component           | Version | Purpose                                 |
-| ------------------- | ------- | --------------------------------------- |
-| **SQLAlchemy**      | 2.0+    | ORM (PostgreSQL)                        |
-| **psycopg2-binary** | 2.9+    | Adaptador PostgreSQL                    |
-| **alembic**         | 1.12+   | Migrações de banco de dados             |
-| **lancedb**         | 0.3+    | Banco de dados vetorial (Nativo Python) |
-
-### Caching e Gerenciamento de Sessão
-
-| Component             | Version | Purpose                    |
-| --------------------- | ------- | -------------------------- |
-| **redis**             | 5.0+    | Cache em memória + sessões |
-| **aioredis**          | 2.0+    | Cliente Redis assíncrono   |
-| **python-redis-lock** | 4.0+    | Bloqueio distribuído       |
-
-### Observabilidade e Logging
-
-| Component                                    | Version | Purpose                        |
-| -------------------------------------------- | ------- | ------------------------------ |
-| **opentelemetry-api**                        | 1.20+   | Padrões de rastreamento        |
-| **opentelemetry-sdk**                        | 1.20+   | Implementação de rastreamento  |
-| **opentelemetry-exporter-jaeger**            | 1.20+   | Exportador Jaeger              |
-| **opentelemetry-exporter-prometheus**        | 0.41b+  | Exportador Prometheus          |
-| **opentelemetry-instrumentation-fastapi**    | 0.41b+  | Auto-instrumentação FastAPI    |
-| **opentelemetry-instrumentation-sqlalchemy** | 0.41b+  | Auto-instrumentação SQLAlchemy |
-| **opentelemetry-instrumentation-redis**      | 0.41b+  | Auto-instrumentação Redis      |
-| **sentry-sdk**                               | 1.38+   | Rastreamento de erros          |
-| **python-json-logger**                       | 2.0+    | Logging estruturado em JSON    |
-
-### Limitação de Taxa e Validação
-
-| Component           | Version | Purpose                        |
-| ------------------- | ------- | ------------------------------ |
-| **slowapi**         | 0.1+    | Limitação de taxa para FastAPI |
-| **email-validator** | 2.1+    | Validação de e-mail            |
-
-### Ferramentas de Desenvolvimento
-
-| Component          | Version | Purpose                      |
-| ------------------ | ------- | ---------------------------- |
-| **ruff**           | 0.1+    | Linter Python rápido         |
-| **mypy**           | 1.7+    | Verificação de tipo estática |
-| **black**          | 23.10+  | Formatador de código         |
-| **pytest**         | 7.4+    | Framework de testes          |
-| **pytest-asyncio** | 0.21+   | Suporte a testes assíncronos |
-| **pytest-cov**     | 4.1+    | Relatório de cobertura       |
-| **httpx**          | 0.25+   | Cliente HTTP (assíncrono)    |
-
-### Exemplo de Arquivo de Dependências
+### Requirements
 
 ```txt
-# requirements.txt (Backend API)
-
 # Framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
@@ -194,359 +619,293 @@ pydantic-settings==2.1.0
 # LangChain
 langchain==0.1.0
 langchain-anthropic==0.1.0
-langchain-core==0.1.0
-langchain-community==0.1.0
-
-# Authentication
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-bcrypt==4.1.1
-python-multipart==0.0.6
 
 # Database
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
+pg8000-embedded==2.0.0
 alembic==1.12.1
 lancedb==0.3.0
 
 # Cache
 redis==5.0.1
 aioredis==2.0.1
-python-redis-lock==4.0.0
+
+# Auth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.1
 
 # Observability
+sentry-sdk[fastapi]==1.38.0
 opentelemetry-api==1.20.0
 opentelemetry-sdk==1.20.0
-opentelemetry-exporter-jaeger==1.20.0
-opentelemetry-exporter-prometheus==0.41b0
 opentelemetry-instrumentation-fastapi==0.41b0
-opentelemetry-instrumentation-sqlalchemy==0.41b0
-opentelemetry-instrumentation-redis==0.41b0
-sentry-sdk[fastapi]==1.38.0
 python-json-logger==2.0.7
 
 # Rate limiting
 slowapi==0.1.9
-email-validator==2.1.0
 
-# Development
-ruff==0.1.11
-mypy==1.7.1
-black==23.10.1
+# Dev & Testing
 pytest==7.4.3
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
-httpx==0.25.2
+ruff==0.1.11
+mypy==1.7.1
+black==23.10.1
+```
+
+---
+
+## Frontend Web
+
+### Stack
+
+| Componente         | Versão | Propósito                |
+| ------------------ | ------ | ------------------------ |
+| **React**          | 18+    | UI framework             |
+| **Vite**           | 5+     | Build tool (dev + prod)  |
+| **TypeScript**     | 5+     | Type safety              |
+| **TailwindCSS**    | 3.3+   | Styling                  |
+| **Zustand**        | 4.4+   | State management         |
+| **TanStack Query** | 5+     | Data fetching            |
+| **React Router**   | 6+     | SPA routing              |
+| **shadcn/ui**      | Latest | UI components (opcional) |
+
+### Arquitetura
+
+```
+src/
+├── pages/               # Rotas principais
+│   ├── Chat.tsx
+│   ├── Datasets.tsx
+│   ├── Memory.tsx
+│   ├── Settings.tsx
+│   └── Admin.tsx
+│
+├── components/          # Componentes reutilizáveis
+│   ├── Header.tsx
+│   ├── Sidebar.tsx
+│   ├── ChatWindow.tsx
+│   └── [...]
+│
+├── hooks/
+│   ├── useChat.ts
+│   ├── useDatasets.ts
+│   └── [...]
+│
+├── store/               # Zustand
+│   ├── authStore.ts
+│   ├── settingsStore.ts
+│   └── [...]
+│
+├── api/                 # API client
+│   └── client.ts
+│
+├── types/
+│   └── index.ts
+│
+└── styles/
+    └── globals.css
+```
+
+### WebSocket/SSE para Streaming
+
+```typescript
+// Streaming respostas LLM em real-time
+const stream = await fetch("/api/v1/chat", {
+  method: "POST",
+  body: JSON.stringify({ query: "..." }),
+});
+
+const reader = stream.body.getReader();
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  const chunk = new TextDecoder().decode(value);
+  updateUI(chunk); // Update chat window incrementally
+}
+```
+
+### Build & Deployment
+
+```bash
+# Development
+npm run dev          # http://localhost:5173
+
+# Production build
+npm run build        # → dist/
+
+# Preview
+npm run preview
+
+# Integrated no backend (served by FastAPI)
+# ./frontend/dist → /static/ (FastAPI static files)
 ```
 
 ---
 
 ## Vectora Cognitive Runtime
 
-### Stack ML em Python
+### Modelo e Fine-tuning
 
-| Component        | Version | Purpose                                    |
-| ---------------- | ------- | ------------------------------------------ |
-| **PyTorch**      | 2.1+    | Framework de deep learning                 |
-| **transformers** | 4.35+   | Carregamento de modelos (Hugging Face)     |
-| **peft**         | 0.7+    | Ajuste fino eficiente em parâmetros (LoRA) |
-| **numpy**        | 1.24+   | Computação numérica                        |
-| **scikit-learn** | 1.3+    | Métricas de avaliação                      |
+| Componente       | Versão | Propósito           |
+| ---------------- | ------ | ------------------- |
+| **PyTorch**      | 2.1+   | Deep learning       |
+| **transformers** | 4.35+  | Hugging Face models |
+| **peft**         | 0.7+   | LoRA fine-tuning    |
 
 ### Modelo Base
 
-| Component                | Params | Languages         | Purpose                    |
-| ------------------------ | ------ | ----------------- | -------------------------- |
-| **XLM-RoBERTa-small**    | 24M    | 101 (incl. PT-BR) | Codificador base           |
-| **LoRA (r=8, alpha=16)** | ~2M    | -                 | Adaptadores de ajuste fino |
+- **XLM-RoBERTa-small**: 24M params, 101 idiomas (incl. PT-BR)
+- **LoRA Fine-tuning**: r=8, alpha=16 (~2M params adicionais)
+- **Saída**: 4 classes (agent_mode, tool_mode, web_search, recovery)
 
-### Treinamento e Avaliação
+### Training
 
-| Component       | Version | Purpose                                 |
-| --------------- | ------- | --------------------------------------- |
-| **tensorboard** | 2.14+   | Visualização de treinamento             |
-| **wandb**       | 0.16+   | Rastreamento de experimentos (opcional) |
-| **pandas**      | 2.1+    | Processamento de dados                  |
-| **tqdm**        | 4.66+   | Barras de progresso                     |
+```bash
+# Baixar modelo base
+python scripts/download_base.py
 
-### Processamento de Dados
+# Build dataset (sintético ou real)
+python scripts/build_dataset.py --synthetic
 
-| Component      | Version | Purpose                                  |
-| -------------- | ------- | ---------------------------------------- |
-| **datasets**   | 2.14+   | Datasets do Hugging Face (opcional)      |
-| **jsonschema** | 4.20+   | Validar formato dos dados de treinamento |
+# Treinar
+python scripts/train.py \
+  --model FacebookAI/xlm-roberta-small \
+  --epochs 3 \
+  --batch_size 32
 
-### Exemplo de Arquivo de Dependências
-
-```txt
-# requirements-vcr.txt (VCR)
-
-# Core ML
-torch==2.1.0
-transformers==4.35.2
-peft==0.7.1
-numpy==1.24.3
-scikit-learn==1.3.2
-
-# Training
-tensorboard==2.14.1
-wandb==0.16.0
-pandas==2.1.3
-tqdm==4.66.1
-
-# Data
-datasets==2.14.1
-jsonschema==4.20.0
+# Avaliar
+python scripts/eval.py --model models/checkpoints/lora_r8_a16_final/
 ```
 
-### Estrutura de Diretórios
+### Inference (Phase 1: Subprocess)
 
-```
-vectora-cognitive-runtime/
-├── scripts/
-│   ├── download_base.py        # Download XLM-RoBERTa-small
-│   ├── build_dataset.py        # Synthetic (Phase 1) or Real (Phase 2+)
-│   ├── train.py                # Fine-tune with LoRA
-│   ├── eval.py                 # Evaluate accuracy, calibration
-│   └── export_onnx.py          # Export to ONNX (Phase 4+)
-├── src/
-│   ├── model.py                # XLM-RoBERTa + classification head
-│   ├── decision.py             # Decision logic (Agent/Tool/Web/Recovery)
-│   ├── recovery.py             # Fallback strategies
-│   ├── inference.py            # Inference loop (subprocess)
-│   ├── server.py               # gRPC server (Phase 4+)
-│   └── __init__.py
-├── data/
-│   ├── raw/
-│   │   ├── synthetic_queries.jsonl
-│   │   └── production_traces.jsonl
-│   └── processed/
-│       ├── train_set.jsonl
-│       ├── val_set.jsonl
-│       └── test_set.jsonl
-├── models/
-│   ├── checkpoints/
-│   │   ├── lora_r8_a16_epoch1/
-│   │   ├── lora_r8_a16_epoch3/
-│   │   └── lora_r8_a16_final/
-│   └── exports/
-│       └── vcr-policy-v1.onnx  (Phase 4+)
-├── evaluation/
-│   ├── golden_queries.jsonl
-│   ├── metrics.py
-│   └── test_production_readiness.py
-├── config.yaml                 # Hyperparameters
-├── requirements.txt
-├── .env.example
-├── Makefile
-└── README.md
+```python
+# Backend chama VCR via subprocess
+import json
+import subprocess
+
+input_data = {
+    "query": "What is AI?",
+    "context": ["machine learning", "neural networks"]
+}
+
+result = subprocess.run(
+    ["python", "vectora-cognitive-runtime/src/inference.py"],
+    input=json.dumps(input_data),
+    capture_output=True,
+    text=True
+)
+
+decision = json.loads(result.stdout)
+# {"action": "agent_mode", "confidence": 0.92}
 ```
 
 ---
 
 ## SDK de Integrações
 
-### Configuração do Monorepo
-
-| Component      | Version | Purpose                               |
-| -------------- | ------- | ------------------------------------- |
-| **Turborepo**  | 1.10+   | Orquestração do monorepo              |
-| **pnpm**       | 8.12+   | Gerenciador de pacotes (modo estrito) |
-| **TypeScript** | 5.2+    | Language                              |
-| **Node.js**    | 20+ LTS | Runtime                               |
-
-### Pacote Compartilhado (@vectora/shared)
-
-| Component        | Version | Purpose                          |
-| ---------------- | ------- | -------------------------------- |
-| **zod**          | 3.22+   | Validação com segurança de tipos |
-| **jsonwebtoken** | 9.1+    | Manipulação de JWT               |
-| **axios**        | 1.6+    | HTTP client                      |
-
-### SDK do Claude Code (@vectora/sdk-claude-code)
-
-| Component                     | Version | Purpose      |
-| ----------------------------- | ------- | ------------ |
-| **@modelcontextprotocol/sdk** | 0.1+    | MCP protocol |
-
-### SDK da CLI do Gemini (@vectora/sdk-gemini-cli)
-
-| Component                 | Version | Purpose       |
-| ------------------------- | ------- | ------------- |
-| **@google/generative-ai** | 0.3+    | Gemini client |
-
-### SDK do Paperclip (@vectora/sdk-paperclip)
-
-| Component             | Version | Purpose        |
-| --------------------- | ------- | -------------- |
-| **@paperclipai/core** | -       | Paperclip core |
-
-### Testes e Qualidade
-
-| Component                  | Version | Purpose                    |
-| -------------------------- | ------- | -------------------------- |
-| **jest**                   | 29.7+   | Framework de testes        |
-| **@testing-library/react** | 14.0+   | Teste de componentes React |
-| **eslint**                 | 8.53+   | Linting                    |
-| **prettier**               | 3.0+    | Formatting                 |
-
-### Exemplo de Arquivo de Dependências
-
-```json
-{
-  "name": "@vectora/shared",
-  "version": "1.0.0",
-  "dependencies": {
-    "zod": "^3.22.4",
-    "jsonwebtoken": "^9.1.2",
-    "axios": "^1.6.2"
-  },
-  "devDependencies": {
-    "typescript": "^5.2.2",
-    "@types/node": "^20.8.0",
-    "jest": "^29.7.0",
-    "eslint": "^8.53.0",
-    "prettier": "^3.0.3"
-  }
-}
-```
-
-### Estrutura de Diretórios
+### Monorepo (Turborepo + pnpm)
 
 ```
 vectora-integrations/
 ├── packages/
-│   ├── shared/
-│   │   ├── src/
-│   │   │   ├── types/
-│   │   │   │   ├── vectora.ts
-│   │   │   │   ├── agents.ts
-│   │   │   │   └── auth.ts
-│   │   │   ├── auth/
-│   │   │   │   ├── jwt.ts
-│   │   │   │   └── encryption.ts
-│   │   │   ├── http/
-│   │   │   │   └── client.ts
-│   │   │   └── errors/
-│   │   │       └── index.ts
-│   │   └── package.json
-│   │
-│   ├── claude-code/
-│   │   ├── src/
-│   │   │   ├── mcp/
-│   │   │   │   ├── server.ts
-│   │   │   │   ├── handlers.ts
-│   │   │   │   └── types.ts
-│   │   │   ├── client.ts
-│   │   │   ├── tools/
-│   │   │   │   ├── search.ts
-│   │   │   │   ├── rerank.ts
-│   │   │   │   ├── websearch.ts
-│   │   │   │   └── knowledge.ts
-│   │   │   └── index.ts
-│   │   └── package.json
-│   │
-│   ├── gemini-cli/
-│   ├── paperclip/
-│   ├── hermes/
-│   └── custom-template/
+│   ├── shared/              (@vectora/shared)
+│   ├── claude-code/         (@vectora/sdk-claude-code)
+│   ├── gemini-cli/          (@vectora/sdk-gemini-cli)
+│   ├── paperclip/           (@vectora/sdk-paperclip)
+│   ├── hermes/              (@vectora/sdk-hermes)
+│   └── custom-template/     (Template)
 │
-├── apps/
-│   └── docs/
-│       ├── content/
-│       └── package.json
-│
-├── turbo.json
-├── pnpm-workspace.yaml
-├── tsconfig.base.json
-├── package.json
-└── .github/
-    └── workflows/
-        ├── test.yml
-        ├── build.yml
-        └── publish.yml
+└── apps/
+    └── docs/                (Integration docs)
 ```
 
----
+### Protocolos
 
-## Site e Documentação
+| Agente          | Protocolo  | Library                   |
+| --------------- | ---------- | ------------------------- |
+| **Claude Code** | MCP        | @modelcontextprotocol/sdk |
+| **Gemini CLI**  | REST       | @google/generative-ai     |
+| **Paperclip**   | MCP + REST | @paperclipai/core         |
+| **Hermes**      | REST       | Custom                    |
+| **Custom**      | REST       | Template                  |
 
-### Gerador de Site Estático
+### Publishing
 
-| Component        | Version | Purpose                   |
-| ---------------- | ------- | ------------------------- |
-| **Hugo**         | 0.120+  | Static site generator     |
-| **Hextra Theme** | latest  | Tema moderno e responsivo |
-
-### Idiomas do Conteúdo
-
-- **English** (/en/)
-- **Portuguese Brazil** (/pt-br/)
-
-### Seções de Conteúdo
-
+```bash
+npm publish @vectora/sdk-claude-code
+npm publish @vectora/sdk-gemini-cli
+# Cada SDK é independente no npm
 ```
-content/
-├── en/
-│   ├── docs/
-│   │   ├── getting-started/ (setup: local, docker, vps)
-│   │   ├── architecture/ (overview, tier-based, data-flow)
-│   │   ├── api-reference/ (chat, memory, datasets, auth, settings)
-│   │   ├── integrations/ (claude-code, gemini, paperclip, custom)
-│   │   ├── contributing/ (dev-setup, code-style, pull-requests)
-│   │   └── faq/
-│   ├── blog/
-│   └── about/
-│
-└── pt-br/
-    ├── docs/
-    ├── blog/
-    └── about/
-```
-
-### Implantação
-
-| Platform         | Method                    | Purpose                       |
-| ---------------- | ------------------------- | ----------------------------- |
-| **GitHub Pages** | Deploy automático da main | Hospedagem estática           |
-| **Netlify**      | Integração de hook do Git | CDN + deploys de visualização |
-| **Fly.io**       | Contêiner Docker          | Alternativa serverless        |
 
 ---
 
 ## Banco de Dados e Armazenamento
 
-### PostgreSQL
+### PostgreSQL Embedded
 
-| Aspect          | Configuration                         | Purpose                               |
-| --------------- | ------------------------------------- | ------------------------------------- |
-| **Version**     | 15+                                   | Banco de dados relacional de produção |
-| **Embedded**    | SQLite (dev) ou PostgreSQL gerenciado | Local development                     |
-| **Persistence** | 50Gi (Kubernetes)                     | Volume persistente                    |
-| **Backup**      | Scripts pg_dump (diário)              | Recuperação de dados                  |
+| Aspecto     | Configuração                | Propósito                          |
+| ----------- | --------------------------- | ---------------------------------- |
+| **Versão**  | 15+                         | Produção relacional                |
+| **Runtime** | `pg8000-embedded` (PyPI)    | Gerenciado pelo Vectora CLI        |
+| **PGDATA**  | `~/.vectora/postgres/data/` | Dados persistidos                  |
+| **Porta**   | 5433 (padrão)               | Evita conflitos com localhost:5432 |
+| **Backup**  | `pg_dump` nightly           | Recuperação de dados               |
 
-### Redis
+**Lifecycle (gerenciado pelo CLI):**
 
-| Aspect          | Configuration          | Purpose                    |
-| --------------- | ---------------------- | -------------------------- |
-| **Version**     | 7+                     | Cache em memória + sessões |
-| **Persistence** | AOF (Append-Only File) | Durabilidade de dados      |
-| **Persistence** | 10Gi (Kubernetes)      | Volume persistente         |
-| **TTL**         | Configurável por chave | Expiração automática       |
+```bash
+vectora start   # Inicia PostgreSQL, Redis, aplicação
+vectora stop    # Para tudo gracefully
+vectora migrate # Executa Alembic
+vectora backup  # pg_dump automático
+```
+
+### Redis Embedded
+
+| Aspecto         | Configuração                      | Propósito            |
+| --------------- | --------------------------------- | -------------------- |
+| **Versão**      | 7+                                | Cache + sessions     |
+| **Port**        | 6379 (padrão ou 6380 se conflito) | In-memory store      |
+| **Persistence** | AOF (`appendonly.aof`)            | Durabilidade         |
+| **TTL**         | Configurável por chave            | Expiração automática |
 
 ### LanceDB
 
-| Aspect            | Configuration            | Purpose                         |
-| ----------------- | ------------------------ | ------------------------------- |
-| **Version**       | 0.3+                     | Banco de dados vetorial         |
-| **Mode**          | Diretório local (Python) | Armazenamento vetorial embutido |
-| **Indexing**      | IVF (Inverted File)      | Pesquisa de similaridade rápida |
-| **Armazenamento** | 20Gi (Kubernetes)        | Volume persistente              |
+| Aspecto       | Configuração               | Propósito            |
+| ------------- | -------------------------- | -------------------- |
+| **Path**      | `~/.vectora/lancedb/`      | Vector store local   |
+| **Modo**      | Embedded (Python nativo)   | Sem servidor externo |
+| **Tabelas**   | `datasets` (1 por dataset) | Vetores + metadata   |
+| **Indexação** | IVF (Inverted File)        | Busca rápida         |
+| **Embedding** | OpenAI/Anthropic/local     | Dimensão variável    |
 
-### Exemplo de Esquema (PostgreSQL)
+**Schema:**
+
+```python
+# LanceDB table per dataset
+{
+  "id": "vector_id",
+  "dataset_id": "uuid",
+  "chunk_id": "int",
+  "content": "text",
+  "embedding": [0.1, 0.2, ...],  # 1536 dims (OpenAI)
+  "metadata": {
+    "source": "file.pdf",
+    "page": 1,
+    "section": "Introduction"
+  },
+  "created_at": "timestamp"
+}
+```
+
+### PostgreSQL Schema
 
 ```sql
--- Users table
+-- Users & Auth
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -555,7 +914,19 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Chat sessions
+-- Datasets
+CREATE TABLE datasets (
+    id UUID PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    source VARCHAR(50),  -- 'file', 'url', 'api'
+    vector_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Chat Sessions
 CREATE TABLE chat_sessions (
     id UUID PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
@@ -568,322 +939,562 @@ CREATE TABLE messages (
     id UUID PRIMARY KEY,
     session_id UUID REFERENCES chat_sessions(id),
     content TEXT NOT NULL,
-    role VARCHAR(50) NOT NULL,
+    role VARCHAR(50),  -- 'user', 'assistant'
     metadata JSONB,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Datasets
-CREATE TABLE datasets (
+-- Memory (custom embeddings/facts)
+CREATE TABLE memory (
     id UUID PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    vector_count INTEGER,
+    content TEXT NOT NULL,
+    embedding VECTOR(1536),  -- pgvector
     created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- API Keys (agentes)
+CREATE TABLE api_keys (
+    id UUID PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    agent_name VARCHAR(255),  -- 'claude-code', 'gemini', etc
+    key_hash VARCHAR(255),
+    scopes TEXT,  -- 'read,write,admin'
+    last_used_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    revoked_at TIMESTAMP
+);
+
+-- Audit logs
+CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    action VARCHAR(255),  -- 'chat', 'upload', 'delete'
+    resource VARCHAR(255),
+    changes JSONB,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Backups metadata
+CREATE TABLE backups (
+    id UUID PRIMARY KEY,
+    filename VARCHAR(255),
+    size_bytes BIGINT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    restored_at TIMESTAMP
 );
 ```
 
 ---
 
-## Stack de Observabilidade
+## Pipeline de Ingestão
 
-### LangSmith (Rastreamento de LLM)
+### Fluxo
 
-| Aspect       | Configuration                      | Purpose                            |
-| ------------ | ---------------------------------- | ---------------------------------- |
-| **Endpoint** | api.smith.langchain.com            | Rastreamento de LLM na nuvem       |
-| **SDK**      | langsmith==0.0.65+                 | Integration                        |
-| **Tracing**  | Automático via callbacks LangChain | Rastreia todas as chamadas LLM     |
-| **Pricing**  | Nível gratuito disponível          | Sem custo de configuração para dev |
+```
+Upload/Import
+    ↓
+Parser (detect format)
+    ├─ PDF → pypdf
+    ├─ Markdown → markdown-it-py
+    ├─ Web → beautifulsoup4
+    ├─ JSON/CSV → pandas
+    └─ Binário → unstructured
+    ↓
+Chunking (overlap, size)
+    ↓
+Embedding (OpenAI / Anthropic / local)
+    ↓
+LanceDB insert + PostgreSQL metadata
+    ↓
+Reindex (rebuil IVF)
+    ↓
+Ready for search
+```
 
-**Setup:**
+### Libraries
+
+| Componente         | Versão | Propósito           |
+| ------------------ | ------ | ------------------- |
+| **unstructured**   | 0.10+  | Parsing genérico    |
+| **pypdf**          | 3.17+  | PDFs                |
+| **beautifulsoup4** | 4.12+  | Web scraping        |
+| **markdown-it-py** | 3.0+   | Markdown parsing    |
+| **python-magic**   | 0.4+   | File type detection |
+| **chardet**        | 5.2+   | Encoding detection  |
+
+### Implementação
+
+```python
+# src/ingestion/pipeline.py
+from unstructured.partition.pdf import partition_pdf
+from unstructured.chunking.basic import chunk_by_title
+from lancedb import connect
+
+class IngestionPipeline:
+    def __init__(self, dataset_id: str):
+        self.dataset_id = dataset_id
+        self.db = connect("~/.vectora/lancedb")
+        self.table = self.db.open_table(f"dataset_{dataset_id}")
+
+    async def ingest(self, file_path: str):
+        # Parse
+        elements = partition_pdf(file_path)
+
+        # Chunk
+        chunks = chunk_by_title(elements, max_characters=1000)
+
+        # Embed
+        embeddings = await self.embed([c.text for c in chunks])
+
+        # Insert LanceDB
+        for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+            self.table.add({
+                "chunk_id": i,
+                "content": chunk.text,
+                "embedding": embedding,
+                "metadata": {
+                    "source": file_path,
+                    "type": chunk.type
+                }
+            })
+
+        # Update count
+        self.update_vector_count(len(chunks))
+```
+
+---
+
+## Background Jobs
+
+### Job Queue
+
+| Tool            | Broker       | Propósito              |
+| --------------- | ------------ | ---------------------- |
+| **RQ**          | Redis        | Recomendado (simples)  |
+| **Celery**      | Redis        | Alternativa (complexo) |
+| **APScheduler** | Local memory | Tarefas recorrentes    |
+
+### Jobs
+
+```python
+# src/jobs/__init__.py
+
+@job
+async def dataset_ingest(dataset_id: str, file_path: str):
+    """Ingestão assíncrona de arquivo"""
+    pipeline = IngestionPipeline(dataset_id)
+    await pipeline.ingest(file_path)
+
+@job
+async def dataset_reindex(dataset_id: str):
+    """Rebuild índices LanceDB"""
+    db = connect("~/.vectora/lancedb")
+    table = db.open_table(f"dataset_{dataset_id}")
+    table.delete_search_index()
+    table.create_search_index()
+
+@job
+async def backup_create():
+    """Backup automático diário"""
+    subprocess.run(["vectora", "backup"])
+
+@job
+async def memory_compact(user_id: int):
+    """Cleanup memória antiga"""
+    db = get_session()
+    # Remove entradas antigas
+    db.query(Memory).filter(
+        Memory.user_id == user_id,
+        Memory.created_at < datetime.now() - timedelta(days=90)
+    ).delete()
+
+@job
+async def embedding_batch(chunk_ids: list[str]):
+    """Batch embedding para chunks"""
+    chunks = db.query(Vector).filter(Vector.id.in_(chunk_ids)).all()
+    embeddings = await embed([c.content for c in chunks])
+    for chunk, emb in zip(chunks, embeddings):
+        chunk.embedding = emb
+    db.commit()
+
+@job
+async def trace_collect():
+    """Coleta traces do dia para Sentry/OpenTelemetry"""
+    pass
+```
+
+### Scheduler
+
+```python
+# src/scheduler.py
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+scheduler = AsyncIOScheduler()
+
+scheduler.add_job(
+    backup_create,
+    'cron',
+    hour=2,  # 2 AM
+    minute=0
+)
+
+scheduler.add_job(
+    memory_compact,
+    'interval',
+    days=1
+)
+
+scheduler.start()
+```
+
+---
+
+## Configuração Local
+
+### Prioridade (primeiro ganha)
+
+1. **CLI flags**: `vectora start --port 9000`
+2. **Env vars**: `VECTORA_PORT=9000`
+3. **config.toml**: `~/.vectora/config.toml`
+4. **Defaults**: código-fonte
+
+### config.toml
+
+```toml
+[vectora]
+environment = "local"
+debug = false
+log_level = "INFO"
+
+[server]
+host = "127.0.0.1"
+port = 8000
+workers = 4
+
+[database]
+postgresql_port = 5433
+postgresql_user = "vectora"
+postgresql_password = "auto-generated"
+
+[redis]
+port = 6379
+ttl_seconds = 3600
+
+[lancedb]
+path = "~/.vectora/lancedb"
+
+[langchain]
+llm_provider = "anthropic"
+embedding_provider = "openai"  # ou "anthropic"
+embedding_model = "text-embedding-3-small"
+
+[security]
+jwt_secret = "auto-generated-on-init"
+api_key_rotation_days = 90
+
+[backup]
+enabled = true
+schedule = "0 2 * * *"  # Daily 2 AM
+retention_days = 30
+```
+
+### Configuração via CLI
 
 ```bash
-# .env
-LANGSMITH_API_KEY=your-api-key
-LANGSMITH_PROJECT=vectora-dev
-LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+vectora config edit              # Abre editor
+vectora config get database.postgresql_port
+vectora config set server.port 9000
 ```
 
-### Prometheus (Coleta de Métricas)
+### Libraries
 
-| Aspect              | Configuration     | Purpose                                        |
-| ------------------- | ----------------- | ---------------------------------------------- |
-| **Version**         | 2.48+             | Banco de dados de métricas de séries temporais |
-| **Scrape Interval** | 15s               | Frequência de coleta padrão                    |
-| **Retention**       | 15d               | Período de retenção de dados                   |
-| **Port**            | 9090 (standalone) | Web UI                                         |
+| Componente            | Versão | Propósito                                                   |
+| --------------------- | ------ | ----------------------------------------------------------- |
+| **pydantic-settings** | 2.1+   | Config validation                                           |
+| **tomli/tomli-w**     | 1.2+   | TOML parsing                                                |
+| **platformdirs**      | 4.0+   | ~/.vectora path                                             |
+| **keyring**           | 24.0+  | Secure secrets (macOS Keychain, Windows Credential Manager) |
 
-**Configuration Example:**
+---
 
-```yaml
-# prometheus.yml
-global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+## Segurança e Autenticação
 
-scrape_configs:
-  - job_name: "vectora-api"
-    static_configs:
-      - targets: ["localhost:8000"]
-    metrics_path: "/metrics"
+### JWT + API Keys
 
-  - job_name: "vectora-vcr"
-    static_configs:
-      - targets: ["localhost:8001"]
-    metrics_path: "/metrics"
+**JWT (usuário web):**
+
+- Token gerado em login
+- TTL: 24 horas
+- Refresh token: 7 dias
+- Stored: localStorage (frontend)
+
+**API Keys (agentes):**
+
+- Gerada por usuário por agente
+- TTL: customizável (padrão: sem expiração)
+- Scopes: read, write, admin
+- Rotation: manual ou automático
+
+### RBAC (5 papéis)
+
+```python
+ROLES = {
+    "admin": ["user:*", "dataset:*", "agent:*", "settings:*", "logs:view"],
+    "researcher": ["dataset:read", "dataset:create", "agent:read"],
+    "developer": ["agent:*", "dataset:read"],
+    "user": ["profile:read", "profile:write", "dataset:read"],
+    "guest": ["public:read"]
+}
+
+AGENT_SCOPES = {
+    "claude-code:read": "Read-only access",
+    "claude-code:write": "Chat + memory write",
+    "memory:read": "Query custom memory",
+    "memory:write": "Store custom memory",
+    "datasets:read": "List + search",
+    "datasets:write": "Upload + delete",
+    "admin:*": "Full access (no restrictions)"
+}
 ```
 
-### Jaeger (Rastreamento Distribuído)
+### Middleware de Segurança
 
-| Aspect             | Configuration                     | Purpose                  |
-| ------------------ | --------------------------------- | ------------------------ |
-| **Version**        | 1.50+                             | Rastreamento distribuído |
-| **Port UI**        | 16686                             | Jaeger UI                |
-| **Port Collector** | 14268                             | Coleta de spans          |
-| **Backend**        | Elasticsearch ou Cassandra (prod) | Armazenamento            |
-
-**Docker Compose:**
-
-```yaml
-jaeger:
-  image: jaegertracing/all-in-one:latest
-  ports:
-    - "16686:16686" # Web UI
-    - "14268:14268" # Collector (HTTP)
-    - "6831:6831/udp" # Agent (UDP)
+```python
+# FastAPI middlewares
+app.add_middleware(CORSMiddleware, allow_origins=[...])
+app.add_middleware(RateLimitMiddleware, requests_per_minute=100)
+app.add_middleware(SecurityHeadersMiddleware)  # HSTS, CSP, etc
+app.add_middleware(RequestLoggingMiddleware)  # Audit logs
 ```
 
-### Grafana (Visualização)
+### Secrets Management
 
-| Aspect           | Configuration                     | Purpose                        |
-| ---------------- | --------------------------------- | ------------------------------ |
-| **Version**      | 10.2+                             | Visualização de métricas       |
-| **Port**         | 3000                              | Web UI                         |
-| **Data Sources** | Prometheus, Jaeger, Loki          | Múltiplas fontes               |
-| **Dashboards**   | Pré-construídos ou personalizados | Visualizações de monitoramento |
+```python
+# src/security/secrets.py
+from keyring import get_password, set_password
 
-**Default Credentials:**
+# Armazenar sensíveis em OS keyring (macOS Keychain, Windows Credential Manager)
+set_password("vectora", "anthropic_api_key", "sk-...")
+api_key = get_password("vectora", "anthropic_api_key")
 
-```
-Username: admin
-Password: admin (change after first login)
+# Ou via .env (git-ignored)
+JWT_SECRET = os.getenv("JWT_SECRET", generate_secret())
 ```
 
-### Sentry (Rastreamento de Erros)
+---
 
-| Aspect      | Configuration                     | Purpose                        |
-| ----------- | --------------------------------- | ------------------------------ |
-| **Version** | latest                            | Rastreamento e alerta de erros |
-| **Port**    | 9000                              | Web UI (local)                 |
-| **Backend** | PostgreSQL + Redis                | Armazenamento                  |
-| **DSN**     | https://<key>@<host>/<project_id> | Endpoint do SDK                |
+## Observabilidade Local-First
 
-**Local Docker Compose:**
+### Default (Built-in)
 
-```yaml
-sentry-postgres:
-  image: postgres:15-alpine
-  environment:
-    POSTGRES_DB: sentry
-    POSTGRES_USER: sentry
-    POSTGRES_PASSWORD: sentry-local-dev
-
-sentry-redis:
-  image: redis:7-alpine
-
-sentry:
-  image: sentry:latest
-  environment:
-    SENTRY_SECRET_KEY: your-secret-key
-    SENTRY_POSTGRES_HOST: sentry-postgres
-    SENTRY_REDIS_HOST: sentry-redis
-  ports:
-    - "9000:9000"
+```
+Logs em arquivo: ~/.vectora/logs/vectora.log
+Health endpoint: GET /health → {"status": "healthy"}
+Ready endpoint: GET /ready → {postgres: ok, redis: ok, lancedb: ok}
+Metrics endpoint: GET /metrics → Prometheus format
 ```
 
-### OpenTelemetry (Padrões)
+### Advanced (Opcional)
 
-| Component                             | Version | Purpose                  |
-| ------------------------------------- | ------- | ------------------------ |
-| **opentelemetry-api**                 | 1.20+   | API padrão               |
-| **opentelemetry-sdk**                 | 1.20+   | Implementação do SDK     |
-| **opentelemetry-exporter-jaeger**     | 1.20+   | Enviar para o Jaeger     |
-| **opentelemetry-exporter-prometheus** | 0.41b+  | Enviar para o Prometheus |
-| **opentelemetry-instrumentation-\***  | 0.41b+  | Auto-instrumentação      |
+**Prometheus + Grafana local:**
 
-### Stack de Observabilidade Unificada (Local)
+```bash
+docker-compose -f docker-compose.dev.yml up -d prometheus grafana
+# Acessa http://localhost:3000 (admin/admin)
+```
 
-**docker-compose.local.yml:**
+**Sentry (opcional, cloud ou self-hosted):**
+
+```python
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN", None),  # Se vazio, desativado
+    environment="local",
+    traces_sample_rate=0.1 if not DEBUG else 1.0
+)
+```
+
+**OpenTelemetry (exportar traces):**
+
+```python
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+# Exportar apenas se Jaeger está rodando
+# Caso contrário, logs locais são suficientes
+```
+
+**LangSmith (LLM tracing):**
+
+```python
+# Opcional: tracear todas as chamadas LangChain
+os.environ["LANGSMITH_API_KEY"] = "..."  # Se vazio, desativado
+```
+
+---
+
+## DevOps e Deployment
+
+### Local Development
+
+```bash
+# Terminal 1: Backend
+uv venv
+source .venv/bin/activate  # ou .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn src.main:app --reload
+
+# Terminal 2: Frontend
+cd frontend
+npm run dev
+
+# Terminal 3: VCR (if training)
+python vectora-cognitive-runtime/src/server.py
+
+# Acessa:
+# Backend: http://localhost:8000
+# Frontend: http://localhost:5173
+# API docs: http://localhost:8000/docs
+```
+
+### Docker (Dev + VPS)
+
+**docker-compose.dev.yml** (development):
 
 ```yaml
 version: "3.8"
 
 services:
-  # Metrics
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-
-  # Tracing
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    ports:
-      - "16686:16686"
-      - "14268:14268"
-      - "6831:6831/udp"
-    environment:
-      COLLECTOR_ZIPKIN_HOST_PORT: ":9411"
-
-  # Visualization
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
-    volumes:
-      - ./observability/grafana/datasources:/etc/grafana/provisioning/datasources
-      - ./observability/grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - grafana_data:/var/lib/grafana
-    depends_on:
-      - prometheus
-
-  # Error Tracking
-  sentry-postgres:
+  postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: sentry
-      POSTGRES_USER: sentry
-      POSTGRES_PASSWORD: sentry-local-dev
-    volumes:
-      - sentry_postgres:/var/lib/postgresql/data
-
-  sentry-redis:
-    image: redis:7-alpine
-
-  sentry:
-    image: sentry:latest
+      POSTGRES_PASSWORD: local
     ports:
-      - "9000:9000"
-    environment:
-      SENTRY_SECRET_KEY: your-secret-key-change-this
-      SENTRY_POSTGRES_HOST: sentry-postgres
-      SENTRY_POSTGRES_USER: sentry
-      SENTRY_POSTGRES_PASSWORD: sentry-local-dev
-      SENTRY_REDIS_HOST: sentry-redis
-    depends_on:
-      - sentry-postgres
-      - sentry-redis
+      - "5433:5432"
     volumes:
-      - sentry_data:/var/lib/sentry
+      - postgres_data:/var/lib/postgresql/data
 
-  sentry-worker:
-    image: sentry:latest
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: .
+    command: uvicorn src.main:app --reload --host 0.0.0.0
+    ports:
+      - "8000:8000"
     environment:
-      SENTRY_SECRET_KEY: your-secret-key-change-this
-      SENTRY_POSTGRES_HOST: sentry-postgres
-      SENTRY_POSTGRES_USER: sentry
-      SENTRY_POSTGRES_PASSWORD: sentry-local-dev
-      SENTRY_REDIS_HOST: sentry-redis
+      - DATABASE_URL=postgresql://postgres:local@postgres:5432/vectora
+      - REDIS_URL=redis://redis:6379
     depends_on:
-      - sentry-postgres
-      - sentry-redis
-    command: run worker
+      - postgres
+      - redis
     volumes:
-      - sentry_data:/var/lib/sentry
+      - .:/app
 
-volumes:
-  prometheus_data:
-  grafana_data:
-  sentry_postgres:
-  sentry_data:
+  frontend:
+    build: ./frontend
+    command: npm run dev
+    ports:
+      - "5173:5173"
 ```
 
----
-
-## DevOps e Infraestrutura
-
-### Conteinerização
-
-#### Docker
-
-| Aspect       | Configuration                         | Purpose                        |
-| ------------ | ------------------------------------- | ------------------------------ |
-| **Engine**   | Docker 24+                            | Tempo de execução do contêiner |
-| **Compose**  | 2.20+                                 | Orquestração local             |
-| **Registry** | Docker Hub, GitHub Container Registry | Armazenamento de imagens       |
-
-#### Dockerfile da API Backend
+**Dockerfile** (produção):
 
 ```dockerfile
-# Multi-stage build
+# Multi-stage: build + runtime
 FROM python:3.11-slim as builder
-
 WORKDIR /build
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --user --no-cache-dir -r requirements.txt
 
 FROM python:3.11-slim
-
 WORKDIR /app
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY src/ ./src/
-COPY config/ ./config/
-
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
+COPY src ./src
+COPY frontend/dist ./static
 EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD python -c "import requests; requests.get('http://localhost:8000/health')"
-
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "--access-logfile", "-", "--error-logfile", "-", "src.main:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "-k", "uvicorn.workers.UvicornWorker", "src.main:app"]
 ```
 
-#### Dockerfile do VCR
+### VPS Deployment
 
-```dockerfile
-FROM python:3.11-slim
+**systemd service:**
 
-WORKDIR /app
-COPY requirements-vcr.txt .
-RUN pip install --no-cache-dir -r requirements-vcr.txt
+```ini
+# /etc/systemd/system/vectora.service
+[Unit]
+Description=Vectora Runtime
+After=network.target
 
-COPY vectora-cognitive-runtime/src ./src/
-COPY vectora-cognitive-runtime/models ./models/
+[Service]
+Type=simple
+User=vectora
+WorkingDirectory=/home/vectora/vectora
+ExecStart=/usr/local/bin/vectora start
+ExecStop=/usr/local/bin/vectora stop
+Restart=on-failure
+RestartSec=10
 
-EXPOSE 8001
-CMD ["python", "src/server.py", "--port", "8001"]
+[Install]
+WantedBy=multi-user.target
 ```
 
-### Pipeline CI/CD
-
-#### GitHub Actions
-
-**Estrutura do Workflow:**
+**Caddyfile (reverse proxy):**
 
 ```
-.github/workflows/
-├── test.yml              # Run tests on PR
-├── lint.yml              # Ruff, Mypy, Black
-├── build.yml             # Build Docker images
-├── security-scan.yml     # Trivy, SAST
-└── deploy.yml            # Deploy to production
+api.example.com {
+    encode gzip
+    reverse_proxy localhost:8000
+
+    # Logs
+    log {
+        level info
+        output file /var/log/caddy/vectora.log
+    }
+}
 ```
 
-**Example: test.yml**
+**.env production:**
+
+```
+ENVIRONMENT=production
+DEBUG=false
+LOG_LEVEL=WARN
+JWT_SECRET=<auto-generated>
+ANTHROPIC_API_KEY=<user-provided>
+DATABASE_URL=postgresql://vectora:password@localhost:5433/vectora
+REDIS_URL=redis://localhost:6379
+```
+
+**Deploy workflow:**
+
+```bash
+# 1. SSH into VPS
+ssh user@vps.example.com
+
+# 2. Update Vectora
+vectora update
+
+# 3. Backup before restart
+vectora backup
+
+# 4. Restart
+vectora service restart
+
+# 5. Verify
+vectora status
+curl http://localhost:8000/health
+```
+
+### CI/CD
+
+**GitHub Actions (test + build + release):**
 
 ```yaml
-name: Tests
+name: Tests & Build
 
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+on: [push, pull_request]
 
 jobs:
   test:
@@ -891,172 +1502,56 @@ jobs:
     services:
       postgres:
         image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
       redis:
         image: redis:7
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-          cache: "pip"
+      - run: pip install -r requirements.txt
+      - run: pytest --cov=src
+      - run: ruff check .
+      - run: mypy src/
 
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pytest pytest-cov pytest-asyncio
-
-      - name: Run tests with coverage
-        run: |
-          pytest --cov=src --cov-report=xml --cov-report=term
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-```
-
-**Example: deploy.yml**
-
-```yaml
-name: Deploy to Production
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
+  build:
+    needs: test
     runs-on: ubuntu-latest
-    needs: [test, lint, security-scan]
-
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v2
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+      - uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v4
+          registry: ghcr.io
+      - uses: docker/build-push-action@v4
         with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/vectora-api:latest
-            ${{ secrets.DOCKER_USERNAME }}/vectora-api:${{ github.sha }}
-
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl set image deployment/vectora-api \
-            vectora-api=docker.io/${{ secrets.DOCKER_USERNAME }}/vectora-api:${{ github.sha }}
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: ghcr.io/vectora/vectora:latest
 ```
 
-#### Jenkins
-
-**Estrutura do Jenkinsfile:**
+**Jenkins (VPS deployment):**
 
 ```groovy
 pipeline {
     agent any
-
-    environment {
-        REGISTRY = credentials('docker-registry')
-        DOCKER_IMAGE = "${REGISTRY}/vectora-api"
-        VERSION = "${BUILD_NUMBER}"
-    }
-
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Build') {
             steps {
-                sh '''
-                    pip install -r requirements.txt
-                    python -m pytest
-                '''
+                sh 'docker build -t vectora:${BUILD_NUMBER} .'
             }
         }
-
-        stage('Lint & Type Check') {
+        stage('Test') {
+            steps {
+                sh 'docker run vectora:${BUILD_NUMBER} pytest'
+            }
+        }
+        stage('Deploy') {
+            when { branch 'main' }
             steps {
                 sh '''
-                    ruff check .
-                    mypy src/
-                    black --check src/
-                '''
-            }
-        }
-
-        stage('Security Scan') {
-            steps {
-                sh '''
-                    pip install bandit
-                    bandit -r src/
-                '''
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh '''
-                    docker build -t ${DOCKER_IMAGE}:${VERSION} .
-                    docker push ${DOCKER_IMAGE}:${VERSION}
-                '''
-            }
-        }
-
-        stage('Deploy to Dev') {
-            steps {
-                sh '''
-                    kubectl set image deployment/vectora-api-dev \
-                      vectora-api=${DOCKER_IMAGE}:${VERSION} \
-                      -n dev
-                '''
-            }
-        }
-
-        stage('Manual Approval for Prod') {
-            steps {
-                input 'Deploy to Production?'
-            }
-        }
-
-        stage('Deploy to Production') {
-            steps {
-                sh '''
-                    kubectl set image deployment/vectora-api-prod \
-                      vectora-api=${DOCKER_IMAGE}:${VERSION} \
-                      -n production
-                '''
-            }
-        }
-    }
-
-    post {
-        failure {
-            script {
-                sh '''
-                    curl -X POST -H 'Content-type: application/json' \
-                      --data '{"text":"Build failed: ${BUILD_URL}"}' \
-                      ${SLACK_WEBHOOK}
+                    docker tag vectora:${BUILD_NUMBER} vectora:latest
+                    docker push registry.example.com/vectora:latest
+                    ssh vectora@vps.example.com "vectora update && vectora restart"
                 '''
             }
         }
@@ -1064,766 +1559,193 @@ pipeline {
 }
 ```
 
-### Kubernetes e Helm
+### Security Scanning
 
-#### Estrutura do Helm Chart
-
-```
-helm/vectora/
-├── Chart.yaml                    # Chart metadata
-├── values.yaml                   # Default configuration
-├── values-dev.yaml               # Dev overrides
-├── values-prod.yaml              # Prod overrides
-└── templates/
-    ├── deployment.yaml
-    ├── service.yaml
-    ├── ingress.yaml
-    ├── configmap.yaml
-    ├── secret.yaml
-    ├── statefulset-postgres.yaml
-    ├── statefulset-redis.yaml
-    └── statefulset-lancedb.yaml
-```
-
-#### Exemplo de Valores do Helm
-
-**values.yaml (Default):**
-
-```yaml
-namespace: default
-replicaCount: 1
-
-image:
-  repository: docker.io/vectora/api
-  tag: latest
-  pullPolicy: IfNotPresent
-
-service:
-  type: ClusterIP
-  port: 80
-  targetPort: 8000
-
-ingress:
-  enabled: false
-  className: nginx
-  hosts:
-    - host: vectora.local
-      paths:
-        - path: /
-          pathType: Prefix
-
-resources:
-  limits:
-    cpu: 1000m
-    memory: 1Gi
-  requests:
-    cpu: 500m
-    memory: 512Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 3
-  targetCPUUtilizationPercentage: 80
-
-postgres:
-  enabled: true
-  storage: 50Gi
-  persistence:
-    storageClass: standard
-
-redis:
-  enabled: true
-  storage: 10Gi
-
-lancedb:
-  enabled: true
-  storage: 20Gi
-
-env:
-  ENVIRONMENT: development
-  LOG_LEVEL: INFO
-```
-
-**values-prod.yaml (Produção Override):**
-
-```yaml
-namespace: vectora-production
-replicaCount: 3
-
-image:
-  tag: v1.0.0 # Pinned version
-  pullPolicy: Always
-
-service:
-  type: LoadBalancer
-
-ingress:
-  enabled: true
-  className: nginx
-  hosts:
-    - host: api.vectora.ai
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: vectora-tls
-      hosts:
-        - api.vectora.ai
-
-resources:
-  limits:
-    cpu: 2000m
-    memory: 2Gi
-  requests:
-    cpu: 1000m
-    memory: 1Gi
-
-autoscaling:
-  enabled: true
-  minReplicas: 3
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 70
-
-postgres:
-  storage: 500Gi
-  backup:
-    enabled: true
-    schedule: "0 2 * * *" # Daily at 2 AM
-
-redis:
-  storage: 100Gi
-  persistence: true
-
-env:
-  ENVIRONMENT: production
-  LOG_LEVEL: WARN
-```
-
-#### Script de Implantação
-
-**deploy.sh:**
-
-```bash
-#!/bin/bash
-
-ENV=${1:-dev}
-HELM_RELEASE=vectora
-HELM_CHART=./helm/vectora
-
-# Validate environment
-if [[ "$ENV" != "dev" && "$ENV" != "prod" ]]; then
-    echo "Usage: $0 {dev|prod}"
-    exit 1
-fi
-
-# Build values file path
-VALUES_FILE="helm/vectora/values-${ENV}.yaml"
-if [[ ! -f "$VALUES_FILE" ]]; then
-    VALUES_FILE="helm/vectora/values.yaml"
-fi
-
-echo "🚀 Deploying Vectora to $ENV environment..."
-echo "📄 Using values: $VALUES_FILE"
-
-# Helm upgrade or install
-helm upgrade --install $HELM_RELEASE $HELM_CHART \
-    -f $VALUES_FILE \
-    -n vectora-$ENV \
-    --create-namespace \
-    --wait \
-    --timeout 5m
-
-echo "✅ Deployment complete!"
-echo "🔗 Get service info: kubectl get svc -n vectora-$ENV"
-```
+| Tool         | Propósito                |
+| ------------ | ------------------------ |
+| **Trivy**    | Container image scanning |
+| **Bandit**   | Python security linting  |
+| **Gitleaks** | Secret detection         |
+| **Semgrep**  | SAST (opcional)          |
 
 ---
 
-## Segurança e Autenticação
+## Website e Documentação
 
-### Autenticação JWT
+### Stack
 
-| Component                     | Purpose                          | Details                        |
-| ----------------------------- | -------------------------------- | ------------------------------ |
-| **Geração de Token**          | Assinar JWT com segredo          | Payload: user_id, role, exp    |
-| **Validação de Token**        | Verificar assinatura e expiração | Em toda requisição autenticada |
-| **Atualização de Token**      | Gerar novo token                 | Via endpoint refresh_token     |
-| **Gerenciamento de Segredos** | Armazenar no ambiente            | Nunca envie segredos (commit)  |
+| Componente       | Versão | Propósito             |
+| ---------------- | ------ | --------------------- |
+| **Hugo**         | 0.120+ | Static site generator |
+| **Hextra Theme** | Latest | Modern theme          |
 
-**Implementation:**
+### Estrutura
 
-```python
-# src/auth/jwt.py
-from datetime import datetime, timedelta
-from jose import JWTError, jwt
-
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-ALGORITHM = "HS256"
-
-def create_token(data: dict, expires_delta: timedelta | None = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(hours=24)
-
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-def verify_token(token: str) -> dict:
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except JWTError:
-        raise ValueError("Invalid token")
 ```
-
-### RBAC (Controle de Acesso Baseado em Funções)
-
-| Role           | Permissions                          | Use Case                             |
-| -------------- | ------------------------------------ | ------------------------------------ |
-| **admin**      | Todas as permissões                  | Administradores do sistema           |
-| **researcher** | Ler datasets, rodar experimentos     | Cientistas de dados                  |
-| **developer**  | Ler/escrever integrações             | Consumidores da API                  |
-| **user**       | Ler próprios dados, gerenciar perfil | Usuários finais                      |
-| **guest**      | Ler apenas dados públicos            | Usuários em período de teste (trial) |
-
-**Permissions Matrix:**
-
-```python
-PERMISSIONS = {
-    "admin": [
-        "user:create", "user:read", "user:update", "user:delete",
-        "dataset:create", "dataset:read", "dataset:update", "dataset:delete",
-        "integration:create", "integration:read", "integration:update", "integration:delete",
-        "settings:manage", "logs:view"
-    ],
-    "researcher": [
-        "dataset:read", "dataset:create",
-        "integration:read",
-        "settings:view"
-    ],
-    "developer": [
-        "integration:read", "integration:create",
-        "dataset:read",
-        "settings:view"
-    ],
-    "user": [
-        "profile:read", "profile:update",
-        "dataset:read",
-    ],
-    "guest": [
-        "public:read"
-    ]
-}
-```
-
-### Segurança de Senha
-
-| Component     | Configuration                                                 | Purpose                        |
-| ------------- | ------------------------------------------------------------- | ------------------------------ |
-| **Hashing**   | bcrypt (rounds=12)                                            | Armazenamento seguro de senha  |
-| **Salt**      | Gerado automaticamente por senha                              | Proteção contra rainbow tables |
-| **Validação** | Mín. 12 caracteres, maiúsculas, minúsculas, dígitos, especial | Senhas fortes                  |
-
-### HTTPS e TLS
-
-| Environment  | Certificate               | Auto-Renewal              |
-| ------------ | ------------------------- | ------------------------- |
-| **Local**    | Autoassinado (apenas dev) | Manual                    |
-| **Produção** | Let's Encrypt             | cert-manager (Kubernetes) |
-
-**Ingress with TLS:**
-
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: vectora-ingress
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-        - api.vectora.ai
-      secretName: vectora-tls
-  rules:
-    - host: api.vectora.ai
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: vectora-api
-                port:
-                  number: 80
-```
-
-### Configuração de CORS
-
-```python
-# src/main.py
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://vectora.ai",
-        "https://app.vectora.ai",
-        "http://localhost:3000",  # local dev
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-### Limitação de Taxa
-
-```python
-# src/middleware/rate_limit.py
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-
-@app.post("/api/v1/chat")
-@limiter.limit("10/minute")
-async def chat(request: Request, query: ChatRequest):
-    return {"response": "..."}
+vectora-website/
+├── content/
+│   ├── en/
+│   │   ├── docs/
+│   │   │   ├── getting-started/
+│   │   │   ├── architecture/
+│   │   │   ├── api-reference/
+│   │   │   ├── cli/
+│   │   │   └── [...]
+│   │   └── blog/
+│   └── pt-br/
+│       └── [mirrors en/]
+│
+└── static/
+    ├── images/
+    └── downloads/
+        ├── vectora-1.0.0-py3-none-any.whl
+        ├── vectora-1.0.0-x86_64-linux
+        ├── vectora-1.0.0.dmg
+        └── vectora-1.0.0.exe
 ```
 
 ---
 
 ## Testes e Qualidade
 
-### Testes Unitários
+### Testing
 
-| Framework          | Version | Purpose                         |
-| ------------------ | ------- | ------------------------------- |
-| **pytest**         | 7.4+    | Executor de testes              |
-| **pytest-asyncio** | 0.21+   | Suporte a testes assíncronos    |
-| **pytest-cov**     | 4.1+    | Relatório de cobertura          |
-| **hypothesis**     | 6.87+   | Testes baseados em propriedades |
+| Framework          | Versão | Propósito   |
+| ------------------ | ------ | ----------- |
+| **pytest**         | 7.4+   | Unit tests  |
+| **pytest-asyncio** | 0.21+  | Async tests |
+| **pytest-cov**     | 4.1+   | Coverage    |
 
-**Example Test:**
+### Linting & Type Checking
 
-```python
-# tests/test_api.py
-import pytest
-from httpx import AsyncClient
-from src.main import app
+| Tool       | Versão | Propósito        |
+| ---------- | ------ | ---------------- |
+| **ruff**   | 0.1+   | Fast linter      |
+| **mypy**   | 1.7+   | Type checking    |
+| **black**  | 23.10+ | Formatter        |
+| **bandit** | 1.7+   | Security linting |
 
-@pytest.mark.asyncio
-async def test_health_check():
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/health")
-        assert response.status_code == 200
-        assert response.json()["status"] == "healthy"
-
-@pytest.mark.asyncio
-async def test_chat_endpoint(db_session):
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.post(
-            "/api/v1/chat",
-            json={"query": "Hello", "session_id": "test-session"}
-        )
-        assert response.status_code == 200
-```
-
-### Testes de Integração
-
-```python
-# tests/integration/test_rag_pipeline.py
-@pytest.mark.asyncio
-async def test_rag_pipeline_end_to_end(db_session, vcr_service):
-    # 1. Upload dataset
-    dataset = await upload_dataset("test_docs.pdf")
-
-    # 2. Query
-    response = await query_service.process("What is Vectora?", dataset_id=dataset.id)
-
-    # 3. Verify LLM response
-    assert response["answer"] is not None
-    assert len(response["sources"]) > 0
-```
-
-### Testes de Carga
-
-| Tool       | Version | Purpose                     |
-| ---------- | ------- | --------------------------- |
-| **locust** | 2.17+   | Framework de teste de carga |
-| **k6**     | 0.47+   | Teste de carga moderno      |
-
-**Example Locust Test:**
-
-```python
-# tests/load/locustfile.py
-from locust import HttpUser, task, between
-
-class VectoraUser(HttpUser):
-    wait_time = between(1, 3)
-
-    @task(1)
-    def health_check(self):
-        self.client.get("/health")
-
-    @task(3)
-    def chat(self):
-        self.client.post("/api/v1/chat", json={
-            "query": "Hello",
-            "session_id": "load-test"
-        })
-
-# Run: locust -f locustfile.py -u 100 -r 10 -t 5m
-```
-
-### Qualidade de Código
-
-| Tool       | Version | Purpose              |
-| ---------- | ------- | -------------------- |
-| **ruff**   | 0.1+    | Linter Python rápido |
-| **mypy**   | 1.7+    | Type checking        |
-| **black**  | 23.10+  | Formatador de código |
-| **pylint** | 3.0+    | Linting avançado     |
-| **bandit** | 1.7+    | Linting de segurança |
-
-**GitHub Actions Quality Gate:**
-
-```yaml
-name: Code Quality
-
-on: [push, pull_request]
-
-jobs:
-  quality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Lint with Ruff
-        run: ruff check .
-
-      - name: Type check with Mypy
-        run: mypy src/
-
-      - name: Format check with Black
-        run: black --check src/
-
-      - name: Security with Bandit
-        run: bandit -r src/
-```
-
-### Cobertura de Testes
+### Coverage Requirement
 
 ```bash
-# Run tests with coverage
-pytest --cov=src --cov-report=html --cov-report=term
-
-# Minimum 80% coverage requirement
 pytest --cov=src --cov-fail-under=80
+# Minimum 80% code coverage
 ```
 
 ---
 
-## Ferramentas e Utilitários
+## Release Engineering
 
-### Ferramentas CLI
+### Versioning
 
-| Tool            | Version | Purpose                           |
-| --------------- | ------- | --------------------------------- |
-| **vectora-cli** | -       | Interface de linha de comando     |
-| **docker**      | 24+     | Gerenciamento de contêineres      |
-| **kubectl**     | 1.28+   | Gerenciamento de Kubernetes       |
-| **helm**        | 3.13+   | Gerenciador de pacotes Kubernetes |
-| **git**         | 2.40+   | Controle de versão                |
+- **Semantic Versioning**: MAJOR.MINOR.PATCH
+- **File**: `.version` in root
+- **Git Tags**: `v1.0.0`
 
-### Desenvolvimento Local
+### Build Matrix
 
-| Tool       | Version  | Purpose                   |
-| ---------- | -------- | ------------------------- |
-| **venv**   | Built-in | Ambiente virtual Python   |
-| **make**   | GNU      | Automação de build        |
-| **direnv** | 2.33+    | Gerenciamento de ambiente |
+| Target                   | Runtime       | Format                     |
+| ------------------------ | ------------- | -------------------------- |
+| **Linux x86_64**         | CPython 3.10+ | `.whl`, `.tar.gz`, `.deb`  |
+| **macOS x86_64 + ARM64** | CPython 3.10+ | `.whl`, `.dmg`             |
+| **Windows x86_64**       | CPython 3.10+ | `.whl`, `.exe` (installer) |
 
-**Makefile Example:**
-
-```makefile
-.PHONY: help setup install test lint format clean run
-
-help:
-	@echo "Vectora Development Commands"
-	@echo "  make setup    - Initialize dev environment"
-	@echo "  make install  - Install dependencies"
-	@echo "  make test     - Run tests"
-	@echo "  make lint     - Lint & format check"
-	@echo "  make format   - Auto-format code"
-	@echo "  make run      - Run development server"
-
-setup:
-	python -m venv venv
-	source venv/bin/activate
-	pip install --upgrade pip
-
-install:
-	pip install -r requirements.txt
-	pip install -r requirements-dev.txt
-
-test:
-	pytest --cov=src --cov-report=html
-
-lint:
-	ruff check .
-	mypy src/
-	black --check src/
-
-format:
-	ruff check --fix .
-	black src/
-
-clean:
-	rm -rf .pytest_cache/ .mypy_cache/ .coverage htmlcov/
-	find . -type d -name __pycache__ -exec rm -rf {} +
-
-run:
-	uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Gerenciamento de Pacotes
-
-| Tool          | Version | Purpose                              |
-| ------------- | ------- | ------------------------------------ |
-| **pip**       | 23.3+   | Gerenciador de pacotes Python        |
-| **pip-tools** | 7.3+    | Travamento de dependências (locking) |
-| **poetry**    | 1.7+    | Alternativa (opcional)               |
-
-**requirements.txt Management:**
+### Release Process
 
 ```bash
-# Generate locked requirements
-pip-compile requirements.in --output-file=requirements.txt
+# 1. Tag release
+git tag -a v1.0.0 -m "Release 1.0.0"
 
-# Install locked versions
-pip install -r requirements.txt
+# 2. GitHub Actions builds all artifacts (matrix)
+# Outputs: wheel, exe, dmg, deb, checksums, SBOM
 
-# Update specific package
-pip-compile --upgrade-package flask requirements.in
+# 3. Create GitHub Release
+gh release create v1.0.0 --generate-notes
+
+# 4. Upload artifacts
+gh release upload v1.0.0 dist/*
+
+# 5. Publish to PyPI
+twine upload dist/*.whl
+
+# 6. Update Homebrew tap
+# (auto via GitHub Actions)
 ```
 
-### Gerenciamento de Versão
+### Artifacts & Checksums
 
-| Tool                    | Purpose                | Configuration     |
-| ----------------------- | ---------------------- | ----------------- |
-| **Semantic Versioning** | Numeração de versão    | MAJOR.MINOR.PATCH |
-| **.version** file       | Única fonte de verdade | `1.0.0`           |
-| **git tags**            | Marcadores de release  | `v1.0.0`          |
+```
+vectora-1.0.0-py3-none-any.whl
+vectora-1.0.0-py3-none-any.whl.sha256
+vectora-1.0.0.tar.gz
+vectora-1.0.0.tar.gz.sha256
+vectora-1.0.0-x86_64-linux
+vectora-1.0.0-x86_64-linux.sha256
+vectora-1.0.0.dmg
+vectora-1.0.0.dmg.sha256
+vectora-1.0.0.exe
+vectora-1.0.0.exe.sha256
+vectora-1.0.0-SBOM.spdx.json
+```
 
-**Version Workflow:**
+### SBOM & Assinatura
 
 ```bash
-# Read version
-VERSION=$(cat .version)
+# SBOM (Software Bill of Materials)
+pip install syft
+syft packages > vectora-1.0.0-SBOM.spdx.json
 
-# Create release
-git tag -a v${VERSION} -m "Release ${VERSION}"
-git push origin v${VERSION}
-
-# Docker build with version
-docker build -t vectora/api:${VERSION} .
+# Assinatura (opcional, com GPG)
+gpg --detach-sign --armor vectora-1.0.0.tar.gz
+# Outputs: vectora-1.0.0.tar.gz.asc
 ```
 
 ---
 
-## Alvos de Implantação
+## Referência Rápida: Stack Resumida
 
-### Desenvolvimento Local
-
-**Ambiente: Máquina do Desenvolvedor**
-
-```bash
-# Setup
-docker-compose -f docker-compose.local.yml up -d
-
-# Access points
-API: http://localhost:8000
-Docs: http://localhost:8000/docs
-Prometheus: http://localhost:9090
-Jaeger: http://localhost:16686
-Grafana: http://localhost:3000
-Sentry: http://localhost:9000
-```
-
-### Staging
-
-**Ambiente: VM na Nuvem ou Self-Hosted**
-
-```bash
-# Deploy
-helm upgrade --install vectora ./helm/vectora \
-  -f helm/vectora/values-staging.yaml \
-  -n vectora-staging
-```
-
-**Access:**
-
-```
-API: https://staging-api.vectora.ai
-Docs: https://staging-api.vectora.ai/docs
-```
-
-### Produção
-
-**Ambiente: Cluster Kubernetes**
-
-```bash
-# High-availability deployment
-helm upgrade --install vectora ./helm/vectora \
-  -f helm/vectora/values-prod.yaml \
-  -n vectora-production \
-  --wait
-```
-
-**Recursos:**
-
-- 3+ réplicas com auto-scaling (3-10)
-- PostgreSQL com backups diários
-- Redis com persistência
-- TLS com Let's Encrypt
-- Failover multirregional (opcional)
-
-**Monitoramento:**
-
-```bash
-# Watch deployment
-kubectl rollout status deployment/vectora-api -n vectora-production
-
-# View logs
-kubectl logs -f deployment/vectora-api -n vectora-production
-
-# Get metrics
-kubectl top pods -n vectora-production
-```
-
-### Provedores de Nuvem
-
-| Provider         | Service  | Configuration          |
-| ---------------- | -------- | ---------------------- |
-| **AWS**          | EKS      | Cluster Kubernetes     |
-| **GCP**          | GKE      | Cluster Kubernetes     |
-| **Azure**        | AKS      | Cluster Kubernetes     |
-| **DigitalOcean** | DOKS     | Cluster Kubernetes     |
-| **Fly.io**       | Machines | Implantação serverless |
+| Layer                     | Tecnologia               | Versão | Propósito                                           |
+| ------------------------- | ------------------------ | ------ | --------------------------------------------------- |
+| **Protocolo: REST API**   | FastAPI                  | 0.104+ | Web UI, CLI, HTTP integrations                      |
+| **Protocolo: MCP Server** | Python MCP SDK           | Latest | Agent integrations (Claude Code, Gemini, Paperclip) |
+| **Protocolo: JSON-RPC**   | JSON-RPC 2.0             | 2.0    | Internal process communication, CLI local           |
+| **Protocolo: Streaming**  | SSE / WebSocket          | Native | Chat streaming, job progress                        |
+| **Linguagem Backend**     | Python                   | 3.10+  | Core logic                                          |
+| **Framework Web**         | FastAPI                  | 0.104+ | REST API server                                     |
+| **Linguagem Frontend**    | TypeScript               | 5+     | UI logic                                            |
+| **Framework UI**          | React                    | 18+    | Components                                          |
+| **Build Tool**            | Vite                     | 5+     | Fast dev + prod build                               |
+| **Gerenciador Estado**    | Zustand                  | 4.4+   | Client state                                        |
+| **HTTP Client**           | TanStack Query           | 5+     | Data fetching                                       |
+| **ORM**                   | SQLAlchemy               | 2.0+   | Database abstraction                                |
+| **Database**              | PostgreSQL               | 15+    | Relational data                                     |
+| **Embedded DB**           | pg8000-embedded          | 2.0+   | Local PostgreSQL                                    |
+| **Cache**                 | Redis                    | 7+     | Sessions + cache                                    |
+| **Vector DB**             | LanceDB                  | 0.3+   | Semantic search                                     |
+| **ML Framework**          | PyTorch                  | 2.1+   | Neural networks                                     |
+| **Transformers**          | HuggingFace              | 4.35+  | Pre-trained models                                  |
+| **Fine-tuning**           | LoRA (PEFT)              | 0.7+   | Efficient training                                  |
+| **LLM Orchestration**     | LangChain                | 0.1+   | RAG pipeline                                        |
+| **LLM Provider**          | Anthropic (Claude)       | Latest | Main LLM                                            |
+| **Embedding Provider**    | OpenAI / Anthropic       | Latest | Embeddings                                          |
+| **Job Queue**             | RQ                       | 1.15+  | Background jobs                                     |
+| **Scheduler**             | APScheduler              | 3.10+  | Cron jobs                                           |
+| **Error Tracking**        | Sentry                   | Latest | Optional                                            |
+| **Observability**         | OpenTelemetry            | 1.20+  | Tracing standard                                    |
+| **Container**             | Docker                   | 24+    | Dev + VPS                                           |
+| **Reverse Proxy**         | Caddy                    | 2.7+   | VPS reverse proxy                                   |
+| **Service Manager**       | systemd                  | Native | VPS lifecycle                                       |
+| **Testing**               | pytest                   | 7.4+   | Unit tests                                          |
+| **Linting**               | ruff                     | 0.1+   | Fast lint                                           |
+| **Type Checking**         | mypy                     | 1.7+   | Static types                                        |
+| **CLI Framework**         | Click/Typer              | Latest | Command interface                                   |
+| **Documentation**         | Hugo + Hextra            | Latest | Static docs site                                    |
+| **Version Control**       | Git                      | Latest | Source control                                      |
+| **CI/CD**                 | GitHub Actions + Jenkins | Latest | Build + deploy automation                           |
 
 ---
 
-## Variáveis de Ambiente
-
-### .env Obrigatório (API Backend)
-
-```env
-# Core
-ENVIRONMENT=development
-DEBUG=false
-LOG_LEVEL=INFO
-
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/vectora
-REDIS_URL=redis://localhost:6379/0
-LANCEDB_PATH=./data/lancedb
-
-# Authentication
-JWT_SECRET_KEY=your-secret-key-min-32-characters
-JWT_ALGORITHM=HS256
-JWT_EXPIRATION_HOURS=24
-
-# LangChain
-ANTHROPIC_API_KEY=your-anthropic-api-key
-LANGSMITH_API_KEY=your-langsmith-api-key
-LANGSMITH_PROJECT=vectora-dev
-LANGSMITH_ENDPOINT=https://api.smith.langchain.com
-
-# Observability
-SENTRY_DSN=https://key@localhost:9000/project_id
-JAEGER_ENDPOINT=http://localhost:14268/api/traces
-PROMETHEUS_PUSHGATEWAY_URL=http://localhost:9091
-
-# Security
-CORS_ORIGINS=["http://localhost:3000", "https://vectora.ai"]
-TRUSTED_HOSTS=["localhost", "vectora.ai"]
-RATE_LIMIT_REQUESTS=100
-RATE_LIMIT_WINDOW=60
-
-# External Services
-SERPAPI_API_KEY=optional-for-web-search
-```
-
-### .env Obrigatório (VCR)
-
-```env
-# Model
-MODEL_PATH=./models/checkpoints/lora_r8_a16_final/
-DEVICE=cpu  # or cuda
-BATCH_SIZE=32
-
-# Inference
-CONFIDENCE_THRESHOLD=0.7
-MAX_CONTEXT_LENGTH=512
-```
-
----
-
-## Referência Rápida: Resumo da Stack
-
-| Layer                   | Technology       | Version   | Purpose                          |
-| ----------------------- | ---------------- | --------- | -------------------------------- |
-| **Language (Backend)**  | Python           | 3.10+     | Desenvolvimento rápido de API    |
-| **Framework**           | FastAPI          | 0.104+    | Framework web assíncrono moderno |
-| **Server**              | Uvicorn/Gunicorn | 0.24+/21+ | Produção-grade serving           |
-| **ORM**                 | SQLAlchemy       | 2.0+      | Abstração de banco de dados      |
-| **Vector DB**           | LanceDB          | 0.3+      | Embedded vector search           |
-| **Cache**               | Redis            | 7+        | Session & in-memory cache        |
-| **ML Framework**        | PyTorch          | 2.1+      | Redes neurais                    |
-| **Transformers**        | Hugging Face     | 4.35+     | Modelos pré-treinados            |
-| **LangChain**           | LangChain        | 0.1+      | Orquestração de LLM              |
-| **Observability**       | OpenTelemetry    | 1.20+     | Rastreamento padronizado         |
-| **Metrics**             | Prometheus       | 2.48+     | Time-series DB                   |
-| **Tracing**             | Jaeger           | 1.50+     | Rastreamento distribuído         |
-| **Viz**                 | Grafana          | 10.2+     | Dashboard de métricas            |
-| **Error Tracking**      | Sentry           | latest    | Monitoramento de erros           |
-| **LLM Tracing**         | LangSmith        | Cloud     | Observabilidade do LangChain     |
-| **Conteinerização**     | Docker           | 24+       | Tempo de execução do contêiner   |
-| **Orchestration**       | Kubernetes       | 1.28+     | Orquestração de contêineres      |
-| **Package Manager**     | Helm             | 3.13+     | Pacotes Kubernetes               |
-| **CI/CD**               | GitHub Actions   | -         | Workflows automatizados          |
-| **Pipeline**            | Jenkins          | 2.400+    | CI/CD alternativo                |
-| **Static Site**         | Hugo             | 0.120+    | Gerador de documentação          |
-| **Documentation Theme** | Hextra           | latest    | Tema Hugo moderno                |
-| **Testing**             | pytest           | 7.4+      | Testes em Python                 |
-| **Linting**             | Ruff             | 0.1+      | Linter Python rápido             |
-| **Type Checking**       | Mypy             | 1.7+      | Verificação de tipo estática     |
-| **Formatting**          | Black            | 23.10+    | Formatador de código             |
-| **Security**            | Bandit           | 1.7+      | Security linter                  |
-
----
-
-## Próximos Passos
-
-1. **Fase 1 (Atual):** Desenvolvimento local com docker-compose
-2. **Fase 2:** Pipeline CI/CD com GitHub Actions
-3. **Fase 3:** Integração com Jenkins para implantações em produção
-4. **Fase 4:** Configuração do cluster Kubernetes
-5. **Fase 5:** Failover multirregional e observabilidade avançada
-
----
-
-**Última Atualização:** 2026-05-03  
-**Status:** Documentação Completa da Stack  
-**Proprietário:** Equipe de Engenharia Vectora
+**Status**: Stack document completo (local-first, instalável, não SaaS)  
+**Última Atualização**: 2026-05-03  
+**Proprietário**: Vectora Engineering Team  
+**Licença**: Apache 2.0
