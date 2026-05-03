@@ -15,7 +15,7 @@ def main():
         ]
 
         # Execute the command
-        result = subprocess.run(command, shell=True, check=True)
+        result = subprocess.run(command, check=True)
 
         if result.returncode == 0:
             print("\nBuild complete! Site generated in 'public/' directory.")
