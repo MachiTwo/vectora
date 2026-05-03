@@ -1,0 +1,968 @@
+# Builds and publishes deepagents packages to PyPI.
+#
+# Triggers:
+# - Automatically via workflow_dispatch from release-please.yml when a release
+#   PR is merged (release-please.yml's `trigger-releases` job calls
+#   `gh workflow run release.yml ...`).
+# - Manually via workflow_dispatch from the Actions UI or `gh` CLI.
+#
+# This workflow is intentionally NOT a reusable workflow (no `workflow_call`
+# trigger): PyPI Trusted Publishing does not officially support reusable
+# workflows, so the auto path uses workflow_dispatch instead. See:
+# https://docs.pypi.org/trusted-publishers/troubleshooting/#reusable-workflows-on-github
+#
+# Flow: build -> pre-release-checks -> test-pypi -> publish -> release
+
+name: "⚠️ Manual Package Release"
+run-name: "release(${{ inputs.package-override || inputs.package }}):${{
+  inputs.version && format(' {0}', inputs.version) || '' }}"
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        required: true
+        type: choice
+        description: "Package to release (⚠️ release-please by default; manual is
+          exception-only — see .github/RELEASING.md) (ignored when override is
+          set)"
+        options:
+          - deepagents
+          - deepagents-cli
+          - deepagents-acp
+          - deepagents-code
+          - deepagents-evals
+          - langchain-daytona
+          - langchain-modal
+          - langchain-quickjs
+          - langchain-repl
+          - langchain-runloop
+        default: deepagents
+      package-override:
+        required: false
+        type: string
+        default: ""
+        description: "Override: custom package name (takes precedence over dropdown)"
+      version:
+        required: true
+        type: string
+        description: "Version string — does NOT control the released version"
+      release-sha:
+        required: false
+        type: string
+        default: ""
+        description: "Merge commit SHA of the release PR. Find it with:
+          gh pr view <release-pr-number> --json mergeCommit --jq .mergeCommit.oid.
+          Required unless you're running an alpha/hotfix release with
+          dangerous-nonmain-release=true. See .github/RELEASING.md > Manual Release."
+      dangerous-nonmain-release:
+        required: false
+        type: boolean
+        default: false
+        description: "Release from a non-main branch (danger!) - Only use for backports
+          and hotfixes"
+      dangerous-skip-sdk-pin-check:
+        required: false
+        type: boolean
+        default: false
+        description: "(CLI only) Skip SDK pin validation (danger!) - Only use when
+          intentionally pinning an older SDK"
+
+env:
+  PYTHON_VERSION: "3.11"
+  UV_NO_SYNC: "true"
+  UV_FROZEN: "true"
+
+permissions:
+  contents: read # Job-level overrides grant write only where needed
+
+jobs:
+  # Determine working directory from package input and resolve the release SHA
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      package: ${{ steps.parse.outputs.package }}
+      working-dir: ${{ steps.parse.outputs.working-dir }}
+      release-sha: ${{ steps.resolve-sha.outputs.sha }}
+    steps:
+      - name: Parse package input
+        id: parse
+        env:
+          PACKAGE_OVERRIDE: ${{ inputs.package-override }}
+          PACKAGE_INPUT: ${{ inputs.package }}
+        run: |
+          # Override takes precedence over dropdown (workflow_dispatch only; unused by workflow_call)
+          if [ -n "$PACKAGE_OVERRIDE" ]; then
+            PACKAGE="$PACKAGE_OVERRIDE"
+          else
+            PACKAGE="$PACKAGE_INPUT"
+          fi
+          echo "package=$PACKAGE" >> "$GITHUB_OUTPUT"
+
+          # Map package name to working directory
+          case "$PACKAGE" in
+            deepagents)
+              echo "working-dir=libs/deepagents" >> $GITHUB_OUTPUT
+              ;;
+            deepagents-cli)
+              echo "working-dir=libs/cli" >> $GITHUB_OUTPUT
+              ;;
+            deepagents-acp)
+              echo "working-dir=libs/acp" >> $GITHUB_OUTPUT
+              ;;
+            deepagents-code)
+              echo "working-dir=libs/code" >> $GITHUB_OUTPUT
+              ;;
+            deepagents-evals)
+              echo "working-dir=libs/evals" >> $GITHUB_OUTPUT
+              ;;
+            langchain-daytona)
+              echo "working-dir=libs/partners/daytona" >> $GITHUB_OUTPUT
+              ;;
+            langchain-modal)
+              echo "working-dir=libs/partners/modal" >> $GITHUB_OUTPUT
+              ;;
+            langchain-quickjs)
+              echo "working-dir=libs/partners/quickjs" >> $GITHUB_OUTPUT
+              ;;
+            langchain-repl)
+              echo "working-dir=libs/repl" >> $GITHUB_OUTPUT
+              ;;
+            langchain-runloop)
+              echo "working-dir=libs/partners/runloop" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "Error: Unknown package '$PACKAGE'"
+              echo "Valid packages are: deepagents, deepagents-cli, deepagents-acp, deepagents-code, deepagents-evals, langchain-daytona, langchain-modal, langchain-quickjs, langchain-repl, langchain-runloop"
+              exit 1
+              ;;
+          esac
+
+      # Pin the GitHub release tag to the release-PR merge commit, not github.sha.
+      # github.sha is whatever commit triggered the workflow — fine for the auto path,
+      # but workflow_dispatch retries (e.g. after a pre-release-checks failure) point
+      # at later commits, leaving the tag on an unrelated commit. release-please then
+      # treats the package as un-released and rebuilds the changelog from scratch.
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve and validate release SHA
+        id: resolve-sha
+        env:
+          INPUT_SHA: ${{ inputs.release-sha }}
+          IS_DANGEROUS: ${{ inputs.dangerous-nonmain-release }}
+          PACKAGE: ${{ steps.parse.outputs.package }}
+          GITHUB_SHA_FALLBACK: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          # Reject malformed boolean values up-front. A typo (e.g. "True", "1") would
+          # otherwise silently fall into the strict-validation branch — safe today,
+          # but a future polarity flip would silently skip validation.
+          case "$IS_DANGEROUS" in
+            true|false|"") ;;
+            *)
+              echo "::error::dangerous-nonmain-release must be 'true' or 'false', got: $IS_DANGEROUS"
+              exit 1
+              ;;
+          esac
+
+          if [ -z "$INPUT_SHA" ]; then
+            if [ "$IS_DANGEROUS" = "true" ]; then
+              # Alpha/hotfix branches don't have a "release(pkg): X.Y.Z" commit; fall
+              # back to the dispatched HEAD. See RELEASING.md > Alpha / Beta / Pre-release.
+              SHA="$GITHUB_SHA_FALLBACK"
+              echo "release-sha unset; dangerous-nonmain-release=true -> using github.sha=$SHA"
+            else
+              echo "::error::release-sha input is required for non-alpha releases."
+              echo "::error::Look it up with: gh pr view <release-pr-number> --json mergeCommit --jq .mergeCommit.oid"
+              exit 1
+            fi
+          else
+            SHA="$INPUT_SHA"
+          fi
+
+          if ! err=$(git cat-file -e "${SHA}^{commit}" 2>&1); then
+            echo "::error::release-sha $SHA does not resolve to a commit in this repository: $err"
+            exit 1
+          fi
+
+          # Skip the message check on dangerous-nonmain-release: those branches use
+          # "hotfix(scope): alpha release ..." commits, not release-please commits.
+          if [ "$IS_DANGEROUS" != "true" ]; then
+            if ! COMMIT_MSG=$(git log -1 --format=%s "$SHA" 2>&1); then
+              echo "::error::cannot read commit $SHA: $COMMIT_MSG"
+              exit 1
+            fi
+            EXPECTED="^release\(${PACKAGE}\): "
+            if ! printf '%s\n' "$COMMIT_MSG" | grep -qE "$EXPECTED"; then
+              echo "::error::Commit $SHA has subject: $COMMIT_MSG"
+              echo "::error::Expected subject matching: $EXPECTED"
+              echo "::error::Pass the SHA of the release PR's merge commit (gh pr view ... --json mergeCommit)."
+              exit 1
+            fi
+            echo "Validated release-sha $SHA -> $COMMIT_MSG"
+          else
+            echo "Using release-sha $SHA (validation skipped: dangerous-nonmain-release)"
+          fi
+
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+  # Build the distribution package and extract version info
+  # Runs in isolated environment with minimal permissions for security
+  build:
+    needs: setup
+    if: github.ref == 'refs/heads/main' || inputs.dangerous-nonmain-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      WORKING_DIR: ${{ needs.setup.outputs.working-dir }}
+
+    outputs:
+      pkg-name: ${{ steps.check-version.outputs.pkg-name }}
+      version: ${{ steps.check-version.outputs.version }}
+      is-prerelease: ${{ steps.check-version.outputs.is-prerelease }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Python + uv
+        uses: "./.github/actions/uv_setup"
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # We want to keep this build stage *separate* from the release stage,
+      # so that there's no sharing of permissions between them.
+      # (Release stage has trusted publishing and GitHub repo contents write access,
+      # which the build stage must not have access to.)
+      #
+      # Otherwise, a malicious `build` step (e.g. via a compromised dependency)
+      # could get access to our GitHub or PyPI credentials.
+      #
+      # Per the trusted publishing GitHub Action:
+      # > It is strongly advised to separate jobs for building [...]
+      # > from the publish job.
+      # https://github.com/pypa/gh-action-pypi-publish#non-goals
+      - name: Build project for distribution
+        run: uv build
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Upload build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: dist
+          path: ${{ env.WORKING_DIR }}/dist/
+
+      - name: Check version
+        id: check-version
+        shell: python
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          import os
+          import re
+          import tomllib
+          with open("pyproject.toml", "rb") as f:
+              data = tomllib.load(f)
+          pkg_name = data["project"]["name"]
+          version = data["project"]["version"]
+          # PEP 440 pre-release: contains a/b/rc/dev suffix or dash separator
+          is_pre = bool(re.search(r"(a|b|rc|\.dev)\d", version) or "-" in version)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"pkg-name={pkg_name}\n")
+              f.write(f"version={version}\n")
+              f.write(f"is-prerelease={'true' if is_pre else 'false'}\n")
+
+      - name: Validate version consistency
+        if: inputs.version != ''
+        run: |
+          BUILD_VERSION="${{ steps.check-version.outputs.version }}"
+          INPUT_VERSION="${{ inputs.version }}"
+          if [ "$BUILD_VERSION" != "$INPUT_VERSION" ]; then
+            echo "::warning::Version mismatch — run name says '$INPUT_VERSION' but pyproject.toml says '$BUILD_VERSION'"
+          fi
+
+  # Generate release notes from CHANGELOG.md (with git log fallback)
+  # and collect contributor shoutouts from merged PRs
+  release-notes:
+    needs:
+      - setup
+      - build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      WORKING_DIR: ${{ needs.setup.outputs.working-dir }}
+    outputs:
+      release-body: ${{ steps.generate-release-body.outputs.release-body }}
+      tag: ${{ steps.check-tags.outputs.tag }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Check tags
+        id: check-tags
+        shell: bash
+        working-directory: ${{ env.WORKING_DIR }}
+        env:
+          PKG_NAME: ${{ needs.build.outputs.pkg-name }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          TAG="${PKG_NAME}==${VERSION}"
+          echo tag="$TAG" >> $GITHUB_OUTPUT
+
+      - name: Resolve previous tag and release commit
+        id: resolve-refs
+        env:
+          PKG_NAME: ${{ needs.build.outputs.pkg-name }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          # Detect PEP 440 pre-release versions:
+          #   - Dash separator: 1.0.0-rc.1
+          #   - PEP 440 suffixes: 1.0.0a1, 1.0.0b1, 1.0.0rc1, 1.0.0.dev1
+          IS_PRERELEASE=false
+          if [[ "$VERSION" == *"-"* ]] || [[ "$VERSION" =~ [0-9](a|b|rc)[0-9] ]] || [[ "$VERSION" =~ [.]dev[0-9] ]]; then
+            IS_PRERELEASE=true
+          fi
+          echo "is-prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
+
+          # Determine previous tag
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            # Strip pre-release suffix to get base version (e.g. 0.5.2a1 -> 0.5.2)
+            # Strip suffixes inside-out: dash first, then .dev, then a/b/rc
+            BASE_VERSION=$(echo "$VERSION" | sed 's/-.*$//' | sed -E 's/\.dev[0-9]+$//' | sed -E 's/(a|b|rc)[0-9]+$//')
+            echo "Pre-release detected: base version is $BASE_VERSION"
+
+            if [[ ! "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::warning::BASE_VERSION '$BASE_VERSION' is not a clean X.Y.Z after stripping pre-release suffixes from '$VERSION'"
+            fi
+
+            # Try exact base version tag first (e.g. deepagents==0.5.2)
+            PREV_TAG=$(git tag --sort=-creatordate | (grep -E "^${PKG_NAME}==${BASE_VERSION}$" || true) | head -1)
+            if [ -z "$PREV_TAG" ]; then
+              # Fall back to latest stable release tag
+              PREV_TAG=$(git tag --sort=-creatordate | (grep -E "^${PKG_NAME}==[0-9]+\.[0-9]+\.[0-9]+$" || true) | head -1)
+            fi
+          else
+            PREV_TAG="$PKG_NAME==${VERSION%.*}.$(( ${VERSION##*.} - 1 ))"
+            [[ "${VERSION##*.}" -eq 0 ]] && PREV_TAG=""
+            if [ -z "$PREV_TAG" ]; then
+              PREV_TAG=$(git tag --sort=-creatordate | (grep -E "^${PKG_NAME}==[0-9]+\.[0-9]+\.[0-9]+$" || true) | head -1)
+            fi
+          fi
+
+          # Validate prev tag exists
+          if [ -n "$PREV_TAG" ] && [ "$PREV_TAG" != "$PKG_NAME==0.0.0" ]; then
+            GIT_TAG_RESULT=$(git tag -l "$PREV_TAG")
+            [ -z "$GIT_TAG_RESULT" ] && PREV_TAG=""
+          else
+            PREV_TAG=""
+          fi
+
+          echo "Previous tag: $PREV_TAG"
+          echo "prev-tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
+
+          # Resolve the actual release commit.
+          # For stable releases: release-please updates CHANGELOG.md in the release
+          # commit, so we use the last CHANGELOG.md touch. On workflow_dispatch
+          # (manual/recovery), HEAD may be ahead — this avoids attributing
+          # post-release commits to this release's contributor list.
+          # For pre-releases: CHANGELOG.md is not updated, so use HEAD directly.
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            RELEASE_COMMIT=$(git rev-parse HEAD)
+            echo "Pre-release: using HEAD as release commit"
+          else
+            RELEASE_COMMIT=$(git log -1 --format=%H -- "$WORKING_DIR/CHANGELOG.md")
+            if [ -z "$RELEASE_COMMIT" ]; then
+              echo "Warning: no CHANGELOG.md history found, falling back to HEAD"
+              RELEASE_COMMIT=$(git rev-parse HEAD)
+            fi
+          fi
+          echo "Release commit: $RELEASE_COMMIT"
+          echo "release-commit=$RELEASE_COMMIT" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release body
+        id: generate-release-body
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_NAME: ${{ needs.build.outputs.pkg-name }}
+          VERSION: ${{ needs.build.outputs.version }}
+          PREV_TAG: ${{ steps.resolve-refs.outputs.prev-tag }}
+          RELEASE_COMMIT: ${{ steps.resolve-refs.outputs.release-commit }}
+          IS_PRERELEASE: ${{ needs.build.outputs.is-prerelease }}
+        run: |
+          if [ -z "$RELEASE_COMMIT" ]; then
+            echo "::error::RELEASE_COMMIT is empty — resolve-refs step may have failed"
+            exit 1
+          fi
+
+          CHANGELOG_PATH="$WORKING_DIR/CHANGELOG.md"
+          RELEASE_BODY=""
+
+          # Try to extract current version's section from CHANGELOG.md
+          # (Pre-releases won't have a CHANGELOG entry and the git log fallback is
+          # also skipped for them — they get the banner + contributors only)
+          if [ -f "$CHANGELOG_PATH" ]; then
+            echo "Found CHANGELOG.md, extracting version $VERSION section..."
+
+            # Extract section between current version header and next version header (or EOF)
+            # Matches headers like: ## [0.0.16] or ## 0.0.16
+            RELEASE_BODY=$(awk -v ver="$VERSION" '
+              BEGIN { found=0; printing=0 }
+              /^## \[?[0-9]+\.[0-9]+\.[0-9]+/ {
+                if (printing) { exit }
+                if (index($0, ver)) { found=1; printing=1; next }
+              }
+              printing { print }
+            ' "$CHANGELOG_PATH")
+
+            if [ -n "$RELEASE_BODY" ]; then
+              echo "Successfully extracted changelog for version $VERSION"
+            else
+              echo "Could not find version $VERSION in CHANGELOG.md"
+            fi
+          else
+            echo "No CHANGELOG.md found at $CHANGELOG_PATH"
+          fi
+
+          # Fallback to git log if CHANGELOG extraction failed
+          # (Skip for pre-releases — they get the banner + contributors only)
+          if [ -z "$RELEASE_BODY" ] && [ "$IS_PRERELEASE" != "true" ]; then
+            echo "Falling back to git log for release notes..."
+
+            FALLBACK_PREV="$PREV_TAG"
+            if [ -z "$FALLBACK_PREV" ]; then
+              PREAMBLE="Initial release"
+              FALLBACK_PREV=$(git rev-list --max-parents=0 "$RELEASE_COMMIT")
+            else
+              PREAMBLE="Changes since $FALLBACK_PREV"
+            fi
+
+            GIT_LOG=$(git log --format="%s" "$FALLBACK_PREV".."$RELEASE_COMMIT" -- "$WORKING_DIR")
+            RELEASE_BODY=$(printf "%s\n%s" "$PREAMBLE" "$GIT_LOG")
+          fi
+
+          # ── Collect contributors from merged PRs ──
+
+          # Get commits between previous tag and release commit for this package
+          if [ -z "$PREV_TAG" ]; then
+            COMMITS=$(git rev-list "$RELEASE_COMMIT" -- "$WORKING_DIR" | head -100)
+          else
+            COMMITS=$(git rev-list "$PREV_TAG".."$RELEASE_COMMIT" -- "$WORKING_DIR" | head -100)
+          fi
+
+          # Find PRs and collect contributors (GitHub username + optional Twitter/LinkedIn)
+          declare -A TWITTER_HANDLES  # Map: github_username -> twitter_handle (or empty)
+          declare -A LINKEDIN_URLS    # Map: github_username -> linkedin_url (or empty)
+          declare -A INTERNAL_USERS   # Map: github_username -> 1 (for dedup)
+          SEEN_PRS=""
+
+          for sha in $COMMITS; do
+            # Get PR number for this commit (if merged via PR)
+            PR_NUM=$(gh api "/repos/${{ github.repository }}/commits/$sha/pulls" \
+              --jq '.[0].number // empty' 2>/dev/null || true)
+
+            if [ -n "$PR_NUM" ] && [[ ! "$SEEN_PRS" =~ ":$PR_NUM:" ]]; then
+              SEEN_PRS="$SEEN_PRS:$PR_NUM:"
+
+              # Get PR author, body, and labels
+              PR_DATA=$(gh pr view "$PR_NUM" --json author,body,labels 2>/dev/null || true)
+              if [ -n "$PR_DATA" ]; then
+                GH_USER=$(echo "$PR_DATA" | jq -r '.author.login // empty')
+                PR_BODY=$(echo "$PR_DATA" | jq -r '.body // empty')
+
+                # Skip bots and automated accounts
+                IS_BOT=$(echo "$PR_DATA" | jq -r '.author.is_bot // false')
+                if [ "$IS_BOT" = "true" ]; then
+                  echo "Skipping bot account: $GH_USER (PR #$PR_NUM)"
+                  continue
+                fi
+
+                # Separate internal contributors (PRs labeled "internal" by pr_labeler workflow)
+                IS_INTERNAL=$(echo "$PR_DATA" | jq -r '.labels[].name // empty' | grep -qx "internal" && echo "true" || echo "false")
+                if [ "$IS_INTERNAL" = "true" ]; then
+                  if [ -n "$GH_USER" ]; then
+                    INTERNAL_USERS[$GH_USER]=1
+                    echo "Collected internal contributor: $GH_USER (PR #$PR_NUM)"
+                  else
+                    echo "::warning::Internal PR #$PR_NUM has no author login — contributor will not appear in release notes"
+                  fi
+                  continue
+                fi
+
+                if [ -n "$GH_USER" ]; then
+                  # Extract Twitter handle if present (matches "Twitter: @handle" or "Twitter: handle")
+                  TWITTER=$(echo "$PR_BODY" | grep -iE '^\s*Twitter:\s' | sed -nE 's/.*:[[:space:]]*@?[[:space:]]*([a-zA-Z0-9_]+).*/\1/p' | head -1 || true)
+
+                  # Extract LinkedIn URL if present (matches "LinkedIn: https://linkedin.com/in/username" or similar)
+                  LINKEDIN=$(echo "$PR_BODY" | grep -iE '^\s*LinkedIn:\s' | grep -oE '(https?://)?(www\.)?linkedin\.com/in/[a-zA-Z0-9_-]+/?' | head -1 || true)
+
+                  # Add user if not seen, or update socials if newly provided
+                  if [ -z "${TWITTER_HANDLES[$GH_USER]+x}" ]; then
+                    TWITTER_HANDLES[$GH_USER]="$TWITTER"
+                    LINKEDIN_URLS[$GH_USER]="$LINKEDIN"
+                  else
+                    [ -n "$TWITTER" ] && [ -z "${TWITTER_HANDLES[$GH_USER]}" ] && TWITTER_HANDLES[$GH_USER]="$TWITTER"
+                    [ -n "$LINKEDIN" ] && [ -z "${LINKEDIN_URLS[$GH_USER]}" ] && LINKEDIN_URLS[$GH_USER]="$LINKEDIN"
+                  fi
+                fi
+              fi
+            fi
+          done
+
+          # Dedup: if a user has both internal and community PRs, keep them
+          # in internal only (they are an org member regardless of PR labels)
+          for GH_USER in "${!INTERNAL_USERS[@]}"; do
+            unset "TWITTER_HANDLES[$GH_USER]"
+            unset "LINKEDIN_URLS[$GH_USER]"
+          done
+
+          # Build contributor list: @ghuser ([Twitter](url), [LinkedIn](url)) or just @ghuser
+          CONTRIBUTOR_LIST=""
+          for GH_USER in "${!TWITTER_HANDLES[@]}"; do
+            TWITTER="${TWITTER_HANDLES[$GH_USER]}"
+            LINKEDIN="${LINKEDIN_URLS[$GH_USER]}"
+
+            # Build social links
+            SOCIALS=""
+            if [ -n "$TWITTER" ]; then
+              SOCIALS="[Twitter](https://x.com/$TWITTER)"
+            fi
+            if [ -n "$LINKEDIN" ]; then
+              # Ensure LinkedIn URL has https:// prefix
+              if [[ ! "$LINKEDIN" =~ ^https?:// ]]; then
+                LINKEDIN="https://$LINKEDIN"
+              fi
+              if [ -n "$SOCIALS" ]; then
+                SOCIALS="$SOCIALS, [LinkedIn]($LINKEDIN)"
+              else
+                SOCIALS="[LinkedIn]($LINKEDIN)"
+              fi
+            fi
+
+            if [ -n "$SOCIALS" ]; then
+              ENTRY="@$GH_USER ($SOCIALS)"
+            else
+              ENTRY="@$GH_USER"
+            fi
+
+            if [ -z "$CONTRIBUTOR_LIST" ]; then
+              CONTRIBUTOR_LIST="$ENTRY"
+            else
+              CONTRIBUTOR_LIST="$CONTRIBUTOR_LIST, $ENTRY"
+            fi
+          done
+
+          echo "Found community contributors: $CONTRIBUTOR_LIST"
+
+          # Build internal maintainers list: @ghuser, @ghuser, ...
+          INTERNAL_LIST=""
+          for GH_USER in "${!INTERNAL_USERS[@]}"; do
+            if [ -z "$INTERNAL_LIST" ]; then
+              INTERNAL_LIST="@$GH_USER"
+            else
+              INTERNAL_LIST="$INTERNAL_LIST, @$GH_USER"
+            fi
+          done
+
+          echo "Found internal maintainers: $INTERNAL_LIST"
+
+          # Prepend pre-release banner
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            RELEASE_BODY=$(printf "> [!WARNING]\n> This is a pre-release version. Install with: \`pip install %s==%s\`\n\n%s" "$PKG_NAME" "$VERSION" "$RELEASE_BODY")
+          fi
+
+          # Append contributor shoutouts
+          SEPARATOR_ADDED=false
+          if [ -n "$CONTRIBUTOR_LIST" ]; then
+            RELEASE_BODY=$(printf "%s\n\n---\n\nThanks to our community contributors: %s" "$RELEASE_BODY" "$CONTRIBUTOR_LIST")
+            SEPARATOR_ADDED=true
+          fi
+
+          if [ -n "$INTERNAL_LIST" ]; then
+            if [ "$SEPARATOR_ADDED" = "false" ]; then
+              RELEASE_BODY=$(printf "%s\n\n---" "$RELEASE_BODY")
+            fi
+            RELEASE_BODY=$(printf "%s\n\nInternal maintainers: %s" "$RELEASE_BODY" "$INTERNAL_LIST")
+          fi
+
+          # Output release body using heredoc for proper multiline handling
+          {
+            echo 'release-body<<EOF'
+            echo "$RELEASE_BODY"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+  test-pypi-publish:
+    needs:
+      - setup
+      - build
+      - pre-release-checks
+    runs-on: ubuntu-latest
+    permissions:
+      # This permission is used for trusted publishing:
+      # https://blog.pypi.org/posts/2023-04-20-introducing-trusted-publishers/
+      #
+      # Trusted publishing has to also be configured on PyPI for each package:
+      # https://docs.pypi.org/trusted-publishers/adding-a-publisher/
+      id-token: write
+    env:
+      WORKING_DIR: ${{ needs.setup.outputs.working-dir }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: dist
+          path: ${{ env.WORKING_DIR }}/dist/
+
+      - name: Publish to test PyPI
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
+        with:
+          packages-dir: ${{ env.WORKING_DIR }}/dist/
+          verbose: true
+          print-hash: true
+          repository-url: https://test.pypi.org/legacy/
+          # We overwrite any existing distributions with the same name and version.
+          # This is *only for CI use* and is *extremely dangerous* otherwise!
+          # https://github.com/pypa/gh-action-pypi-publish#tolerating-release-package-file-duplicates
+          skip-existing: true
+          # Temp workaround since attestations are on by default as of gh-action-pypi-publish v1.11.0
+          attestations: false
+
+  pre-release-checks:
+    needs:
+      - setup
+      - build
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+    timeout-minutes: 20
+    env:
+      WORKING_DIR: ${{ needs.setup.outputs.working-dir }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      # We explicitly *don't* set up caching here. This ensures our tests are
+      # maximally sensitive to catching breakage.
+      #
+      # For example, here's a way that caching can cause a falsely-passing test:
+      # - Make the package manifest no longer list a dependency package
+      #   as a requirement. This means it won't be installed by `pip install`,
+      #   and attempting to use it would cause a crash.
+      # - That dependency used to be required, so it may have been cached.
+      #   When restoring the venv packages from cache, that dependency gets included.
+      # - Tests pass, because the dependency is present even though it wasn't specified.
+      # - The package is published, and it breaks on the missing dependency when
+      #   used in the real world.
+
+      - name: Set up Python + uv
+        uses: "./.github/actions/uv_setup"
+        id: setup-python
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: dist
+          path: ${{ env.WORKING_DIR }}/dist/
+
+      - name: Verify CLI pins latest SDK version
+        if: needs.build.outputs.pkg-name == 'deepagents-cli' &&
+          !inputs.dangerous-skip-sdk-pin-check
+        run: |
+          SDK_VERSION=$(sed -nE 's/^version = "([^"]*)".*/\1/p' libs/deepagents/pyproject.toml | head -1)
+          if [ -z "$SDK_VERSION" ]; then
+            echo "::error file=libs/deepagents/pyproject.toml::Failed to extract SDK version. Expected a line matching: version = \"X.Y.Z\""
+            exit 1
+          fi
+
+          CLI_SDK_PIN=$(sed -nE 's/.*deepagents==([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' libs/cli/pyproject.toml | head -1)
+          if [ -z "$CLI_SDK_PIN" ]; then
+            echo "::error file=libs/cli/pyproject.toml::Failed to extract CLI SDK pin. Expected a dependency matching: deepagents==X.Y.Z"
+            exit 1
+          fi
+
+          if [ "$SDK_VERSION" != "$CLI_SDK_PIN" ]; then
+            echo "::error::CLI SDK pin does not match SDK version!"
+            echo "SDK version (libs/deepagents/pyproject.toml): $SDK_VERSION"
+            echo "CLI SDK pin (libs/cli/pyproject.toml): $CLI_SDK_PIN"
+            echo ""
+            echo "Update the deepagents dependency in libs/cli/pyproject.toml to deepagents==$SDK_VERSION"
+            echo "Or re-run with 'dangerous-skip-sdk-pin-check' enabled to bypass."
+            exit 1
+          else
+            echo "CLI SDK pin matches SDK version: $SDK_VERSION"
+          fi
+
+      - name: Import dist package
+        shell: bash
+        working-directory: ${{ env.WORKING_DIR }}
+        env:
+          PKG_NAME: ${{ needs.build.outputs.pkg-name }}
+          VERSION: ${{ needs.build.outputs.version }}
+        # Install directly from the locally-built wheel (no index resolution needed)
+        run: |
+          uv venv
+          VIRTUAL_ENV=.venv uv pip install dist/*.whl
+
+          # Replace all dashes in the package name with underscores,
+          # since that's how Python imports packages with dashes in the name.
+          IMPORT_NAME="$(echo "$PKG_NAME" | sed s/-/_/g)"
+
+          uv run python -c "import $IMPORT_NAME; print(dir($IMPORT_NAME))"
+
+      - name: Import test dependencies
+        run: uv sync --group test
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Install sandbox provider extras (CLI only)
+        if: needs.setup.outputs.package == 'deepagents-cli'
+        run: uv sync --group test --extra all-sandboxes
+        working-directory: ${{ env.WORKING_DIR }}
+
+      # Overwrite the local version of the package with the built version
+      - name: Import published package (again)
+        working-directory: ${{ env.WORKING_DIR }}
+        shell: bash
+        env:
+          PKG_NAME: ${{ needs.build.outputs.pkg-name }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          VIRTUAL_ENV=.venv uv pip install dist/*.whl
+
+      - name: Run unit tests
+        run: make test COV_ARGS= PYTEST_EXTRA="--no-cov -v"
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Run integration tests
+        if: false # Disabled: integration tests are not run during releases
+        env:
+          # deepagents SDK: subagent middleware tests
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # deepagents SDK: LangSmith sandbox tests
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          # langchain-daytona, CLI test_sandbox_operations.py
+          DAYTONA_API_KEY: ${{ secrets.DAYTONA_API_KEY }}
+          # langchain-modal
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+          # langchain-runloop
+          RUNLOOP_API_KEY: ${{ secrets.RUNLOOP_API_KEY }}
+
+        # We skip test_sandbox_factory.py and test_sandbox_operations.py in CLI
+        # releases — overlap with partner-level SandboxIntegrationTests.
+        # TODO: upstream unique batch/binary tests to langchain-tests, then
+        # remove files.
+        run: |
+          if [ -f Makefile ] && grep -q "integration_test" Makefile; then
+            if [ "${{ needs.setup.outputs.package }}" = "deepagents-cli" ]; then
+              export PYTEST_ADDOPTS="${PYTEST_ADDOPTS:-} --ignore=tests/integration_tests/test_sandbox_factory.py --ignore=tests/integration_tests/test_sandbox_operations.py"
+            fi
+            make integration_test
+          else
+            echo "::warning::No integration test target found — integration tests were NOT run for this release"
+          fi
+        working-directory: ${{ env.WORKING_DIR }}
+
+  publish:
+    # Publishes the package to PyPI
+    needs:
+      - setup
+      - build
+      - test-pypi-publish
+      - pre-release-checks
+    runs-on: ubuntu-latest
+    permissions:
+      # This permission is used for trusted publishing:
+      # https://blog.pypi.org/posts/2023-04-20-introducing-trusted-publishers/
+      #
+      # Trusted publishing has to also be configured on PyPI for each package:
+      # https://docs.pypi.org/trusted-publishers/adding-a-publisher/
+      id-token: write
+    env:
+      WORKING_DIR: ${{ needs.setup.outputs.working-dir }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Python + uv
+        uses: "./.github/actions/uv_setup"
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: dist
+          path: ${{ env.WORKING_DIR }}/dist/
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
+        with:
+          packages-dir: ${{ env.WORKING_DIR }}/dist/
+          verbose: true
+          print-hash: true
+          # Temp workaround since attestations are on by default as of gh-action-pypi-publish v1.11.0
+          attestations: false
+
+  # Create GitHub release after checks pass
+  mark-release:
+    needs:
+      - setup
+      - build
+      - release-notes
+      - test-pypi-publish
+      - pre-release-checks
+      - publish
+    if: always() && needs.pre-release-checks.result == 'success' &&
+      needs.publish.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      # This permission is needed by `ncipollo/release-action` to
+      # create the GitHub release/tag
+      contents: write
+      # This permission is needed to update release PR labels
+      pull-requests: write
+    env:
+      WORKING_DIR: ${{ needs.setup.outputs.working-dir }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Python + uv
+        uses: "./.github/actions/uv_setup"
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: dist
+          path: ${{ env.WORKING_DIR }}/dist/
+
+      - name: Create Release
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1
+        with:
+          artifacts: "${{ env.WORKING_DIR }}/dist/*"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generateReleaseNotes: false
+          tag: ${{ needs.build.outputs.pkg-name }}==${{ needs.build.outputs.version }}
+          body: ${{ needs.release-notes.outputs.release-body }}
+          commit: ${{ needs.setup.outputs.release-sha }}
+          prerelease: ${{ needs.build.outputs.is-prerelease == 'true' }}
+          makeLatest: ${{ needs.build.outputs.pkg-name == 'deepagents' &&
+            needs.build.outputs.is-prerelease != 'true' }}
+          draft: false
+
+      # Mark the release PR as tagged so release-please knows it's been released
+      # This is required because skip-github-release is true in release-please config
+      - name: Update release PR label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_NAME: ${{ needs.build.outputs.pkg-name }}
+          RELEASE_SHA: ${{ needs.setup.outputs.release-sha }}
+        run: |
+          set -euo pipefail
+
+          UPDATED=false
+
+          # Surface a manual-fix instruction on the run summary so a human reviewer
+          # sees it without scrolling through step logs.
+          fail_summary() {
+            local pr="$1"
+            {
+              echo "### ⚠️ Release PR label not updated"
+              echo ""
+              echo "Package: \`$PKG_NAME\`"
+              echo "Release SHA: \`$RELEASE_SHA\`"
+              if [ -n "$pr" ]; then
+                echo "PR: #$pr"
+                echo ""
+                echo "Manual fix:"
+                echo ""
+                echo "\`\`\`"
+                echo "gh pr edit $pr --remove-label 'autorelease: pending' --add-label 'autorelease: tagged'"
+                echo "\`\`\`"
+              else
+                echo ""
+                echo "No release PR was found. Inspect open PRs with the \`autorelease: pending\` label."
+              fi
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          # Try 1: find PR associated with the release commit. Distinguish "no PR
+          # for this commit" (alpha/hotfix path, eventual-consistency on fresh
+          # merges) from a real API failure — the latter must not silently fall
+          # through to label search, which could match an unrelated stale PR.
+          if API_OUT=$(gh api "/repos/${{ github.repository }}/commits/${RELEASE_SHA}/pulls" 2>&1); then
+            PR_NUMBER=$(printf '%s' "$API_OUT" | jq -r '.[0].number // empty')
+          else
+            echo "::warning::commit-pulls API call failed: $API_OUT"
+            echo "Falling through to label search."
+            PR_NUMBER=""
+          fi
+
+          if [ -n "$PR_NUMBER" ]; then
+            if ! LABELS=$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name' 2>&1); then
+              echo "::warning::gh pr view #$PR_NUMBER failed: $LABELS"
+              echo "Falling through to label search."
+            elif printf '%s\n' "$LABELS" | grep -qFx "autorelease: pending"; then
+              echo "Found release PR #$PR_NUMBER with 'autorelease: pending', updating labels..."
+              if EDIT_ERR=$(gh pr edit "$PR_NUMBER" --remove-label "autorelease: pending" --add-label "autorelease: tagged" 2>&1); then
+                UPDATED=true
+              else
+                echo "::warning::gh pr edit #$PR_NUMBER failed: $EDIT_ERR"
+                echo "Falling through to label search."
+              fi
+            else
+              # Idempotent re-run: the PR is already tagged, or RELEASE_SHA pointed
+              # at something other than a release-please merge. Either way, no-op
+              # here and let the label search confirm there's nothing pending.
+              echo "::notice::PR #$PR_NUMBER lacks 'autorelease: pending'. Either already tagged or RELEASE_SHA is not the release PR merge."
+            fi
+          else
+            echo "No PR found via commit ${RELEASE_SHA}."
+          fi
+
+          # Try 2: fallback label search. Used when Try 1 returns no PR — alpha/hotfix
+          # releases (release-sha falls back to github.sha, no merge PR) or fresh
+          # merges where GitHub's commit-to-PR index hasn't caught up yet.
+          if [ "$UPDATED" = "false" ]; then
+            if ! LIST_OUT=$(gh pr list --repo "${{ github.repository }}" \
+              --state merged \
+              --label "autorelease: pending" \
+              --label "release" \
+              --search "\"release($PKG_NAME)\" in:title" \
+              --json number --jq '.[0].number // empty' 2>&1); then
+              echo "::error::gh pr list failed: $LIST_OUT"
+              fail_summary ""
+              exit 1
+            fi
+            PR_NUMBER="$LIST_OUT"
+            if [ -n "$PR_NUMBER" ]; then
+              echo "Found release PR #$PR_NUMBER via label search, updating labels..."
+              if EDIT_ERR=$(gh pr edit "$PR_NUMBER" --remove-label "autorelease: pending" --add-label "autorelease: tagged" 2>&1); then
+                UPDATED=true
+              else
+                echo "::error::gh pr edit #$PR_NUMBER failed: $EDIT_ERR"
+                fail_summary "$PR_NUMBER"
+                exit 1
+              fi
+            else
+              echo "::warning::No release PR with 'autorelease: pending' found for $PKG_NAME."
+              fail_summary ""
+            fi
+          fi
