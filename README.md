@@ -1,48 +1,53 @@
 # VECTORA — Executive Overview
 
-## O que é, Como Funciona, Por que Importa
+Vectora centraliza memoria, busca, contexto e permissoes para agents que precisam colaborar sem perder isolamento operacional.
 
----
+## O que e Vectora?
 
-## O que é VECTORA?
+Vectora e um hub de conhecimento inteligente open-source para agents, construido em Go e orquestrado com LangChainGo. Ele combina busca vetorial, reranking, integracao com LLMs, memoria persistente e permissoes separadas por agent.
 
-**VECTORA** é um **knowledge hub inteligente open-source** que gerencia processamento e análise de dados com:
+**Vectora** gerencia processamento e analise de dados com:
 
-- 🧠 **Vector Search** — busca semântica em documentos (LanceDB + Voyage embeddings)
-- 🎯 **Reranking Local** — reordena resultados localmente (Voyage v2.5, sem API adicional)
-- 🔍 **Web Search** — integra resultados da web (SerpAPI)
-- 🤖 **LLM Integration** — funciona com Claude, OpenAI, Google (Agent Mode)
-- 💾 **Memory System** — persiste conhecimento em vector db + PostgreSQL
-- 🔌 **Multi-Agent Compatible** — integra com Claude Code, Gemini CLI, Paperclip, etc
+- **Busca vetorial** - busca semantica em documentos com LanceDB e Voyage embeddings.
+- **Reranking local** - reordena resultados localmente com Voyage v2.5, sem API adicional.
+- **Busca web** - integra resultados da web via SerpAPI.
+- **Integracao com LLMs** - conecta Claude, OpenAI e Google por meio de LangChainGo.
+- **Sistema de memoria** - persiste conhecimento em vector db, PostgreSQL, Redis e buckets de contexto.
+- **Compatibilidade multi-agent** - integra com Claude Code, Gemini CLI, Paperclip e outros agents.
+- **Permissoes separadas por agent** - cada agent pode operar com API key propria e bucket privado completo.
+- **Contexto exportavel** - dados podem ser exportados e importados entre usuarios, organizacoes e agents autorizados.
 
 **NÃO é:**
 
-- ❌ SaaS proprietary
-- ❌ Chat interface genérica
-- ❌ Apenas wrapper de RAG
-- ❌ Dependente de nuvem
+- SaaS proprietary
+- Chat interface genérica
+- Apenas wrapper de RAG
+- Dependente de nuvem
 
-**É:**
+**E:**
 
-- ✅ Open-source, rode localmente em KVM1 (2 vCPU, 4GB RAM)
-- ✅ Knowledge hub — inteligência reutilizável
-- ✅ Orquestrador — suporta 2 modos operacionais
-- ✅ Extensível — integra com qualquer agent
+- Open-source, rode localmente em KVM1 (2 vCPU, 4GB RAM).
+- Knowledge hub com inteligencia reutilizavel.
+- Orquestrador com suporte a Agent Mode e Tool Mode.
+- Multi-agent com permissoes, memoria e contexto separados.
+- Exportavel entre agents quando a hierarquia de permissoes autorizar.
 
 ---
 
 ## Mapa Mental Completo
 
+A visao abaixo resume os componentes principais e as relacoes entre modos de uso, backend e dados persistidos.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     VECTORA                                  │
+│                     Vectora                                  │
 │          Knowledge Hub Inteligente                          │
 └──────────────────────┬──────────────────────────────────────┘
                        │
         ┌──────────────┼──────────────┐
         │              │              │
     ┌───▼──┐       ┌──▼──┐       ┌──▼────────┐
-    │AGENT │       │TOOL │       │DASHBOARD  │
+    │AGENT │       │TOOL │       │Dashboard  │
     │MODE  │       │MODE │       │ & CONFIG  │
     │(LLM) │       │     │       │           │
     │      │       │     │       │(Web UI)   │
@@ -51,7 +56,7 @@
         └──────────────┼─────────────┘
                        │
    ┌───────────────────▼────────────────────┐
-   │    VECTORA Backend (Go)                 │
+   │    Vectora Backend (Go)                 │
    │                                        │
    │  ┌─────────────────────────────────┐   │
    │  │   RAG Orchestrator              │   │
@@ -98,7 +103,11 @@
 
 ## 2 Modos Operacionais
 
+Os modos operacionais separam quando o Vectora decide a resposta e quando ele atua como ferramenta estruturada para outro agent.
+
 ### Mode 1: Agent Mode (Full RAG — Modo Orquestrador)
+
+Nesse modo, o Vectora executa o ciclo completo de busca, reranking, contexto e chamada ao LLM.
 
 ```
 ┌─────────────────────────────────┐
@@ -108,7 +117,7 @@
                │ POST /api/v1/chat/message
                │
    ┌───────────▼──────────────┐
-   │  VECTORA Backend          │
+   │  Vectora Backend          │
    │                          │
    │  1. Vector Search        │
    │     └─ encontra docs     │
@@ -163,6 +172,8 @@ Claude Code: "O que é o padrão Observer em TypeScript?"
 ---
 
 ### Mode 2: Tool Mode (Structured Integration — Modo Ferramenta)
+
+Nesse modo, o agent externo chama endpoints especificos e usa os dados retornados em sua propria analise.
 
 ```
 ┌─────────────────────────────────┐
@@ -219,13 +230,27 @@ Claude Code (análise própria):
 
 ---
 
+---
+
+## Modelo de Permissoes Multi-Agent
+
+O Vectora separa autenticacao de usuario e autenticacao de agent. A conta usa login com email e senha, mas tambem recebe uma API key principal para automacao e integracoes.
+
+A partir da API key principal, o usuario pode derivar chaves especificas para cada agent. Um agent de CEO, TCO, backend, frontend, security ou QA pode ter sua propria chave, seu proprio contexto, sua propria memoria, Redis, embeddings, indices e bucket privado completo.
+
+Os buckets privados nao sao compartilhados por padrao. Isso permite que cada agent mantenha historico, decisoes e contexto operacional sem misturar dados sensiveis com outros agents.
+
+Mesmo com isolamento privado, todos os agents autorizados sempre podem acessar o bucket publico do usuario e o bucket publico da organizacao. Esses buckets servem como camada comum para documentacao, decisoes compartilhadas, referencias e conhecimento que deve circular entre agents.
+
+O Vectora tambem e totalmente exportavel. Dados, memoria e contexto podem ser exportados e importados entre usuarios, organizacoes e agents autorizados. Quando a hierarquia exigir, o CEO pode receber acesso ao contexto do TCO, e o TCO pode receber acesso ao contexto dos engenheiros, sem transformar todos os buckets privados em dados publicos.
+
 ## Dashboard — Interface de Configuração (Sempre Ativa)
 
 Dashboard NÃO é um "modo", é a **interface de gerenciamento** que funciona **em paralelo** com ambos os modos:
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│       VECTORA DASHBOARD                               │
+│       Vectora Dashboard                               │
 │    https://localhost:3000 (ou VPS)                   │
 │                                                      │
 │  ┌─────────────────────────────────────────────┐    │
@@ -235,14 +260,14 @@ Dashboard NÃO é um "modo", é a **interface de gerenciamento** que funciona **
 │  ┌────────────────────▼───────────────────────┐    │
 │  │ Main Dashboard                             │    │
 │  │                                            │    │
-│  │  📊 Stats & Analytics:                     │    │
+│  │   Stats & Analytics:                     │    │
 │  │  ├─ Queries today: 42                      │    │
 │  │  ├─ Avg latency: 234ms                     │    │
 │  │  ├─ Cache hit rate: 73%                    │    │
 │  │  ├─ Vectors indexed: 15K                   │    │
 │  │  └─ Storage used: 2.3GB / 50GB             │    │
 │  │                                            │    │
-│  │  🛠️ Quick Actions:                         │    │
+│  │   Quick Actions:                         │    │
 │  │  ├─ [Index New Dataset]                    │    │
 │  │  ├─ [Clear Cache]                          │    │
 │  │  └─ [Export Memory]                        │    │
@@ -251,18 +276,18 @@ Dashboard NÃO é um "modo", é a **interface de gerenciamento** que funciona **
 │  ┌────────────────────────────────────────────┐    │
 │  │ Settings & Configuration                   │    │
 │  │                                            │    │
-│  │  🔑 API Keys:                              │    │
+│  │   API Keys:                              │    │
 │  │  ├─ Claude API Key: [••••••••••]           │    │
 │  │  ├─ OpenAI API Key: [••••••••••]           │    │
 │  │  ├─ Voyage API Key: [••••••••••]           │    │
 │  │  └─ SerpAPI Key: [••••••••••]              │    │
 │  │                                            │    │
-│  │  🔒 Security:                              │    │
+│  │   Security:                              │    │
 │  │  ├─ Change Password                        │    │
 │  │  ├─ Session Timeout: 30 min                │    │
 │  │  └─ Two-Factor Auth: OFF                   │    │
 │  │                                            │    │
-│  │  ⚙️ Preferences:                           │    │
+│  │   Preferences:                           │    │
 │  │  ├─ Default LLM: Claude                    │    │
 │  │  ├─ Cache TTL: 5 min                       │    │
 │  │  └─ Log Level: info                        │    │
@@ -271,18 +296,18 @@ Dashboard NÃO é um "modo", é a **interface de gerenciamento** que funciona **
 │  ┌────────────────────────────────────────────┐    │
 │  │ Memory Viewer                              │    │
 │  │                                            │    │
-│  │  📚 Indexed Documents:                     │    │
+│  │   Indexed Documents:                     │    │
 │  │  ├─ Godot 4.6 Docs (installed)             │    │
 │  │  ├─ React Hooks Guide (installed)          │    │
 │  │  ├─ Web search results (temp, auto-clean)  │    │
 │  │  └─ Custom docs (uploaded)                 │    │
 │  │                                            │    │
-│  │  💬 Chat History:                          │    │
+│  │   Chat History:                          │    │
 │  │  ├─ "What is Observer pattern?" (3h ago)   │    │
 │  │  ├─ "How to use hooks?" (2h ago)           │    │
 │  │  └─ "Best practices..." (1h ago)           │    │
 │  │                                            │    │
-│  │  📈 Execution Logs:                        │    │
+│  │   Execution Logs:                        │    │
 │  │  ├─ [View recent queries]                  │    │
 │  │  ├─ [Download logs]                        │    │
 │  │  └─ [Clear old logs]                       │    │
@@ -291,7 +316,7 @@ Dashboard NÃO é um "modo", é a **interface de gerenciamento** que funciona **
 │  ┌────────────────────────────────────────────┐    │
 │  │ Dataset Manager (VAL Registry)             │    │
 │  │                                            │    │
-│  │  📦 Installed Datasets:                    │    │
+│  │   Installed Datasets:                    │    │
 │  │  ├─ godot-4.6-docs (v4.6.1)                │    │
 │  │  │  └─ [Uninstall] [Update] [Details]      │    │
 │  │  ├─ react-hooks-guide (v2.1.0)             │    │
@@ -299,7 +324,7 @@ Dashboard NÃO é um "modo", é a **interface de gerenciamento** que funciona **
 │  │  └─ custom-company-docs (v1.0.0)           │    │
 │  │     └─ [Uninstall] [Update] [Details]      │    │
 │  │                                            │    │
-│  │  🌐 Browse VAL Registry:                   │    │
+│  │   Browse VAL Registry:                   │    │
 │  │  ├─ [Search available datasets]            │    │
 │  │  ├─ [Featured this month]                  │    │
 │  │  └─ [Community contributions]              │    │
@@ -311,23 +336,25 @@ Dashboard NÃO é um "modo", é a **interface de gerenciamento** que funciona **
 
 **Dashboard permite:**
 
-- ✅ Configurar chaves de API (sem exigir código)
-- ✅ Visualizar histórico de memory
-- ✅ Gerenciar datasets (install, uninstall, update)
-- ✅ Monitorar performance (queries/min, latência)
-- ✅ Alterar senha e preferências
-- ✅ Tudo via interface web (não requer CLI)
+- Configurar chaves de API (sem exigir código)
+- Visualizar histórico de memory
+- Gerenciar datasets (install, uninstall, update)
+- Monitorar performance (queries/min, latência)
+- Alterar senha e preferências
+- Tudo via interface web (não requer CLI)
 
 **Por que Dashboard é importante:**
 
-- 🎯 Usuários non-technical podem usar Vectora
-- 🔒 Configuração segura (sem expor chaves em código)
-- 📊 Visibilidade de o que está acontecendo
-- 🔧 Gerenciamento sem terminal
+- Usuários non-technical podem usar Vectora
+- Configuração segura (sem expor chaves em código)
+- Visibilidade de o que está acontecendo
+- Gerenciamento sem terminal
 
 ---
 
 ## Stack Técnico (Simplificado)
+
+O stack prioriza Go, LangChainGo e armazenamento local para manter baixa latencia e deploy simples.
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -404,6 +431,8 @@ O workspace do Vectora está organizado nestas pastas:
 
 ## Fluxo de Dados (End-to-End)
 
+O fluxo abaixo mostra como uma pergunta vira contexto recuperado, resposta e memoria persistida.
+
 ```
 USUARIO (Claude Code)
   │
@@ -423,7 +452,7 @@ USUARIO (Claude Code)
            │                         │
            │                         │
     ┌──────▼───────────────────────────┐
-    │  VECTORA BACKEND                  │
+    │  Vectora Backend                  │
     │                                  │
     │  RAG ORCHESTRATOR:               │
     │  1. Vector Search (LanceDB)      │
@@ -465,100 +494,130 @@ USUARIO (Claude Code)
 
 ## Key Features by Priority
 
+As fases organizam o que entra primeiro no produto e o que fica para estabilizacao, ecossistema e uso enterprise.
+
 ### Phase 1 (MVP — 8 weeks)
 
-- ✅ User authentication (email + password)
-- ✅ RAG orchestrator (search + rerank + LLM)
-- ✅ Agent Mode (chat → LLM → response)
-- ✅ Tool Mode (knowledge.store, memory.query)
-- ✅ Dashboard (settings, memory viewer)
-- ✅ CLI (init, start, auth, dataset)
-- ✅ Docker Compose (local dev)
+A primeira fase entrega autenticacao, API key, RAG, dashboard, CLI e base local de deploy.
+
+- User authentication (email + password)
+- RAG orchestrator (search + rerank + LLM)
+- Agent Mode (chat → LLM → response)
+- Tool Mode (knowledge.store, memory.query)
+- Dashboard (settings, memory viewer)
+- CLI (init, start, auth, dataset)
+- Docker Compose (local dev)
 
 ### Phase 2 (Stabilization — 4 weeks)
 
-- ✅ Comprehensive testing (E2E, load, security)
-- ✅ Performance baselines
-- ✅ Bug fixes + user feedback
+A segunda fase foca em qualidade, testes, performance e feedback real de uso.
+
+- Comprehensive testing (E2E, load, security)
+- Performance baselines
+- Bug fixes + user feedback
 
 ### Phase 3 (Ecosystem — 8 weeks)
 
-- ✅ Claude Code MCP integration
-- ✅ Gemini CLI adapter
-- ✅ Web search integration (SerpAPI)
-- ✅ VAL Registry (community datasets)
-- ✅ Monitoring (Prometheus + Sentry)
+A terceira fase amplia integracoes, adapters e datasets comunitarios.
+
+- Claude Code MCP integration
+- Gemini CLI adapter
+- Web search integration (SerpAPI)
+- VAL Registry (community datasets)
+- Monitoring (Prometheus + Sentry)
 
 ### Phase 4 (Enterprise — 6 weeks)
 
-- ✅ Caching optimization
-- ✅ System Tray (Windows)
-- ✅ Package manager distribution
-- ✅ RBAC + multi-user
-- ✅ Auto-updates
+A quarta fase adiciona recursos operacionais para ambientes com multiplos usuarios e controle administrativo.
+
+- Caching optimization
+- System Tray (Windows)
+- Package manager distribution
+- RBAC + multi-user
+- Auto-updates
 
 ### Phase 5 (Ongoing)
 
-- ✅ Knowledge graphs
-- ✅ Multi-agent orchestration
-- ✅ SSO/SAML (enterprise)
-- ✅ Plugin ecosystem
-- ✅ Community growth
+A fase continua cobre evolucao de grafo de conhecimento, plugins e crescimento da comunidade.
+
+- Knowledge graphs
+- Multi-agent orchestration
+- SSO/SAML (enterprise)
+- Plugin ecosystem
+- Community growth
 
 ---
 
 ## Constraints & Guarantees
 
+Estas restricoes definem o comportamento minimo esperado para que o Vectora continue local-first e previsivel.
+
 ### Must-Have (Non-Negotiable)
 
-- ✅ Roda em KVM1: 2 vCPU, 4GB RAM, 50GB NVMe
-- ✅ Open-source (Apache 2.0)
-- ✅ Zero vendor lock-in
-- ✅ Multi-agent compatible
-- ✅ RAG + LLM agnostic
+Os requisitos abaixo nao devem ser sacrificados durante a implementacao.
+
+- Roda em KVM1: 2 vCPU, 4GB RAM, 50GB NVMe
+- Open-source (Apache 2.0)
+- Zero vendor lock-in
+- Multi-agent compatible
+- RAG + LLM agnostic
 
 ### Performance Targets
 
-- ✅ API response < 500ms p95
-- ✅ Vector search < 150ms p95
-- ✅ Vectora Cognitive Runtime inference 4-8ms
-- ✅ Memory usage < 1.5GB peak
+As metas de performance orientam as escolhas de armazenamento, cache e execucao.
+
+- API response < 500ms p95
+- Vector search < 150ms p95
+- Vectora Cognitive Runtime inference 4-8ms
+- Memory usage < 1.5GB peak
 
 ### Security
 
-- ✅ Per-user data isolation
-- ✅ Encryption at rest (AES-256)
-- ✅ JWT for auth
-- ✅ bcrypt for passwords
-- ✅ No secrets in logs
+A seguranca precisa cobrir usuario, organizacao, API keys derivadas e buckets privados por agent.
+
+- Per-user data isolation
+- Encryption at rest (AES-256)
+- JWT for auth
+- bcrypt for passwords
+- No secrets in logs
 
 ### Scalability
 
-- ✅ Suporta 100+ users localmente
-- ✅ 1M+ vectors em LanceDB
-- ✅ Goroutines para concorrência
-- ✅ Redis Pub/Sub para invalidation
+A escala esperada considera uso local e organizacoes pequenas antes de ambientes distribuidos maiores.
+
+- Suporta 100+ users localmente
+- 1M+ vectors em LanceDB
+- Goroutines para concorrência
+- Redis Pub/Sub para invalidation
 
 ---
 
-## Why VECTORA Matters
+## Why Vectora Matters
+
+O valor do Vectora vem de reduzir perda de contexto entre agents e execucoes repetidas.
 
 ### Problem it Solves
 
-- 🎯 Agents isolated = cada um guarda seu conhecimento
-- 🔄 Código repetido = pattern, insight, análise são perdidos
-- 📚 Sem memória = agent repete análise mesma coisa n vezes
-- 🤖 Multi-agent ineficiente = agents não compartilham contexto
+Agents sem memoria compartilhada repetem trabalho e perdem conhecimento util entre sessoes.
 
-### VECTORA Solution
+- Agents isolated = cada um guarda seu conhecimento
+- Código repetido = pattern, insight, análise são perdidos
+- Sem memória = agent repete análise mesma coisa n vezes
+- Multi-agent ineficiente = agents não compartilham contexto
 
-- 🧠 **Shared Memory** — todos agents acessam mesmo knowledge base
-- 🔍 **Semantic Search** — encontra contexto relevante automaticamente
-- 🎯 **Intelligence Reuse** — análise anterior reutilizada
-- 🤝 **Agent Orchestration** — múltiplos agents colaboram
-- 💾 **Persistent Learning** — sistema aprende ao longo do tempo
+### Vectora Solution
+
+A solucao combina memoria privada por agent com buckets publicos compartilhados e exportacao controlada.
+
+- **Shared Memory** — todos agents acessam mesmo knowledge base
+- **Semantic Search** — encontra contexto relevante automaticamente
+- **Intelligence Reuse** — análise anterior reutilizada
+- **Agent Orchestration** — múltiplos agents colaboram
+- **Persistent Learning** — sistema aprende ao longo do tempo
 
 ### For Who
+
+Os publicos abaixo representam os primeiros casos de uso do projeto.
 
 - **Developers** — integram Vectora em seus agents/tools
 - **Companies** — deploy local, zero cloud lock-in
@@ -568,6 +627,8 @@ USUARIO (Claude Code)
 ---
 
 ## Quick Start (Depois de implementação)
+
+Os comandos abaixo descrevem o fluxo esperado para a primeira versao instalavel.
 
 ```bash
 # Install
@@ -601,24 +662,28 @@ vectora query "What is React hooks?"
 
 ---
 
-## Comparison: VECTORA vs Alternatives
+## Comparison: Vectora vs Alternatives
 
-| Feature                | VECTORA          | LangChain        | RAGstack   | Llamaindex      |
-| ---------------------- | ---------------- | ---------------- | ---------- | --------------- |
-| **Local-first**        | ✅ Yes            | ❌ Cloud-oriented | ✅ Yes      | ❌ Cloud-focused |
-| **Multi-agent**        | ✅ Native         | ⚠️ Possible       | ⚠️ Possible | ❌ Single agent  |
-| **Zero config**        | ✅ Docker Compose | ❌ Complex setup  | ⚠️ Moderate | ⚠️ Moderate      |
-| **KVM1 viable**        | ✅ Yes (<1.5GB)   | ⚠️ Borderline     | ✅ Yes      | ⚠️ Tight         |
-| **Open-source**        | ✅ Apache 2.0     | ✅ MIT            | ✅ Various  | ✅ MIT           |
-| **Dashboard**          | ✅ Built-in       | ❌ No             | ⚠️ External | ❌ No            |
-| **Package mgrs**       | ✅ (Phase 4)      | ❌ pip/npm        | ❌ No       | ❌ pip only      |
-| **Community datasets** | ✅ VAL Registry   | ❌ No             | ❌ No       | ❌ No            |
-| **Cost**               | 🆓 Free           | 🆓 Free           | 🆓 Free     | 🆓 Free          |
-| **Maturity**           | 🚀 Pre-release    | ✅ Mature         | ⚠️ Alpha    | ✅ Mature        |
+A comparacao destaca o posicionamento do Vectora frente a alternativas de RAG e memoria para agents.
+
+| Feature                | Vectora        | LangChain      | RAGstack | Llamaindex    |
+| ---------------------- | -------------- | -------------- | -------- | ------------- |
+| **Local-first**        | Yes            | Cloud-oriented | Yes      | Cloud-focused |
+| **Multi-agent**        | Native         | Possible       | Possible | Single agent  |
+| **Zero config**        | Docker Compose | Complex setup  | Moderate | Moderate      |
+| **KVM1 viable**        | Yes (<1.5GB)   | Borderline     | Yes      | Tight         |
+| **Open-source**        | Apache 2.0     | MIT            | Various  | MIT           |
+| **Dashboard**          | Built-in       | No             | External | No            |
+| **Package mgrs**       | (Phase 4)      | pip/npm        | No       | pip only      |
+| **Community datasets** | VAL Registry   | No             | No       | No            |
+| **Cost**               | Free           | Free           | Free     | Free          |
+| **Maturity**           | Pre-release    | Mature         | Alpha    | Mature        |
 
 ---
 
 ## Roadmap Visual
+
+A linha do tempo resume as fases de entrega planejadas.
 
 ```
 2026
@@ -646,16 +711,20 @@ vectora query "What is React hooks?"
 
 ## Contact & Community
 
-- 📧 **GitHub:** github.com/vectora/vectora
-- 💬 **Discord:** discord.gg/vectora (Phase 5)
-- 📚 **Docs:** vectora.ai (Phase 3)
-- 🤝 **Contributing:** github.com/vectora/vectora/CONTRIBUTING.md
+Os canais abaixo concentram codigo, discussao, documentacao e contribuicoes.
+
+- **GitHub:** github.com/vectora/vectora
+- **Discord:** discord.gg/vectora (Phase 5)
+- **Docs:** vectora.ai (Phase 3)
+- **Contributing:** github.com/vectora/vectora/CONTRIBUTING.md
 
 ---
 
 ## tl;dr
 
-**VECTORA** = 🧠 Knowledge hub inteligente que:
+A sintese final concentra a proposta principal do Vectora em poucos pontos.
+
+**Vectora** = Knowledge hub inteligente que:
 
 - Busca semanticamente (Vector search)
 - Reordena localmente (Reranking)
@@ -664,7 +733,7 @@ vectora query "What is React hooks?"
 - Persiste memória (Multi-user isolation)
 - Funciona em KVM1 (2 vCPU, 4GB RAM)
 - Roda localmente (Open-source, zero cloud)
-- Integra agentes (Claude Code, Gemini, etc)
+- Integra agents (Claude Code, Gemini, Paperclip, etc)
 
 **Próximos passos:**
 
@@ -674,10 +743,10 @@ vectora query "What is React hooks?"
 4. Otimizar performance (Phase 4)
 5. Crescer comunidade (Phase 5 — ongoing)
 
-🚀 **Let's build the future of AI agents together!**
+**Let's build the future of AI agents together!**
 
 ---
 
 **Document Version:** 1.0
 **Last Updated:** 2026-05-01
-**Status:** ✅ Approved for Implementation
+**Status:** Approved for Implementation
