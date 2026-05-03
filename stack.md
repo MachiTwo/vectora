@@ -1,6 +1,6 @@
 # Documentação da Stack do Vectora
 
-**Vectora é um single binary instalável (aplicação única), controlado por CLI, com interface web integrada.** Não é SaaS, não é cloud-native, não é modular separado. É um produto que o usuário instala (`vectora` ou `vectora.exe`) em sua máquina ou VPS e roda 24/7, como Paperclip.
+**Vectora é um aplicativo local-first instalável, controlado por CLI, com interface web integrada.** Não é SaaS, não é cloud-native, não é modular separado. É um produto que o usuário instala (`pip install vectora`, `pipx install vectora`, ou `docker run`) em sua máquina ou VPS e roda 24/7, como Paperclip.
 
 Stack de tecnologia completa: tudo integrado em um único aplicativo, com todos componentes internos (CLI, Backend, Frontend, Databases) rodando juntos.
 
@@ -42,11 +42,11 @@ Stack de tecnologia completa: tudo integrado em um único aplicativo, com todos 
 - Databases (PostgreSQL, Redis, LanceDB embedded) → gerenciados via CLI
 - VCR (Vectora Cognitive Runtime) → spawned como subprocess quando necessário
 
-### Arquitetura: Single Binary
+### Arquitetura: Single App
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  VECTORA APP (Single Binary: vectora / vectora.exe)     │
+│  VECTORA APP (Installed: pip / pipx / docker)           │
 │                                                         │
 │  $ vectora start                                        │
 │  $ vectora stop                                         │
@@ -723,32 +723,84 @@ peft==0.7+
 
 **Versioning:** Semantic (MAJOR.MINOR.PATCH)
 
-**Channels:**
+**3 Canais Principais de Instalação:**
 
-```
-PyPI (pip install vectora)
-Homebrew (brew install vectora)
-WinGet (winget install Vectora)
-Scoop (scoop install vectora)
-Chocolatey (choco install vectora)
-GitHub Releases (download .exe, .dmg, .deb)
-curl script (curl -fsSL https://install.vectora.dev | sh)
-```
+### 1. Docker Image (Recomendado para VPS/Servidor)
 
-**Build Matrix:**
+```bash
+# Pull
+docker pull vectora/vectora:latest
 
-```
-Linux x86_64 → .whl, .tar.gz, .deb
-macOS x86_64 + ARM64 → .whl, .dmg
-Windows x86_64 → .whl, .exe (installer)
+# Run
+docker run -p 8000:8000 \
+  -v ~/.vectora:/root/.vectora \
+  vectora/vectora:latest
+
+# Docker Compose
+docker-compose -f docker-compose.yml up -d
 ```
 
-**Artifacts:**
+**Artifact:** `ghcr.io/vectora/vectora:latest` (GitHub Container Registry)
+
+### 2. pip (Padrão Python, Simples)
+
+```bash
+pip install vectora
+
+# Após instalação
+vectora start
+```
+
+**Artifact:** PyPI package `vectora-1.0.0-py3-none-any.whl` (~10MB código)
+
+### 3. pipx (Recomendado para CLI, Isolado)
+
+```bash
+pipx install vectora
+
+# Isolado em seu próprio venv
+vectora start
+```
+
+**Artifact:** Mesmo wheel, mas pipx gerencia isolamento
+
+**Por quê 3 canais?**
+
+| Caso                                      | Recomendação                      |
+| ----------------------------------------- | --------------------------------- |
+| **VPS produção**                          | Docker (controlado, reproducível) |
+| **Máquina pessoal (Linux/macOS/Windows)** | pipx (mais limpo, sem poluição)   |
+| **Python dev já existe**                  | pip (rápido)                      |
+
+**Build & Distribution:**
+
+```bash
+# 1. Build frontend
+cd frontend && npm run build  # → frontend/dist/
+
+# 2. Build wheel
+python -m build  # → dist/vectora-1.0.0-py3-none-any.whl
+
+# 3. Build Docker image
+docker build -t vectora/vectora:1.0.0 .
+
+# 4. Push artifacts
+twine upload dist/*.whl  # → PyPI
+docker push vectora/vectora:1.0.0  # → GHCR
+gh release create v1.0.0 dist/*  # → GitHub Releases
+
+# 5. Checksums & SBOM
+sha256sum dist/*.whl > checksums.txt
+syft packages > vectora-1.0.0-SBOM.spdx.json
+```
+
+**Artifacts Publicados:**
 
 ```
-Checksums (SHA256)
-SBOM (SPDX)
-Signatures (GPG optional)
+vectora-1.0.0-py3-none-any.whl (PyPI)
+vectora-1.0.0-py3-none-any.whl.sha256
+vectora-1.0.0-SBOM.spdx.json
+ghcr.io/vectora/vectora:1.0.0 (Docker)
 ```
 
 ---
@@ -788,7 +840,7 @@ Signatures (GPG optional)
 
 ---
 
-**Status:** Documentação completa de Vectora App (single binary, local-first, instalável)  
+**Status:** Documentação completa de Vectora App (local-first, instalável via Docker/pip/pipx)  
 **Última Atualização:** 2026-05-03  
 **Proprietário:** Vectora Engineering Team  
 **Licença:** Apache 2.0
