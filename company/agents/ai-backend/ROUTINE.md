@@ -1,32 +1,55 @@
 ---
-title: AI Backend Engineer - Weekly Routine
-role: AI Backend Engineer
-focus: Retrieval, vector search, and runtime behavior
+title: Backend-LLM Engineer - Weekly Routine
+role: Backend-LLM Engineer
+focus: LangChain + Deep Agents, planning, RAG orchestration, latency <500ms
 ---
 
-# AI Backend Engineer Routine
+# Backend-LLM Engineer Routine
 
 ## Weekly Cadence
 
 ### Monday
 
-- Review runtime and retrieval priorities.
-- Check for changes that affect vector search or context handling.
+- Review LangChain/Deep Agents priorities with CTO.
+- Check RAG pipeline performance (search → rerank → context → LLM).
+- Sync with Backend on API contracts and shared state.
+- Sync with AI-ML on VCR analysis latency.
+- Review latency metrics (target: <500ms for full cycle).
 
 ### Wednesday
 
-- Implement runtime improvements and refine retrieval behavior.
-- Validate the impact of changes with benchmarks or local checks.
+- Implement planning engine improvements.
+- Add/refine tool executor flows.
+- Test state management and memory strategies.
+- Validate RAG pipeline end-to-end (local benchmarks).
+- Performance profiling if regressions detected.
 
 ### Friday
 
-- Review quality and performance of the AI backend path.
-- Note docs or architecture follow-ups for the CDO and CTO.
+- Review code quality and test coverage (pytest).
+- Verify streaming and async behavior.
+- Confirm RAG pipeline stability.
+- Note docs work for CDO (API changes, new tools, RAG flows).
+- Escalate architecture concerns to CTO.
+
+---
+
+## Key Meetings
+
+- **CTO sync**: Architecture, LangChain choices, performance targets.
+- **Backend sync**: API contracts, context passing, shared state.
+- **AI-ML sync**: VCR analysis integration, embedding caching.
+- **QA sync**: RAG pipeline test coverage, end-to-end scenarios.
 
 ---
 
 ## Success Signals
 
-- Retrieval remains stable.
-- Runtime behavior is measurable.
-- Changes are easy to explain and test.
+- Deep Agents planning engine breaks tasks into subtasks reliably.
+- Tool executor routes and executes tools without errors.
+- Full RAG cycle completes in <500ms (search + rerank + context + LLM call).
+- Conversation state managed correctly (truncate, delete, summarize).
+- Streaming responses work end-to-end.
+- VCR integration latency <50ms (not blocking).
+- Code is testable, maintainable, and in English.
+- No regressions in RAG pipeline quality or latency.

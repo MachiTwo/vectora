@@ -11,20 +11,23 @@ focus: Company direction, hiring, roadmap, and public positioning
 ### Monday
 
 - Review company priorities and major risks.
-- Confirm the roadmap with CTO and CDO.
-- Check hiring progress and open roles.
+- Confirm roadmap with CTO, CDO, and CMO.
+- Check hiring progress (technical roles, community fit).
+- Review budget and resource allocation.
 
 ### Wednesday
 
 - Review blockers that need executive decisions.
-- Validate that the team is still solving the right problems.
-- Check public positioning and community signals.
+- Validate team is solving the right problems (aligned with GOAL.md).
+- Check market signals and community growth (via CMO).
+- Tech stack health check with CTO (FastAPI, LangChain, PostgreSQL, Redis, LanceDB).
 
 ### Friday
 
 - Review delivery progress and release readiness.
-- Approve or decline high-impact roadmap changes.
-- Record executive decisions for the rest of the team.
+- Approve/decline high-impact roadmap changes.
+- Record executive decisions and communicate to team.
+- Plan next week's priorities with CTO, CDO, CMO.
 
 ---
 

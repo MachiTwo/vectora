@@ -1,7 +1,7 @@
 ---
 title: Security Engineer - Weekly Routine
 role: Security Engineer
-focus: Secrets, auth, dependency risk, and release safety
+focus: JWT auth, RBAC enforcement, SQL injection prevention, dependency scanning
 ---
 
 # Security Engineer Routine
@@ -10,23 +10,47 @@ focus: Secrets, auth, dependency risk, and release safety
 
 ### Monday
 
-- Review high-risk changes and new dependencies.
-- Check auth-related work for obvious issues.
+- Review high-risk changes (auth, RBAC, database, secrets).
+- Check new dependencies (vulnerability scan with `safety`).
+- Sync with Backend on JWT token implementation.
+- Review any sensitive data handling changes.
 
 ### Wednesday
 
-- Perform deeper review on sensitive paths.
-- Check for secrets, insecure defaults, and risky assumptions.
+- Deep security review on auth/RBAC changes.
+- Test JWT token generation, validation, refresh.
+- RBAC permission enforcement verification.
+- SQL injection prevention (parameterized queries check).
+- Check for hardcoded secrets or API keys in code.
 
 ### Friday
 
-- Summarize open security risks.
-- Confirm whether any issue should block release.
+- Summarize open security risks and blockers.
+- Verify release readiness (no critical vulnerabilities).
+- Penetration testing on auth flows (JWT, RBAC boundaries).
+- Document security decisions and threat model updates.
+
+---
+
+## Security Review Checklist
+
+- **Authentication:** JWT tokens (generation, validation, expiration, refresh).
+- **Authorization:** RBAC enforcement (5 levels, 15 permissions verified).
+- **Data Privacy:** No PII logged, encryption at rest/in transit.
+- **SQL Injection:** Parameterized queries only (no string concatenation).
+- **Secrets:** No API keys/credentials in code (env vars only).
+- **Dependencies:** `safety` check for known vulnerabilities.
+- **Encryption:** TLS 1.3 for transit, AES-256 for data at rest.
 
 ---
 
 ## Success Signals
 
-- Sensitive changes are reviewed early.
-- Secrets stay out of code and logs.
-- Security concerns are clear and actionable.
+- JWT tokens implemented and validated correctly.
+- RBAC permissions enforced on all API endpoints.
+- No secrets in code or logs (env vars only).
+- SQL injection prevention (parameterized queries).
+- Dependency vulnerabilities caught immediately.
+- Auth flows tested for privilege escalation.
+- Security risks clear and documented.
+- No critical vulnerabilities block releases.
