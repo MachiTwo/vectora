@@ -17,6 +17,7 @@
   <url><loc>https://vectora.github.io/langchain/core-concepts.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/langchain/document-loaders.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/langchain/embeddings.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/fastapi-integration.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/langchain/guardrails.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/langchain/integration-patterns.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/langchain/json-rpc.pt/</loc><lastmod>2026-05-04</lastmod></url>
@@ -24,6 +25,7 @@
   <url><loc>https://vectora.github.io/langchain/multi-agent-systems.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/langchain/output-parsers.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/langchain/prompts.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/langchain/rag-pipeline-orchestration.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/langchain/pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/langchain/deep-agents/acp-deployment.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/langchain/deep-agents/cli.pt/</loc><lastmod>2026-05-04</lastmod></url>
