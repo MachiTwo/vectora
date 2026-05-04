@@ -4,7 +4,7 @@ Esta documentação detalha a visão estratégica e os objetivos fundamentais do
 
 ## O que é o Vectora
 
-Vectora é um **Hub de Conhecimento e Agente Especialista** local-first, projetado para servir como a camada de inteligência e memória para desenvolvedores e outros agentes de IA. Ele opera como um aplicativo de binário único (Go) que combina busca vetorial de alta performance, gerenciamento de dados estruturados e uma camada de pré-processamento cognitivo (VCR).
+Vectora é um **Hub de Conhecimento e Agente Especialista** local-first, projetado para servir como a camada de inteligência e memória para desenvolvedores e outros agentes de IA. Ele opera como um aplicativo Python (FastAPI + LangChain) que combina busca vetorial de alta performance, gerenciamento de dados estruturados e uma camada de pré-processamento cognitivo (VCR).
 
 O Vectora é o "cérebro local" que permite que ferramentas como Claude Code, Cursor, Gemini e sistemas multi-agentes baseados em Paperclip operem com contexto profundo, sem alucinações e com total privacidade de dados.
 
@@ -24,14 +24,14 @@ O objetivo do Vectora é descentralizar a inteligência artificial, fornecendo u
 
 A arquitetura do Vectora é composta por diversos módulos integrados que trabalham em harmonia para fornecer uma experiência local-first robusta e escalável.
 
-### Backend (Go)
+### Backend (Python)
 
-O núcleo do sistema, construído em Go para máxima performance e baixa latência. Responsável por:
+O núcleo do sistema, construído em Python (FastAPI + LangChain) para máxima performance e baixa latência. Responsável por:
 
-- Daemon de alta concorrência e binário único.
+- Aplicação FastAPI com alta concorrência via asyncio.
 - Servidor MCP (Model Context Protocol) nativo para integração com agentes.
 - Orquestração de pipelines RAG e integração com LLMs (Claude, OpenAI, Gemini).
-- Gerenciamento de bancos de dados embedded e roteamento de APIs.
+- Gerenciamento de bancos de dados embedded e roteamento de APIs REST/RPC.
 
 ### Vectora Cognitive Runtime (VCR)
 
