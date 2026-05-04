@@ -1,186 +1,211 @@
 ---
 title: Context Engine
 slug: context-engine
-date: "2026-04-19T09:00:00-03:00"
+date: "2026-05-03T09:00:00-03:00"
 type: docs
 sidebar:
   open: true
 tags:
-  - adk
-  - agentic-framework
-  - agents
-  - ai
-  - ast-parsing
-  - auth
-  - claude
-  - concepts
-  - config
   - context-engine
-  - embeddings
-  - go
-  - guardian
-  - jwt
-  - mongodb-atlas
+  - lancedb
+  - vector-search
   - rag
   - reranker
   - search
   - semantic
-  - tree-sitter
-  - vector-db
-  - vector-search
+  - embeddings
+  - concepts
+  - ai
   - vectora
-  - voyage
-  - yaml
+  - postgresql
+  - redis
 ---
 
 {{< lang-toggle >}}
 
-O Context Engine é o coração da orquestração do Vectora. Ele decide **o quê, como e quando** buscar contexto em seu codebase, evitando ruído e overfetch.
+{{< section-toggle >}}
 
-> [!IMPORTANT] Context Engine não é apenas busca. É um pipeline inteligente: **Embed → Search → Rerank → Compose → Validate**.
+O Context Engine é o coração da orquestração inteligente do Vectora. Ele decide o quê, como e quando buscar contexto em seu codebase, evitando ruído e overfetch. Não é apenas busca — é um pipeline de 5 etapas: Embed (VoyageAI) → Search (LanceDB) → Rerank (XLM-RoBERTa local) → Compact → Validate (VCR).
 
-## O Problema
+## O Desafio
 
-Agents genéricos retornam 50 arquivos irrelevantes para uma query simples. O Context Engine filtra por relevância, reduzindo para 5-10 chunks altamente úteis.
+Agentes genéricos retornam 50 arquivos irrelevantes para uma query simples. O Context Engine filtra por relevância semântica e estrutural, reduzindo para 5-10 chunks altamente relevantes, com latência controlada.
+
+## Arquitetura: LanceDB + VoyageAI + XLM-RoBERTa Local
+
+O Context Engine é composto por quatro camadas:
+
+```text
+Query de Usuário
+    |
+    +-> Embeddings (VoyageAI API, cached no Redis)
+    |
+    +-> Vector Search (LanceDB com HNSW local)
+    |
+    +-> Reranking (XLM-RoBERTa-small, <10ms, no Redis)
+    |
+    +-> Compaction (Redução de contexto)
+    |
+    +-> VCR Validation (Qualidade do contexto)
+    |
+    +-> Resultado Final
+```
+
+### 1. Embeddings (VoyageAI + Redis Cache)
+
+Query é convertida para embedding 1024D via VoyageAI API. Resultados são cacheados em Redis por 24h para reduzir custos.
+
+```python
+# Pseudocódigo
+embedding = redis.get(f"query_embedding:{query_hash}")
+if not embedding:
+    embedding = voyageai.embed(query, model="voyage-3-large")
+    redis.setex(f"query_embedding:{query_hash}", 86400, embedding)
+```
+
+### 2. Vector Search (LanceDB com HNSW)
+
+LanceDB executa busca semântica com HNSW (Hierarchical Navigable Small World) em índices locais. Retorna top-100 candidatos ordenados por similaridade.
+
+```python
+# Pseudocódigo
+results = lancedb.search(embedding, top_k=100)
+# Exemplo output: [
+#   {id: 1, distance: 0.91, file: "src/auth/jwt.py", ...},
+#   {id: 2, distance: 0.88, file: "src/auth/guards.py", ...},
+# ]
+```
+
+### 3. Reranking (XLM-RoBERTa Local)
+
+XLM-RoBERTa-small executado no CPU refina top-100 para top-10 com score de relevância. Latência < 10ms p99.
+
+```python
+# Pseudocódigo
+candidates = lancedb.search(embedding, top_k=100)
+scores = xlmroberta_reranker(query, [c["content"] for c in candidates])
+ranked = sorted(zip(candidates, scores), key=lambda x: x[1], reverse=True)[:10]
+```
+
+### 4. Compaction (Head/Tail Reduction)
+
+Reduz tamanho de contexto mantendo informação crítica:
+
+- **Head**: Primeiras linhas (imports, definições)
+- **Tail**: Últimas linhas (lógica principal)
+- **Omit**: Linhas intermediárias (comentários, espaços em branco)
 
 ## Estratégias de Busca
 
-O Context Engine oferece três estratégias de busca independentes ou combinadas, dependendo do tipo de consulta e precisão desejada.
+### Estratégia 1: Semântica
 
-## Semântica
+Usa embeddings para similaridade funcional. Ideal para "Como validar tokens?" ou "Onde está o middleware de CORS?".
 
-Usa embeddings para encontrar similaridade funcional. Ideal para "Como validar tokens?"
+### Estratégia 2: Estrutural (AST)
 
-## Estrutural
+Usa análise de sintaxe para relações de código. Ideal para "Quem chama getUserById?" ou "Que funções herdam de BaseClass?".
 
-Usa AST parsing para relações de código. Ideal para "Que funções chamam X?"
+### Estratégia 3: Híbrida
 
-## Híbrida
-
-Combina semântica + estrutura. Ideal para refatoração de módulos.
-
-## Pipeline Orquestrado pelo Vectora Cognitive Runtime
-
-O **[Vectora Cognitive Runtime (Decision Engine)](/models/vectora-decision-engine/)** orquestra cada etapa do pipeline do Context Engine, decidindo o roteamento dinâmico e validando a qualidade da saída.
-
-1. **Embedding**: Query → vetor 1024D (Voyage 4).
-2. **Search**: MongoDB Atlas com filters por namespace.
-3. **Validação Tática (Vectora Cognitive Runtime)**: O Vectora Cognitive Runtime analisa se os candidatos iniciais justificam um reranking pesado.
-4. **Reranking**: Voyage Rerank 2.5 refina top-50 para top-10.
-5. **Compaction**: head/tail reduz tamanho sem perder contexto.
-6. **Observação de Faithfulness (Vectora Cognitive Runtime)**: O Vectora Cognitive Runtime valida se o contexto final é fiel e suficiente para o Agentic Framework.
+Combina semântica + estrutura com BM25 (busca léxica). Ideal para refatoração de módulos ou busca de dependências.
 
 ## Configuração
 
 ```yaml
 context_engine:
+  embeddings:
+    provider: "voyageai"
+    model: "voyage-3-large"
+    dimension: 1024
+    cache_ttl: 86400
+  search:
+    backend: "lancedb"
+    index_type: "hnsw"
+    top_k: 100
+  reranking:
+    enabled: true
+    model: "xlm-roberta-small"
+    cache_ttl: 3600
+  compaction:
+    enabled: true
+    head_lines: 5
+    tail_lines: 10
   strategy: "auto"
-  max_depth: 3
-  compaction: true
-  include_ast: true
-  include_dependencies: true
 ```
 
-## Exemplos Práticos
+## Fluxo Completo: Exemplo
 
-Abaixo estão dois exemplos detalhados mostrando como o Context Engine processa queries e retorna contexto estruturado.
-
-## Exemplo 1: Busca Semântica
-
-**Query**: "Como validar tokens?"
+**Query**: "Como validar tokens JWT?"
 
 ```text
-Input:
-  - Query: "Como validar tokens?"
-  - Strategy: semantic
-  - Namespace: seu-projeto
-  - Top-k: 10
+Entrada:
+  Query: "Como validar tokens JWT?"
+  Strategy: auto
+  Top-k: 10
 
 Processamento:
-  1. Embed: Query → vetor 1536D via Voyage 4
-  2. Search: HNSW busca 100 candidatos mais próximos
-  3. Rerank: Voyage Rerank 2.5 refina para top-10
-  4. Compaction: Reduz tamanho de 15KB → 4KB mantendo contexto
-  5. Validate: Agentic Framework valida output, captura métricas
+  1. Embed (VoyageAI): Query → vetor 1024D
+     Latência: 200ms
+     Cached: sim (reutilizar próximas 24h)
 
-Output:
+  2. Search (LanceDB): HNSW → top-100 candidatos
+     Latência: 50ms
+     Candidatos: [
+       {file: "src/auth/jwt.py", score: 0.94, lines: 1-45},
+       {file: "src/auth/guards.py", score: 0.87, lines: 12-34},
+       ...
+     ]
+
+  3. Rerank (XLM-RoBERTa): top-100 → top-10
+     Latência: 8ms
+     Resultado: [
+       {file: "src/auth/jwt.py", score: 0.96, rank: 1},
+       {file: "src/auth/guards.py", score: 0.89, rank: 2},
+       {file: "src/middleware/auth.py", score: 0.82, rank: 3},
+       ...
+     ]
+
+  4. Compact: Reduz 25KB → 6KB
+     Ratio: 0.24
+
+  5. VCR Validate: Checksum de qualidade
+     Faithfulness: 0.91 (alvo > 0.65)
+
+Saída:
   chunks: [
-    {file: "src/auth/jwt.ts", precision: 0.89, content: "...validateToken..."},
-    {file: "src/auth/guards.ts", precision: 0.78, content: "...middleware..."},
+    {
+      file: "src/auth/jwt.py",
+      lines: "1-5, 20-30",
+      score: 0.96,
+      content: "def validate_token(token):\n    ..."
+    },
     ...
   ]
   metadata: {
-    retrieval_precision: 0.87,
-    latency_ms: 234,
-    total_searched: 3159,
-    compaction_ratio: 0.27
+    total_latency_ms: 258,
+    total_searched: 10000,
+    compaction_ratio: 0.24,
+    precision: 0.91,
+    recall: 0.85
   }
 ```
 
-## Exemplo 2: Busca Estrutural
+## Métricas e Targets
 
-**Query**: "Quem chama getUserById?"
+O Context Engine monitora continuamente:
 
-```text
-Input:
-  - Symbol: getUserById
-  - Strategy: structural
-  - Include indirect: true
-
-Processamento:
-  1. AST Parse: Analisa arquivo onde getUserById é definido
-  2. Call Graph: Encontra todas as referências (diretas + indiretas)
-  3. Context: Extrai linhas de contexto de cada chamada
-
-Output:
-  direct_calls: 47
-  indirect_calls: 12
-  callers: [
-    {file: "src/middleware/auth.ts", line: 34, type: "direct"},
-    {file: "src/routes/profile.ts", line: 12, type: "indirect via getUserData"},
-    ...
-  ]
-```
+- **Retrieval Precision**: Alvo ≥ 0.80 (% de top-10 realmente relevantes)
+- **Retrieval Recall**: Alvo ≥ 0.75 (% de chunks relevantes encontrados)
+- **Total Latency P95**: Alvo < 500ms
+- **Compaction Ratio**: Alvo < 0.30 (máximo 30% do tamanho original)
+- **Cache Hit Rate**: Alvo > 70% (para queries frequentes)
 
 ## External Linking
 
-| Concept               | Resource                            | Link                                                                                                       |
-| --------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **MongoDB Atlas**     | Atlas Vector Search Documentation   | [www.mongodb.com/docs/atlas/atlas-vector-search/](https://www.mongodb.com/docs/atlas/atlas-vector-search/) |
-| **Anthropic Claude**  | Claude Documentation                | [docs.anthropic.com/](https://docs.anthropic.com/)                                                         |
-| **AST Parsing**       | Tree-sitter Official Documentation  | [tree-sitter.github.io/tree-sitter/](https://tree-sitter.github.io/tree-sitter/)                           |
-| **Voyage AI**         | High-performance embeddings for RAG | [www.voyageai.com/](https://www.voyageai.com/)                                                             |
-| **Voyage Embeddings** | Voyage Embeddings Documentation     | [docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings)                             |
-| **Voyage Reranker**   | Voyage Reranker API                 | [docs.voyageai.com/docs/reranker](https://docs.voyageai.com/docs/reranker)                                 |
-
----
-
-> **Próximo**: [Agentic Framework](./agentic-framework.md)
-
----
-
-**Vectora v0.1.0** · [GitHub](https://github.com/Kaffyn/Vectora) · [Licença (MIT)](https://github.com/Kaffyn/Vectora/blob/master/LICENSE) · [Contribuidores](https://github.com/Kaffyn/Vectora/graphs/contributors)
-
-_Parte do ecossistema Vectora AI Agent. Construído com [ADK](https://adk.dev/), [Claude](https://claude.ai/) e [Go](https://golang.org/)._
-
-© 2026 Contribuidores do Vectora. Todos os direitos reservados.
-
----
-
-**Vectora v0.1.0** · [GitHub](https://github.com/Kaffyn/Vectora) · [Licença (MIT)](https://github.com/Kaffyn/Vectora/blob/master/LICENSE) · [Contribuidores](https://github.com/Kaffyn/Vectora/graphs/contributors)
-
-_Parte do ecossistema Vectora AI Agent. Construído com [ADK](https://adk.dev/), [Claude](https://claude.ai/) e [Go](https://golang.org/)._
-
-© 2026 Contribuidores do Vectora. Todos os direitos reservados.
-
----
-
-**Vectora v0.1.0** · [GitHub](https://github.com/Kaffyn/Vectora) · [Licença (MIT)](https://github.com/Kaffyn/Vectora/blob/master/LICENSE) · [Contribuidores](https://github.com/Kaffyn/Vectora/graphs/contributors)
-
-_Parte do ecossistema Vectora AI Agent. Construído com [ADK](https://adk.dev/), [Claude](https://claude.ai/) e [Go](https://golang.org/)._
-
-© 2026 Contribuidores do Vectora. Todos os direitos reservados.
-
----
-
-_Parte do ecossistema Vectora_ · [Open Source (MIT)](https://github.com/Kaffyn/Vectora) · [Contribuidores](https://github.com/Kaffyn/Vectora/graphs/contributors)
+| Conceito                | Recurso                                   | Link                                                                           |
+| ----------------------- | ----------------------------------------- | ------------------------------------------------------------------------------ |
+| **LanceDB**             | Vector database local de código aberto    | [lancedb.com/docs](https://lancedb.com/docs)                                   |
+| **VoyageAI**            | Embeddings de alta performance para RAG   | [voyageai.com/](https://www.voyageai.com/)                                     |
+| **VoyageAI Embeddings** | Documentação de embeddings                | [docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings) |
+| **XLM-RoBERTa**         | Modelo multilíngue para reranking         | [huggingface.co/xlm-roberta-small](https://huggingface.co/xlm-roberta-small)   |
+| **HNSW**                | Estrutura de indexação vetorial eficiente | [github.com/nmslib/hnswlib](https://github.com/nmslib/hnswlib)                 |

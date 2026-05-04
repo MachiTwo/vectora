@@ -1,18 +1,21 @@
 ---
 title: "Core: Sistema Inteligente do Vectora"
 slug: core
-date: 2026-04-25T23:00:00-03:00
+date: 2026-05-03T23:00:00-03:00
 type: docs
 sidebar:
   open: true
 tags:
+  - langchain
+  - deep-agents
+  - vcr
   - agentic-framework
   - ai
   - architecture
   - concepts
   - context-engine
   - core
-  - gemini
+  - lancedb
   - state
   - system
   - vectora
@@ -21,43 +24,47 @@ draft: false
 
 {{< lang-toggle >}}
 
-O Core é onde o Vectora "pensa" e age. Ele contém os componentes que tornam o Vectora um agente inteligente e auto-corrigível, indo além de um simples sistema de busca de código passivo.
+{{< section-toggle >}}
 
-Ao integrar raciocínio avançado com uma profunda consciência de contexto, o Core garante que cada interação seja fundamentada na realidade da sua base de código.
+O Core é o coração inteligente do Vectora. Ele contém os componentes que tornam o Vectora um agente especialista auto-corrigível, capaz de raciocínio profundo, busca de contexto governada e inferência local segura.
+
+Ao integrar LangChain com Deep Agents, orquestração de raciocínio avançado com uma profunda consciência de contexto, o Core garante que cada interação seja fundamentada na realidade da sua base de código, executada localmente e sem alucinações.
 
 ## Componentes Principais
 
-A inteligência do Vectora é construída sobre dois motores principais que trabalham em conjunto para fornecer insights precisos e acionáveis.
+A inteligência do Vectora é construída sobre três motores principais que trabalham em conjunto para fornecer insights precisos e acionáveis.
 
-### Agentic Framework
+### Deep Agents Framework
 
-O sistema nervoso distribuído do Vectora — uma máquina de estado de 5 camadas que valida, executa e recupera de falhas em cada etapa. O Gemini alimenta a máquina, mas a máquina controla o Gemini, não o contrário.
+O sistema nervoso distribuído do Vectora, construído sobre LangChain e LangGraph. Uma máquina de estado que executa planejamento multi-etapas, chaining de ferramentas e recuperação automática de falhas. Deep Agents orquestra a sequência de ações; FastAPI executa as ações no backend.
 
-**Saiba como**: [→ Agentic Framework](./agentic-framework.md)
+**Saiba como**: [Ver Deep Agents Framework](./agentic-framework.md)
 
 ### Context Engine
 
-O curador inteligente de contexto do Vectora. Um pipeline de 5 etapas que decide **o quê, como e quando** buscar contexto no codebase, filtrando ruído e evitando o excesso de dados (overfetch).
+O curador inteligente de contexto do Vectora, um pipeline de 5 etapas que decide o quê, como e quando buscar contexto no codebase. Usa LanceDB para busca semântica, VoyageAI para embeddings e XLM-RoBERTa local para reranking. Filtra ruído e evita o excesso de dados (overfetch).
 
-**Saiba como**: [→ Context Engine](./context-engine.md)
+**Saiba como**: [Ver Context Engine](./context-engine.md)
 
-### Vectora Decision Engine (Vectora Cognitive Runtime)
+### Vectora Cognitive Runtime (VCR)
 
-O cérebro tático do Core. O Vectora Cognitive Runtime é a camada de inferência local que orquestra a política de decisão entre o Agentic Framework e o Context Engine, garantindo que cada ação seja segura, auditável e livre de alucinações.
+O cérebro tático do Core, uma camada de inferência local baseada em PyTorch + XLM-RoBERTa-small com LoRA fine-tuning. VCR orquestra a política de decisão entre Deep Agents e Context Engine, garantindo que cada ação seja segura, auditável e livre de alucinações. Latência < 10ms p99 em CPU.
 
-**Saiba como**: [→ Vectora Cognitive Runtime Architecture](../models/vectora-decision-engine.md)
+**Saiba como**: [Ver Vectora Cognitive Runtime](../models/vectora-cognitive-runtime.md)
 
 ## Como Trabalham Juntos
 
-O Agentic Framework alimenta a máquina de decisão, enquanto o Context Engine fornece o combustível: contexto relevante no momento certo. Juntos, eles transformam consultas simples em respostas precisas e modificações de código confiáveis.
+Deep Agents formula o plano de execução usando LangChain, enquanto o Context Engine fornece o contexto governado em tempo real via LanceDB. VCR valida cada etapa localmente com PyTorch. Juntos, transformam consultas simples em respostas precisas e modificações de código confiáveis, tudo sem sair da máquina local.
 
 ## External Linking
 
-| Concept              | Resource                       | Link                                                                                 |
-| -------------------- | ------------------------------ | ------------------------------------------------------------------------------------ |
-| **Gemini AI**        | Google DeepMind Gemini Models  | [deepmind.google/technologies/gemini/](https://deepmind.google/technologies/gemini/) |
-| **Gemini API**       | Google AI Studio Documentation | [ai.google.dev/docs](https://ai.google.dev/docs)                                     |
-| **Anthropic Claude** | Claude Documentation           | [docs.anthropic.com/](https://docs.anthropic.com/)                                   |
+| Conceito        | Recurso                                           | Link                                                                               |
+| --------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **LangChain**   | Framework de orquestração LLM                     | [python.langchain.com/docs](https://python.langchain.com/docs)                     |
+| **LangGraph**   | State machine para multi-etapa workflows          | [langchain-ai.github.io/langgraph](https://langchain-ai.github.io/langgraph/)      |
+| **Deep Agents** | Framework de planejamento e execução multi-etapas | [github.com/langchain-ai/deep-agents](https://github.com/langchain-ai/deep-agents) |
+| **LanceDB**     | Vector database local de código aberto            | [lancedb.com/docs](https://lancedb.com/docs)                                       |
+| **PyTorch**     | Framework de deep learning para VCR               | [pytorch.org/docs](https://pytorch.org/docs)                                       |
 
 ---
 

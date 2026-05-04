@@ -1,19 +1,18 @@
 ---
-title: "Agentic Framework: O Sistema Nervoso do Vectora"
+title: "Deep Agents Framework: O Sistema Nervoso do Vectora"
 slug: agentic-framework
-date: "2026-04-18T22:30:00-03:00"
+date: "2026-05-03T22:30:00-03:00"
 type: docs
 sidebar:
   open: true
 tags:
-  - agentic-framework
+  - deep-agents
+  - langchain
+  - langgraph
   - ai
   - architecture
-  - auth
   - concepts
   - errors
-  - gemini
-  - guardian
   - orchestration
   - rag
   - security
@@ -21,94 +20,122 @@ tags:
   - system
   - tools
   - vectora
+  - planning
 ---
 
 {{< lang-toggle >}}
 
-> [!IMPORTANT] > **Redefinição Crítica**: O Agentic Framework **não é um módulo isolado**, nem uma pasta específica no código. Ele é o **sistema nervoso distribuído** do Vectora — a inteligência que permeia cada camada, observando, validando, corrigindo e orquestrando o comportamento do modelo de IA em tempo real.
+{{< section-toggle >}}
 
-Diferente de sistemas RAG tradicionais que apenas enviam dados para uma LLM, o Agentic Framework torna o Vectora auto-consciente e auto-corretivo, garantindo que as respostas sejam precisas, seguras e contextualizadas.
+Deep Agents é o sistema nervoso distribuído do Vectora — construído sobre LangChain e LangGraph. É a inteligência que permeia cada camada, observando, planejando, executando e corrigindo o comportamento em tempo real. Diferente de sistemas RAG tradicionais que apenas enviam dados para uma LLM, Deep Agents torna o Vectora auto-consciente e auto-corretivo, garantindo que as respostas sejam precisas, seguras e contextualizadas.
 
-## O Que Agentic Framework Realmente É
+## O Que Deep Agents Realmente É
 
-O framework atua como uma camada cognitiva distribuída que gerencia o ciclo de vida de cada interação entre o usuário e o sub-agente.
+Deep Agents é um framework de **planejamento e execução multi-etapas** que gerencia o ciclo de vida de cada interação do usuário.
 
-- **Observação em Tempo Real**: O modelo "assiste" o resultado de cada chamada de ferramenta e ajusta seu raciocínio imediatamente.
-- **Meta-cognição**: O sistema avalia sua própria confiança e decide autonomamente quando deve delegar tarefas, corrigir erros ou pedir clarificações.
-- **Auto-correção**: Implementa uma escada de recuperação (Recovery Ladder) para tratar falhas de precisão ou erros de API sem interromper o fluxo do usuário.
-- **Memória de Execução**: Cada decisão e erro é persistido, permitindo auditoria completa e aprendizado sobre o comportamento do agente.
+- **Planejamento Estruturado**: O agente formula um plano de ação antes de executar, usando LLM reasoning e VCR validação.
+- **Execução com Observação**: Após cada ferramenta executada, o agente observe o resultado e ajusta seu raciocínio imediatamente.
+- **Meta-cognição**: O sistema avalia sua confiança e decide autonomamente quando deve iterar, corrigir ou delegar a VCR.
+- **Auditoria Completa**: Cada decisão e erro é persistido via LangGraph state persistence, permitindo auditoria e aprendizado.
 
-## Camada Cognitiva vs Fluxo Passivo
+## Arquitetura: LangChain + LangGraph + VCR
 
-| Conceito         | Visão Agentic (Vectora)                        | Fluxo Tradicional (Passivo)       |
-| :--------------- | :--------------------------------------------- | :-------------------------------- |
-| **Orquestração** | Distribuída entre prompt, tools e estado       | Sequencial e rígida (hardcoded)   |
-| **Recuperação**  | Escada de estratégias por custo (Retry/Rerank) | Try/catch genérico com erro final |
-| **Estado**       | Imutável com trilha de auditoria completa      | Variáveis globais mutáveis        |
-| **Contexto**     | Pipeline ativo de compactação e reshaping      | Acúmulo de mensagens até o limite |
+Deep Agents é composto por três camadas:
 
-## As 5 Camadas do Agentic Framework
-
-A arquitetura é dividida em cinco camadas lógicas que garantem a integridade operacional do sistema.
-
-```mermaid
-graph TD
-    A[Loop Principal do Agente] --> Vectora Cognitive Runtime[Vectora Cognitive Runtime: Policy Orchestrator]
-    Vectora Cognitive Runtime --> B[Camada 1: Context Pipeline]
-    Vectora Cognitive Runtime --> C[Camada 2: Streaming Execution]
-    Vectora Cognitive Runtime --> D[Camada 3: Recovery Ladder]
-    Vectora Cognitive Runtime --> E[Camada 4: Termination Conditions]
-    Vectora Cognitive Runtime --> F[Camada 5: State Threading]
-
-    B --> B1[Compactação e Trimming]
-    C --> C1[Execução Concorrente de Tools]
-    D --> D1[Estratégias de Auto-correção]
-    E --> E1[Estados Terminais Tipados]
-    F --> F1[Estado Imutável e Auditoria]
+```text
+Loop Principal (Deep Agents)
+    |
+    +-> LangChain (orquestração de tools, prompts, embeddings)
+    |
+    +-> LangGraph State Machine (estado imutável, persistência)
+    |
+    +-> VCR Policy Engine (validação local, < 10ms decisões)
 ```
 
-O **[Vectora Cognitive Runtime (Decision Engine)](/models/vectora-decision-engine/)** é o motor de inferência local que alimenta o Agentic Framework. Ele decide, em cada iteração do loop principal, qual política de recuperação adotar ou se as condições de término foram atingidas, baseando-se em decisões estruturadas e auditáveis.
+### 1. LangChain Orchestration
 
-### 1. Context Pipeline
+LangChain gerencia:
 
-Gerencia o limite de tokens do modelo sem perder informação crítica. Utiliza técnicas de `applyToolResultBudget` para limitar outputs de ferramentas e `autoCompact` para resumir históricos longos quando o contexto atinge 95% da janela permitida.
+- **Tool Registry**: Descoberta automática e binding de ferramentas disponíveis
+- **Prompts e Templates**: Prompts estruturados para planejamento e execução
+- **Memory Strategies**: Truncate, delete, summarize para gerenciar contexto
+- **Output Parsing**: Extração estruturada de decisões e resultados
 
-### 2. Streaming Execution
+### 2. LangGraph State Machine
 
-Reduz a latência percebida executando ferramentas enquanto o modelo ainda está gerando a resposta. Isso permite que o Vectora apresente resultados parciais e valide dados em tempo real, diminuindo o tempo total de resposta em até 60%.
+LangGraph implementa:
 
-### 3. Recovery Ladder (Escada de Recuperação)
+- **State Schema**: Tipagem forte de estado (typed AgentState)
+- **Graph Topology**: Nós representam etapas; arestas representam transições
+- **Persistence**: Snapshots de estado para auditoria e recuperação
+- **Conditional Routing**: Decisões determinísticas baseadas em estado atual
 
-Quando uma operação falha ou a precisão da busca é baixa (< 0.65), o framework aciona estratégias ordenadas por custo.
+### 3. VCR Policy Engine
 
-1. **Retry com Parâmetros Ajustados**: Tenta novamente a mesma ferramenta com um prompt refinado.
-2. **Rerank com Modelo Pesado**: Utiliza modelos de reranking mais potentes para desempatar resultados ambíguos.
-3. **Bloqueio e Alerta**: Se um evento de segurança for detectado, o [Guardian](../security-engine) interrompe a execução imediatamente.
+VCR fornece:
 
-### 4. Condições de Término Tipadas
+- **Local Validation**: Cada decisão é validada por XLM-RoBERTa-small antes de execução
+- **Sub-10ms Inference**: PyTorch quantizado (INT8) garante latência < 10ms p99
+- **Recovery Strategies**: Políticas de recuperação quando precisão < 0.65
+- **Confidence Scoring**: Cada ação tem score de confiança auditável
 
-O framework define estados finais claros para evitar loops infinitos ou respostas incompletas, como `completed`, `max_turns` (limite de iterações) e `blocking_limit` (violação de política).
+## Padrões de Execução
 
-### 5. State Threading
+### Padrão 1: Single-Agent Planning-Execution
 
-O estado do agente é tratado como imutável. Cada iteração reconstrói um novo `AgentState` que contém todo o histórico de mensagens, ferramentas pendentes e a trilha de auditoria (audit trail) das decisões tomadas pelo framework.
+Um agente principal formula um plano e executa ferramentas sequencialmente:
 
-## Métricas de Performance e SLAs
+```text
+User Query
+    |
+    +-> Deep Agent (Planejamento com LLM)
+    |
+    +-> VCR Validação do Plano (< 10ms)
+    |
+    +-> LangGraph State: Execute Step 1
+    |
+    +-> Observe Resultado, Ajuste Plano
+    |
+    +-> Repeat até completion
+    |
+    +-> Return Response
+```
 
-O Agentic Framework monitora métricas vitais em cada iteração para garantir que o sistema opere dentro dos padrões de qualidade definidos.
+### Padrão 2: Sub-Agent Delegation
 
-- **Retrieval Precision**: Alvo ≥ 0.65. Se cair, o sistema dispara refinamento de query automaticamente.
-- **Tool Accuracy**: Alvo ≥ 0.95. Garante que as ferramentas estão retornando dados válidos.
-- **Confidence Score**: Avaliação interna do Gemini sobre a precisão da resposta final.
-- **Latência P95**: Alvo < 2000ms para iterações de processamento local.
+Agente principal delega a sub-agentes especializados:
+
+```text
+Principal Agent (Planejamento)
+    |
+    +-> Delega a Sub-Agent 1 (Busca de Contexto via Context Engine)
+    |
+    +-> Delega a Sub-Agent 2 (Análise de Código)
+    |
+    +-> Delega a Sub-Agent 3 (Validação de Segurança)
+    |
+    +-> Aguarda resultados, Integra Respostas
+```
+
+## Métricas de Performance
+
+Deep Agents monitora em cada iteração:
+
+- **Planning Quality**: Alvo ≥ 0.85. Se cair, replanejar com contexto expandido.
+- **Tool Success Rate**: Alvo ≥ 0.95. Ferramentas devem executar confiably.
+- **VCR Confidence**: Alvo ≥ 0.70. Score de confiança da decisão local.
+- **Total Latency P95**: Alvo < 2000ms para iteração completa.
+- **Context Window Usage**: Monitorar % de tokens usados vs. disponível.
 
 ## External Linking
 
-| Concept        | Resource                                                   | Link                                                                                 |
-| -------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| **Gemini AI**  | Google DeepMind Gemini Models                              | [deepmind.google/technologies/gemini/](https://deepmind.google/technologies/gemini/) |
-| **Gemini API** | Google AI Studio Documentation                             | [ai.google.dev/docs](https://ai.google.dev/docs)                                     |
-| **RAG**        | Retrieval-Augmented Generation for Knowledge-Intensive NLP | [arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)                         |
+| Conceito          | Recurso                              | Link                                                                                                |
+| ----------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| **LangChain**     | Framework de orquestração LLM        | [python.langchain.com/docs](https://python.langchain.com/docs)                                      |
+| **LangGraph**     | State machine para agentic workflows | [langchain-ai.github.io/langgraph](https://langchain-ai.github.io/langgraph/)                       |
+| **Deep Agents**   | Planning e multi-step execution      | [github.com/langchain-ai/deep-agents](https://github.com/langchain-ai/deep-agents)                  |
+| **ReAct Pattern** | Reasoning + Acting para agentes      | [arxiv.org/abs/2210.03629](https://arxiv.org/abs/2210.03629)                                        |
+| **Tool Use**      | LLM tool calling specification       | [openai.com/docs/guides/function-calling](https://platform.openai.com/docs/guides/function-calling) |
 
 ---
 
