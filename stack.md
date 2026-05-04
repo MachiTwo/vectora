@@ -316,7 +316,7 @@ $ curl http://localhost:8000/health
 
 ### Frontend Web
 
-**Framework:** React 18+  
+**Framework:** React 19+  
 **Build Tool:** Vite 5+  
 **Styling:** TailwindCSS 3.3+  
 **State:** Zustand 4.4+  

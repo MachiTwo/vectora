@@ -7,7 +7,7 @@ Vectora é um knowledge hub inteligente que orquestra processamento de dados, RA
 O Vectora é construído com uma arquitetura polyglot, escolhendo a melhor ferramenta para cada camada. Backend em Go para performance e concorrência, frontend em React + Vite para UX moderna, e Python para o decision engine especializado. Banco de dados usa Embedded PostgreSQL para simplicidade de deploy, LanceDB para busca vetorial, e Redis para caching de respostas e invalidação de cache.
 
 - **Backend:** Go 1.21+, Echo/Chi, GORM, Embedded PostgreSQL, LanceDB, Redis, JWT + bcrypt + AES-256, slog
-- **Frontend:** React 18+, Vite 5+, TypeScript, TailwindCSS, Zustand, SWR, WebSocket
+- **Frontend:** React 19+, Vite 5+, TypeScript, TailwindCSS, Zustand, SWR, WebSocket
 - **CLI:** Go + Cobra, Viper (config), Charmbracelet (formatting)
 - **Vectora Cognitive Runtime:** PyTorch 2.1+, Transformers, PEFT (LoRA), ONNX Runtime (INT4, 35MB)
 - **Docker:** Docker Compose (LanceDB, Redis, Vectora backend + Vectora Cognitive Runtime)

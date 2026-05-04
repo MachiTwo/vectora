@@ -1,13 +1,13 @@
 # Phase 5: Frontend & CLI Integration
 
-**Objetivo**: Implementar interface React 18 (web + desktop), CLI completo com TUI interativo e integração de system tray para Windows.
+**Objetivo**: Implementar interface React 19 (web + desktop), CLI completo com TUI interativo e integração de system tray para Windows.
 
 **Status**: Análise inicial
 **Duração estimada**: 4-5 semanas
 
 ## Objectives
 
-1. React 18 frontend (web + desktop via Tauri/Electron)
+1. React 19 frontend (web + desktop via Tauri/Electron)
 2. CLI completo com TUI interativo
 3. System tray integration (Windows)
 4. Real-time sync com backend
@@ -15,7 +15,7 @@
 
 ## Key Tasks
 
-### 5.1 React 18 Frontend
+### 5.1 React 19 Frontend
 
 - [ ] Setup com Vite (fast builds)
 - [ ] Component library (shadcn/ui ou similar)
@@ -91,7 +91,7 @@
 
 ## Dependencies
 
-- React 18
+- React 19
 - Vite
 - shadcn/ui (ou similar)
 - Zustand ou Redux Toolkit

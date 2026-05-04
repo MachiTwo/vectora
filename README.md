@@ -122,7 +122,7 @@ Fluxo de uma chamada externa (Claude Code) até resposta final:
 **Stack Interno:**
 
 - **Backend:** Python 3.10+ | FastAPI | LangChain
-- **Frontend:** React 18 | Vite | TypeScript
+- **Frontend:** React 19 | Vite | TypeScript
 - **CLI:** Python Click/Typer
 - **VCR:** PyTorch | XLM-RoBERTa-small | PEFT LoRA
 - **DBs:** PostgreSQL (pg8000-embedded) | Redis | LanceDB
@@ -327,7 +327,7 @@ O stack prioriza Go, LangChainGo e armazenamento local para manter baixa latenci
 ┌─────────────────────────────────────────────────────┐
 │                                                     │
 │  Frontend (User-Facing)                             │
-│  ├─ React 18 + Vite (dashboard)                     │
+│  ├─ React 19 + Vite (dashboard)                     │
 │  ├─ TypeScript (type safety)                        │
 │  └─ TailwindCSS (styling)                           │
 │                                                     │
