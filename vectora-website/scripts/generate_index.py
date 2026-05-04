@@ -42,7 +42,7 @@ def build_index():
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(entries, f, ensure_ascii=False, indent=2)
-    print(f"Search index written: {len(entries)} entries → {OUTPUT_FILE}")
+    print(f"Search index written: {len(entries)} entries -> {OUTPUT_FILE}")
 
 
 if __name__ == "__main__":

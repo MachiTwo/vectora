@@ -57,9 +57,9 @@ tags:
 
 {{< lang-toggle >}}
 
-Agentes de IA tradicionais operam em **contextos fragmentados**, gerando alucinações, desperdiçando tokens e expondo segredos acidentalmente. O **Vectora** resolve isso não sendo "apenas mais um chat", mas sim um **[Sub-Agente de Tier 2](/concepts/sub-agents/)** projetado exclusivamente para engenharia de software: ele intercepta chamadas via [Protocolo MCP](/protocols/mcp/), valida a segurança em tempo real com o [Guardian](/security/guardian/), orquestra a recuperação em múltiplas etapas via [Context Engine](/concepts/context-engine/) e entrega contexto estruturado ao seu agente principal (Claude Code, Gemini CLI, Cursor, etc.).
+O **Vectora** é um **Hub de Conhecimento Local-First** que capacita agentes de IA a operarem com contexto governado, sem alucinações e com privacidade total. Construído com **FastAPI + LangChain + Deep Agents**, combina busca vetorial de alta performance (LanceDB + VoyageAI), análise cognitiva (VCR com PyTorch + XLM-RoBERTa) e orquestração de RAG para fornecer contexto preciso via REST/MCP/JSON-RPC.
 
-> [!IMPORTANT] **Fórmula Central**: `Agente Funcional = Modelo (Gemini 3 Flash) + [Agentic Framework](/concepts/agentic-framework-runtime/) + Contexto Governado (Voyage 4 + MongoDB Atlas)`
+> [!IMPORTANT] **Fórmula Central**: `Agente Especialista = LangChain + Deep Agents + [VCR Pré-Pensamento](/models/vectora-cognitive-runtime/) + Contexto Governado (LanceDB + PostgreSQL + Redis)`
 
 ## O Problema que o Vectora Resolve
 
@@ -73,51 +73,58 @@ A tabela abaixo descreve como o Vectora aborda as falhas comuns em agentes gené
 | **Consumo Imprevisível**       | LLMs geram excesso de dados, desperdiçando tokens em boilerplate | [Context Engine](/concepts/context-engine/) decide o escopo, aplica compactação (head/tail) e injeta apenas o que é relevante                                 |
 | **Segurança Frágil**           | Blocklists dependem de prompts (que podem sofrer jailbreak)      | [Hard-Coded Guardian](/security/guardian/) é compilado no binário Go, impossível de contornar via prompt                                                      |
 
-## A Solução: Arquitetura de Sub-Agente
+## A Solução: Camada de Inteligência Local-First
 
-O Vectora é exposto **exclusivamente via MCP**. Não há CLI de chat, TUI ou interface conversacional direta. Ele opera silenciosamente como uma camada de governança e contexto.
+O Vectora é exposto via **REST, MCP e JSON-RPC**. Ele opera como uma camada de pré-pensamento e governança, enriquecendo agentes com contexto preciso e artefatos de decisão estruturados.
 
 ```mermaid
 graph LR
-    A[Agente Principal] -->|Chamada de Ferramenta MCP| B[Agentic Framework]
-    B --> C{Guardian + Validação Nativa}
-    C -->| Aprovado| D[Context Engine]
-    D --> E[Embed via Voyage 4]
-    D --> F[Rerank via Voyage 2.5]
-    E --> G[MongoDB Atlas Vector Search]
+    A["Agente Principal<br/>(Claude Code, Cursor, etc)"] -->|REST/MCP/JSON-RPC| B["FastAPI<br/>(Backend Python)"]
+    B --> C["VCR: Pré-Pensamento<br/>(PyTorch + XLM-RoBERTa)"]
+    C --> D["Context Engine<br/>(Parser AST + Compactação)"]
+    D --> E["LanceDB<br/>(Vector Search)"]
+    D --> F["VoyageAI<br/>(Embeddings + Reranking)"]
+    E --> G["PostgreSQL + Redis<br/>(Metadata + Cache)"]
     F --> G
-    G --> H[Vectora Cognitive Runtime: Policy Orchestrator]
-    H --> I[Contexto Composto + Métricas]
-    I -->|Resposta MCP| A
+    G --> H["LangChain + Deep Agents<br/>(Orchestration)"]
+    H --> I["Contexto Governado<br/>+ Análise + Métricas"]
+    I -->|REST/MCP/JSON-RPC| A
 ```
 
 ## Componentes Principais
 
-O sistema é dividido em módulos especializados que garantem a integridade e a performance da recuperação de contexto.
+O sistema é dividido em módulos especializados que garantem integridade, performance e segurança na recuperação de contexto.
 
-| Módulo                                                                              | Responsabilidade                                                                    | Documentação                                                               |
-| :---------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------- | :------------------------------------------------------------------------- |
-| **[Vectora Cognitive Runtime (Decision Engine)](/models/vectora-decision-engine/)** | Cérebro tático: intercepta, roteia e observa o fluxo via inferência ONNX local      | Camada de decisão estruturada que orquestra a política do agente           |
-| **[Agentic Framework](/concepts/agentic-framework-runtime/)**                       | Orquestra execução, valida esquemas, intercepta chamadas, persiste estado           | Infraestrutura que conecta a LLM ao mundo real, não um framework de testes |
-| **[Context Engine](/concepts/context-engine/)**                                     | Decide o escopo (filesystem vs vector), aplica parsing AST, compactação multi-etapa | Pipeline `Embed → Search → Rerank → Compose → Validate`                    |
-| **[Provider Router](/models/gemini/)**                                              | Roteia para a stack curada, gerencia fallback BYOK, rastreia cota                   | Sem camadas genéricas. SDKs oficiais, parsing estável                      |
-| **[Tool Executor](/reference/mcp-tools/)**                                          | Valida argumentos via Tipagem Forte, executa com retry exponencial, sanitiza saída  | Blocklist imutável aplicada antes de qualquer chamada                      |
+| Módulo                                                                   | Responsabilidade                                                                         | Tecnologia                   |
+| :----------------------------------------------------------------------- | :--------------------------------------------------------------------------------------- | :--------------------------- |
+| **[VCR: Vectora Cognitive Runtime](/models/vectora-cognitive-runtime/)** | Pré-pensamento: análise de intenção, seleção de ferramentas, otimização de query (<10ms) | PyTorch + XLM-RoBERTa + LoRA |
+| **[FastAPI Backend](/backend/_index.pt.md)**                             | Servidor REST/MCP/JSON-RPC, auth JWT, RBAC, gestão de estado                             | FastAPI + Pydantic + asyncio |
+| **[LangChain + Deep Agents](/langchain/deep-agents/_index.pt.md)**       | Orchestração, planning engine, executor de ferramentas, memória                          | LangChain + Deep Agents      |
+| **[Context Engine](/concepts/context-engine/)**                          | Parsing AST, compactação, busca semântica, reranking local                               | LanceDB + VoyageAI           |
+| **[Vector Storage](/backend/lancedb.pt.md)**                             | Armazenamento vetorial nativo, índices otimizados, busca semântica rápida                | LanceDB (local-first)        |
+| **[Metadata + Cache](/backend/postgresql.pt.md)**                        | Persistência de metadados, sessões, histórico, isolamento multi-tenant                   | PostgreSQL + Redis           |
+| **[Protocols](/protocols/_index.pt.md)**                                 | REST API, MCP server, JSON-RPC 2.0, ACP para integrações de editor                       | HTTP, stdin/stdout, JSON-RPC |
 
-## Stack Curada e Infraestrutura
+## Stack Tecnológico
 
-O Vectora **não é agnóstico a provedores**. Operamos com modelos rigorosamente calibrados para garantir consistência de métricas, estabilidade de parsing e custos previsíveis.
+O Vectora é construído com tecnologias **comprovadas, de código aberto** e otimizadas para **operação local-first** com máxima privacidade.
 
-| Camada                    | Tecnologia                            | Por que escolhemos                                                           | Docs                                                          |
-| :------------------------ | :------------------------------------ | :--------------------------------------------------------------------------- | :------------------------------------------------------------ |
-| **Decisão (Tático)**      | `Vectora Cognitive Runtime (SmolLM2)` | Inferência local (<8ms), zero rede, decisões estruturadas e auditáveis       | [Vectora Cognitive Runtime](/models/vectora-decision-engine/) |
-| **LLM (Inferência)**      | `gemini-3-flash`                      | Latência <30ms, chamadas de ferramentas estáveis, custo 90% menor que o Pro  | [Gemini 3](/models/gemini/)                                   |
-| **Embeddings**            | `voyage-4`                            | Ciente de AST, captura similaridade funcional (`validateToken` ≈ `checkJWT`) | [Voyage 4](/models/voyage/)                                   |
-| **Reranking**             | `voyage-rerank-2.5`                   | Cross-encoder otimizado para código, latência <100ms, +25% precisão vs BM25  | [Reranker](/concepts/reranker/)                               |
-| **Vector DB + Metadados** | `MongoDB Atlas`                       | Backend unificado (vetores + docs + estado + auditoria), escalável, sem ETL  | [MongoDB Atlas](/backend/mongodb-atlas/)                      |
+| Camada                          | Tecnologia                       | Razão                                                                    | Docs                                      |
+| :------------------------------ | :------------------------------- | :----------------------------------------------------------------------- | :---------------------------------------- |
+| **Orquestração + Planejamento** | `LangChain + Deep Agents`        | Abstração limpa sobre LLMs, planning nativo, estado persistido           | [LangChain](/langchain/_index.pt.md)      |
+| **Pré-Pensamento (VCR)**        | `PyTorch + XLM-RoBERTa-small`    | Inferência local (<10ms p99), LoRA fine-tuning, zero dependência de rede | [VCR](/models/vectora-cognitive-runtime/) |
+| **API Backend**                 | `FastAPI (Python 3.10+)`         | Async nativo, validação Pydantic, REST/MCP/JSON-RPC em um servidor       | [FastAPI](/backend/_index.pt.md)          |
+| **Embeddings**                  | `VoyageAI (Voyage 4)`            | Ciente de AST, captura similaridade semântica funcional                  | [Embeddings](/search/embeddings.pt.md)    |
+| **Reranking Local**             | `XLM-RoBERTa via VCR`            | Cross-encoder otimizado no VCR (<10ms), zero chamadas externas           | [Reranking](/search/reranker.pt.md)       |
+| **Vector Storage**              | `LanceDB`                        | Nativo, sem servidor, índices otimizados, busca rápida, backup fácil     | [LanceDB](/backend/lancedb.pt.md)         |
+| **Dados Estruturados**          | `PostgreSQL (pg8000 embedded)`   | Metadados, sessões, histórico, RBAC, totalmente local                    | [PostgreSQL](/backend/postgresql.pt.md)   |
+| **Cache + Sessões**             | `Redis (embedded)`               | Cache de alta velocidade, gerenciamento de sessões, filas de background  | [Redis](/backend/redis.pt.md)             |
+| **Frontend**                    | `React 19 + TypeScript + Vite`   | Type-safe, performance, real-time updates via WebSocket/SSE              | [Frontend](/frontend/_index.pt.md)        |
+| **CLI + TUI**                   | `Python + textual + system tray` | Acessível, intuitivo, integrável com sistemas operacionais               | [CLI](/cli/_index.pt.md)                  |
 
-> [!WARNING] **Vectora Apenas Cloud**:
-> O Vectora é uma solução 100% baseada em nuvem, otimizada para a stack Gemini + Voyage.
-> **Não suportamos modelos locais (Ollama, LlamaCpp, etc.)** ou outros provedores genéricos para garantir a precisão do motor.
+> [!IMPORTANT] **Local-First, Privacy-Preserving**:
+> O Vectora é designed para **rodarpor completo no seu ambiente** — PostgreSQL, Redis, LanceDB, VCR são todos embedidos ou rodam localmente.
+> **Seus dados ficam seus.** Sem envio para a nuvem (exceto chamadas opcionais a VoyageAI para embeddings).
 
 ## Segurança, Governança e BYOK
 
