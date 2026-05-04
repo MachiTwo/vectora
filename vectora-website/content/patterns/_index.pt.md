@@ -1,7 +1,7 @@
 ---
-title: Patterns - Paradigmas Arquiteturais
+title: "Patterns: Paradigmas Arquiteturais"
 slug: patterns
-date: 2026-04-25T23:00:00-03:00
+date: "2026-05-03T22:30:00-03:00"
 type: docs
 sidebar:
   open: true
@@ -9,65 +9,58 @@ tags:
   - ai
   - architecture
   - concepts
-  - governance
+  - langchain
+  - langgraph
   - patterns
   - rag
   - sub-agents
-  - system
-  - tools
   - trace
+  - vcr
   - vectora
 draft: false
 ---
 
 {{< lang-toggle >}}
 
-Os padrões operacionais do Vectora definem como diferentes componentes do ecossistema se combinam para resolver problemas complexos de engenharia e inteligência artificial.
+{{< section-toggle >}}
 
-## Paradigmas Arquiteturais Orquestrados pelo Vectora Cognitive Runtime
-
-O **[Vectora Cognitive Runtime (Decision Engine)](/models/vectora-decision-engine/)** é o motor que orquestra a execução desses padrões. Ele decide, em tempo real, quando disparar um sub-agente, como validar o RAG Conectado e quais eventos devem ser capturados pelo Trace para garantir uma governança tática de 360 graus.
+Os padrões operacionais do Vectora definem como os componentes do ecossistema se combinam para resolver problemas de engenharia com IA. Cada padrão é orquestrado pelo VCR (Vectora Cognitive Runtime) e executado via LangChain + LangGraph.
 
 ## Padrões Disponíveis
 
-Abaixo estão detalhados os principais paradigmas suportados nativamente pelo sistema, focados em produtividade e observabilidade.
+O VCR decide em tempo real qual padrão aplicar com base na query, no contexto disponível e na estratégia configurada (auto, semantic, structural, hybrid).
 
 ### RAG Conectado
 
-O RAG Conectado vai além da simples recuperação e geração. Ele integra um loop de validação contra o codebase vivo, garantindo que o código sugerido não apenas faça sentido semântico, mas que também seja sintaticamente válido no contexto do projeto.
+RAG Conectado vai além da recuperação simples. Integra um pipeline de 5 etapas — embed (VoyageAI) → busca vetorial (LanceDB HNSW) → reranking (XLM-RoBERTa local) → compactação → validação (VCR) — garantindo que o contexto entregue ao LLM seja preciso e verificado contra o codebase real.
 
-**Saiba mais**: [→ RAG Conectado](./rag.md)
+**[Ver RAG Conectado](./rag.md)**
 
-### Sub-Agents (Tier 2)
+### Sub-Agents
 
-Este padrão foca na governança de agentes subordinados com autoridade limitada. Um agente mestre pode delegar tarefas para sub-agentes especializados, mantendo controle total sobre as permissões e garantindo uma trilha de auditoria clara.
+Sub-Agents implementa delegação controlada via LangGraph. O agente principal (orchestrator) decompõe tarefas complexas e delega sub-tarefas para agentes especializados com autoridade limitada, mantendo trilha de auditoria completa via ACP (Agent Communication Protocol).
 
-**Saiba mais**: [→ Sub-Agents](./sub-agents.md)
+**[Ver Sub-Agents](./sub-agents.md)**
 
 ### Trace
 
-O Trace é o diário de bordo estruturado de toda a execução agentica. Ele permite a observabilidade completa do fluxo de pensamento do modelo, chamadas de ferramentas e mudanças de contexto, facilitando a depuração de comportamentos complexos.
+Trace é o sistema de observabilidade estruturada de execuções agênticas. Captura cada tool call, mudança de contexto, score do VCR e decisão do LangGraph state machine em formato estruturado para debugging e auditoria.
 
-**Saiba mais**: [→ Trace](./trace.md)
+**[Ver Trace](./trace.md)**
 
 ## Matriz de Uso
 
-Esta matriz auxilia na escolha do padrão mais adequado para cada necessidade técnica dentro do ecossistema.
-
-| Padrão            | Caso de Uso                | Exemplo                              |
-| :---------------- | :------------------------- | :----------------------------------- |
-| **RAG Conectado** | Código contextual e válido | Refatoração de funções complexas     |
-| **Sub-Agents**    | Tarefas multi-domínio      | Review de código + geração de testes |
-| **Trace**         | Depuração e auditoria      | Análise de decisões do agente        |
+| Padrão            | Caso de Uso                            | Orchestrador             |
+| ----------------- | -------------------------------------- | ------------------------ |
+| **RAG Conectado** | Busca e geração com contexto de código | VCR + LangChain          |
+| **Sub-Agents**    | Tarefas multi-domínio (review + teste) | LangGraph state machine  |
+| **Trace**         | Debugging e auditoria de decisões      | VCR metrics + Prometheus |
 
 ## External Linking
 
-| Concept           | Resource                                                   | Link                                                                                                     |
-| ----------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **Trace**         | Distributed Tracing Concepts (OpenTelemetry)               | [opentelemetry.io/docs/concepts/signals/traces/](https://opentelemetry.io/docs/concepts/signals/traces/) |
-| **RAG**           | Retrieval-Augmented Generation for Knowledge-Intensive NLP | [arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)                                             |
-| **Observability** | Control Theory and System Observability                    | [en.wikipedia.org/wiki/Observability](https://en.wikipedia.org/wiki/Observability)                       |
-
----
-
-_Parte do ecossistema Vectora_ · [Open Source (MIT)](https://github.com/Kaffyn/Vectora) · [Contribuidores](https://github.com/Kaffyn/Vectora/graphs/contributors)
+| Conceito          | Recurso                                 | Link                                                                                                    |
+| ----------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **RAG**           | Retrieval-Augmented Generation          | [arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)                                            |
+| **LangGraph**     | Stateful agent orchestration            | [langchain-ai.github.io/langgraph](https://langchain-ai.github.io/langgraph/)                           |
+| **OpenTelemetry** | Distributed tracing concepts            | [opentelemetry.io/docs/concepts/signals/traces](https://opentelemetry.io/docs/concepts/signals/traces/) |
+| **ReAct**         | Reasoning and Acting in language models | [arxiv.org/abs/2210.03629](https://arxiv.org/abs/2210.03629)                                            |
