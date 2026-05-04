@@ -13,20 +13,34 @@ vectora-website/content/
 │ ├── agent-complete.pt.md
 │ └── data-flow.pt.md
 │
-├── langchain/ [Core framework + Deep Agents]
+├── langchain/ [Core framework + Subframeworks]
 │ ├── \_index.pt.md (LangChain overview)
-│ ├── core-concepts.pt.md
-│ │ ├── runnables.pt.md (Chains, runnables)
-│ │ ├── tools.pt.md (Tool definition + use)
-│ │ ├── memory.pt.md (Memory systems)
-│ │ └── retrieval.pt.md (RAG via LangChain)
+│ ├── core-concepts.pt.md (Runnables, Tools, Memory, Retrieval, Messages, Structured Output)
+│ ├── chat-models.pt.md (Claude, GPT, Gemini integrations)
+│ ├── prompts.pt.md (PromptTemplate, ChatPrompt, Few-shot)
+│ ├── output-parsers.pt.md (Pydantic, JSON, Custom parsers)
+│ ├── document-loaders.pt.md (PDF, CSV, Web, Notion loaders)
+│ ├── embeddings.pt.md (Voyage, OpenAI embeddings + Vector stores)
+│ ├── chains.pt.md (LCEL, Composition, Parallel, Conditional)
+│ │
+│ ├── context-engineering.pt.md (Model/Tool/Lifecycle context patterns)
+│ ├── guardrails.pt.md (Security & validation in production)
+│ ├── multi-agent-systems.pt.md (5 patterns: Subagents, Handoffs, Skills, Router, Custom)
+│ ├── advanced-patterns.pt.md (VCR integration, Multi-LLM routing, Tool composition)
+│ │
+│ ├── mcp.pt.md (Model Context Protocol - tools, resources, prompts)
+│ ├── acp.pt.md (Agent Client Protocol - agent-editor integration)
+│ ├── json-rpc.pt.md (JSON-RPC protocol for internal communication)
 │ │
 │ ├── langgraph/
-│ │ ├── \_index.pt.md (What is LangGraph)
+│ │ ├── \_index.pt.md (What is LangGraph + Comparison with Deep Agents)
 │ │ ├── graph-basics.pt.md (Nodes, edges, state)
 │ │ ├── agent-loop.pt.md (Agent decision loop)
 │ │ ├── error-handling.pt.md (Recovery, retries)
-│ │ └── vectora-agent-example.pt.md (How Vectora uses LangGraph)
+│ │ ├── vectora-agent-example.pt.md (How Vectora uses LangGraph)
+│ │ ├── persistence.pt.md (Threads, Checkpoints, Memory Store)
+│ │ ├── memory-strategies.pt.md (Truncate, Delete, Summarize)
+│ │ └── application-structure.pt.md (langgraph.json, project layout, deployment)
 │ │
 │ ├── langsmith/
 │ │ ├── \_index.pt.md (Tracing & debugging)
@@ -34,19 +48,15 @@ vectora-website/content/
 │ │ ├── trace-queries.pt.md (Trace agent decisions)
 │ │ └── performance-monitoring.pt.md (Monitor latency, tokens)
 │ │
-│ ├── deep-agents/ [Deep Agents framework]
-│ │ ├── \_index.pt.md (Deep Agents overview)
-│ │ ├── cli.pt.md (Deep Agents CLI - init, config, start, stop, logs)
-│ │ ├── providers.pt.md (LLM Providers setup)
-│ │ ├── memory.pt.md (Memory management & persistence)
-│ │ ├── streaming.pt.md (Streaming responses)
-│ │ ├── data-locations.pt.md (Data storage locations)
-│ │ └── tui.pt.md (Terminal UI usage)
-│ │
-│ └── integration-patterns.pt.md
-│ ├── pre-thinking-vcr.pt.md (VCR → LangChain flow)
-│ ├── multi-llm-routing.pt.md (LLM selection)
-│ └── tool-composition.pt.md (Complex tool chains)
+│ └── deep-agents/ [Deep Agents framework]
+│ ├── \_index.pt.md (Deep Agents overview + Comparison with LangGraph)
+│ ├── cli.pt.md (Deep Agents CLI)
+│ ├── providers.pt.md (LLM Providers)
+│ ├── memory.pt.md (Memory management & persistence)
+│ ├── streaming.pt.md (Streaming responses)
+│ ├── data-locations.pt.md (Data storage locations)
+│ ├── tui.pt.md (Terminal UI usage)
+│ └── acp-deployment.pt.md (ACP server mode, editor integration)
 │
 ├── models/ [LLM options + embeddings + VCR]
 │ ├── \_index.pt.md (Models overview)
@@ -83,15 +93,6 @@ vectora-website/content/
 │ ├── postgresql.pt.md
 │ ├── redis-memory.pt.md
 │ └── lancedb-vectors.pt.md
-│
-├── protocols/
-│ ├── \_index.pt.md
-│ ├── mcp-protocol.pt.md
-│ ├── json-rpc.pt.md
-│ ├── rest-api.pt.md
-│ ├── websocket.pt.md
-│ ├── acp.pt.md (Agent Client Protocol)
-│ └── deep-agents-acp.pt.md (Deep Agents ACP implementation)
 │
 ├── backend/
 │ ├── \_index.pt.md
