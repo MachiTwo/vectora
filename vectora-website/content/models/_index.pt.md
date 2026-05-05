@@ -31,13 +31,13 @@ O Vectora combina três camadas de modelos com papéis distintos: um **LLM princ
 
 O LLM é o "cérebro de raciocínio" do Vectora — interpreta a query do usuário, decide quais ferramentas chamar e gera a resposta final com base no contexto recuperado. Você escolhe qual LLM usar:
 
-| LLM                              | Provedor          | Recomendado para                      |
-| -------------------------------- | ----------------- | ------------------------------------- |
-| [Claude sonnet-4-6](./claude.md) | Anthropic         | Uso geral — melhor custo/performance  |
-| [Claude opus-4-7](./claude.md)   | Anthropic         | Análise complexa, raciocínio profundo |
-| [GPT-4o](./openai.md)            | OpenAI            | Alternativa de alta qualidade         |
-| [Gemini 2.0 Flash](./gemini.md)  | Google            | Alto volume, custo baixo              |
-| [Ollama (local)](./openai.md)    | OpenAI-compatible | Uso 100% offline                      |
+| LLM                           | Provedor          | Recomendado para                      |
+| ----------------------------- | ----------------- | ------------------------------------- |
+| [Claude sonnet-4-6](./claude) | Anthropic         | Uso geral — melhor custo/performance  |
+| [Claude opus-4-7](./claude)   | Anthropic         | Análise complexa, raciocínio profundo |
+| [GPT-4o](./openai)            | OpenAI            | Alternativa de alta qualidade         |
+| [Gemini 2.0 Flash](./gemini)  | Google            | Alto volume, custo baixo              |
+| [Ollama (local)](./openai)    | OpenAI-compatible | Uso 100% offline                      |
 
 A troca de LLM é feita por configuração — o pipeline de busca, reranking e contexto permanece idêntico.
 
@@ -45,7 +45,7 @@ A troca de LLM é feita por configuração — o pipeline de busca, reranking e 
 
 VoyageAI é o provedor exclusivo de embeddings no Vectora. Não é swappável no MVP porque todos os vetores no LanceDB foram gerados com o mesmo modelo — trocar exigiria reindexar todo o codebase.
 
-**[Ver documentação completa do VoyageAI](./voyage/)**
+**[Ver documentação completa do VoyageAI](./voyage)**
 
 | Especificação    | Valor                       |
 | ---------------- | --------------------------- |

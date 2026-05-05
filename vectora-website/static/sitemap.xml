@@ -11,9 +11,18 @@
   <url><loc>https://vectora.github.io/backend/redis.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/backend/pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/cli/pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/concepts/agent-complete.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/concepts/context-enrichment.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/concepts/local-first.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/concepts/specialized-vs-generalist.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/concepts/pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/core/agentic-framework.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/core/context-engine.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/core/pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/deployment/docker.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/deployment/pip-installation.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/deployment/vps-deployment.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/deployment/pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/devops/pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/faq/pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/frontend/pt/</loc><lastmod>2026-05-04</lastmod></url>
@@ -63,8 +72,8 @@
   <url><loc>https://vectora.github.io/models/gemini.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/models/openai.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/models/vectora-cognitive-runtime.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/models/voyage.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/models/pt/</loc><lastmod>2026-05-04</lastmod></url>
-  <url><loc>https://vectora.github.io/models/voyage/pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/patterns/rag.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/patterns/sub-agents.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/patterns/trace.pt/</loc><lastmod>2026-05-04</lastmod></url>
@@ -83,6 +92,10 @@
   <url><loc>https://vectora.github.io/security/data-privacy.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/security/injection-prevention.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/security/pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/storage/lancedb-vectors.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/storage/postgresql.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/storage/redis-memory.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/storage/pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/testing/pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/troubleshooting/pt/</loc><lastmod>2026-05-04</lastmod></url>
 </urlset>
