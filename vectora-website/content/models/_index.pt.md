@@ -25,107 +25,77 @@ tags:
 
 {{< section-toggle >}}
 
-Vectora usa uma arquitetura de **modelos especializados**, cada um otimizado para uma tarefa específica: orquestração (LangChain), decisão tática (VCR), embeddings (VoyageAI) e reranking (XLM-RoBERTa). Todos os modelos rodam **localmente** — a inferência nunca sai da sua máquina.
+O Vectora combina três camadas de modelos com papéis distintos: um **LLM principal** (swappável) para raciocínio, **VoyageAI** (fixo) para embeddings e **XLM-RoBERTa** (local) para reranking. Cada camada tem sua responsabilidade e não pode ser substituída pela outra.
 
-## Vectora Cognitive Runtime (VCR)
+## LLM Principal (Swappável)
 
-O cérebro decisório local do Vectora. VCR roda em seu CPU usando PyTorch quantizado com XLM-RoBERTa-small + LoRA fine-tuning. Ele toma decisões sobre qual contexto buscar, como validar respostas e quando delegar a LLMs externos.
+O LLM é o "cérebro de raciocínio" do Vectora — interpreta a query do usuário, decide quais ferramentas chamar e gera a resposta final com base no contexto recuperado. Você escolhe qual LLM usar:
 
-**Especificações:**
+| LLM                              | Provedor          | Recomendado para                      |
+| -------------------------------- | ----------------- | ------------------------------------- |
+| [Claude sonnet-4-6](./claude.md) | Anthropic         | Uso geral — melhor custo/performance  |
+| [Claude opus-4-7](./claude.md)   | Anthropic         | Análise complexa, raciocínio profundo |
+| [GPT-4o](./openai.md)            | OpenAI            | Alternativa de alta qualidade         |
+| [Gemini 2.0 Flash](./gemini.md)  | Google            | Alto volume, custo baixo              |
+| [Ollama (local)](./openai.md)    | OpenAI-compatible | Uso 100% offline                      |
 
-- **Modelo Base**: XLM-RoBERTa-small (110M parâmetros)
-- **Fine-tuning**: LoRA adapters (< 2% de overhead)
-- **Quantização**: INT8 (90% redução de memória)
-- **Latência Target**: < 10ms p99 em CPU
-- **Memória**: < 500MB RAM
-- **Compatibilidade**: CPU-only (nenhuma GPU necessária)
+A troca de LLM é feita por configuração — o pipeline de busca, reranking e contexto permanece idêntico.
 
-**[Ver Arquitetura Detalhada](./vectora-cognitive-runtime.md)**
+## Embeddings (VoyageAI — Fixo no MVP)
 
-## Embeddings (VoyageAI)
+VoyageAI é o provedor exclusivo de embeddings no Vectora. Não é swappável no MVP porque todos os vetores no LanceDB foram gerados com o mesmo modelo — trocar exigiria reindexar todo o codebase.
 
-VoyageAI fornece embeddings de alta performance para busca semântica. Resultados são cacheados em Redis para reduzir custos.
+**[Ver documentação completa do VoyageAI](./voyage/)**
 
-**Especificações:**
-
-- **Modelo**: voyage-3-large
-- **Dimensão**: 1024D
-- **Taxa de Tokens**: ~2M tokens / $0.10
-- **Cache**: Redis (TTL 24h)
-- **Latência**: ~200ms (primeira requisição), <1ms (cached)
+| Especificação    | Valor                       |
+| ---------------- | --------------------------- |
+| **Modelo**       | voyage-3-large              |
+| **Dimensões**    | 1024D                       |
+| **Preço**        | $0.10 / 2M tokens           |
+| **Cache Redis**  | TTL 24h, < 1ms em cache hit |
+| **Latência API** | ~200ms (sem cache)          |
 
 ## Reranking Local (XLM-RoBERTa)
 
-XLM-RoBERTa-small refina candidatos de busca com score de relevância local. Roda em CPU, < 10ms para 100 candidatos.
+XLM-RoBERTa-small roda localmente para reordenar os top-100 candidatos do LanceDB em top-10 por relevância semântica real. Zero chamadas de rede, inferência em CPU.
 
-**Especificações:**
-
-- **Modelo**: xlm-roberta-small
-- **Tarefa**: Binary relevance classification
-- **Latência**: < 10ms p99 para top-100 candidatos
-- **Threshold**: Score > 0.65 considerado relevante
-
-## Orchestração (LangChain + Deep Agents)
-
-LangChain orquestra o fluxo de execução, gerenciando tools, prompts e memória. Deep Agents adiciona planejamento e execução multi-etapas.
-
-**Specificações:**
-
-- **Framework**: LangChain 0.1.0+
-- **State Machine**: LangGraph
-- **Memory**: Truncate/Delete/Summarize strategies
-- **Tool Binding**: Automático via schema inspection
-
-## Modelos Externos (Opcional)
-
-Você pode opcionalmente integrar LLMs externos para raciocínio mais profundo:
-
-- **claude-sonnet-4-6** (recomendado) — Melhor custo/performance
-- **claude-opus-4-7** — Máxima capacidade de raciocínio
-- **GPT-4o** — Alternativa OpenAI
-- **Qualquer LLM via OpenAI-compatible API** — Suporte genérico
-
-Vectora roda **sem** LLM externo — use VCR + Deep Agents localmente para maioria das tarefas.
+| Especificação   | Valor                          |
+| --------------- | ------------------------------ |
+| **Modelo**      | xlm-roberta-small              |
+| **Quantização** | INT8 (< 120MB RAM)             |
+| **Latência**    | < 10ms p99 para 100 candidatos |
+| **Custo**       | Grátis (local)                 |
 
 ## Tabela Comparativa
 
-| Componente                  | Local | Caching     | Latência | Custo           |
-| --------------------------- | ----- | ----------- | -------- | --------------- |
-| **VCR (XLM-RoBERTa)**       | Sim   | Via memória | <10ms    | Grátis          |
-| **Embeddings (VoyageAI)**   | Não   | Redis 24h   | 200ms    | $0.10/2M tokens |
-| **Reranking (XLM-RoBERTa)** | Sim   | Via memória | <10ms    | Grátis          |
-| **LLM Externo**             | Não   | Não         | 1-5s     | Por token       |
+| Componente                      | Local | Swappável | Custo           | Latência            |
+| ------------------------------- | ----- | --------- | --------------- | ------------------- |
+| **LLM (Claude / GPT / Gemini)** | Não   | Sim       | Por token       | 1-5s                |
+| **Embeddings (VoyageAI)**       | Não   | Não (MVP) | $0.10/2M tokens | ~200ms / <1ms cache |
+| **Reranking (XLM-RoBERTa)**     | Sim   | Não (MVP) | Grátis          | < 10ms              |
 
-## Configuração
+## Configuração Rápida
 
-Por padrão, Vectora vem com:
+```bash
+# LLM: escolha um dos três
+vectora config set anthropic_api_key sk-ant-xxx   # Claude
+vectora config set openai_api_key sk-xxx          # GPT-4o
+vectora config set google_api_key AIza-xxx        # Gemini
 
-- VCR ativado (local)
-- VoyageAI embeddings (requer chave de API)
-- XLM-RoBERTa reranking (local)
-- Sem LLM externo
+# Embeddings: sempre necessário
+vectora config set voyage_api_key sk-voyage-xxx
 
-Para adicionar LLM externo:
-
-```yaml
-# .env ou vectora config
-OPENAI_API_KEY=sk-...  # Para GPT-4, Claude 3, etc via OpenAI API
-ANTHROPIC_API_KEY=sk-ant-...  # Para Claude nativo
+# Definir qual LLM usar
+vectora config set llm_provider anthropic   # ou: openai, google
+vectora config set llm_model claude-sonnet-4-6
 ```
-
-## Recursos Relacionados
-
-- [Vectora Cognitive Runtime — Arquitetura Detalhada](./vectora-cognitive-runtime.md)
-- [VoyageAI Embeddings — Setup e Uso](../search/embeddings.md)
-- [Context Engine — Como VCR valida contexto](../core/context-engine.md)
-- [Deep Agents — Planejamento e orquestração](../core/agentic-framework.md)
 
 ## External Linking
 
-| Conceito        | Recurso                              | Link                                                                         |
-| --------------- | ------------------------------------ | ---------------------------------------------------------------------------- |
-| **XLM-RoBERTa** | Modelo multilíngue de código aberto  | [huggingface.co/xlm-roberta-small](https://huggingface.co/xlm-roberta-small) |
-| **PyTorch**     | Framework de deep learning           | [pytorch.org](https://pytorch.org/)                                          |
-| **LoRA**        | Low-Rank Adaptation para fine-tuning | [arxiv.org/abs/2106.09685](https://arxiv.org/abs/2106.09685)                 |
-| **VoyageAI**    | Embeddings de alta performance       | [voyageai.com](https://www.voyageai.com/)                                    |
-| **LangChain**   | Framework de orquestração LLM        | [python.langchain.com/docs](https://python.langchain.com/docs)               |
+| Conceito        | Recurso                                    | Link                                                                         |
+| --------------- | ------------------------------------------ | ---------------------------------------------------------------------------- |
+| **VoyageAI**    | Embeddings de alta performance para código | [voyageai.com](https://www.voyageai.com/)                                    |
+| **XLM-RoBERTa** | Modelo multilíngue de código aberto        | [huggingface.co/xlm-roberta-small](https://huggingface.co/xlm-roberta-small) |
+| **LangChain**   | Framework de orquestração LLM              | [python.langchain.com](https://python.langchain.com/)                        |
+| **Anthropic**   | Claude API documentation                   | [docs.anthropic.com](https://docs.anthropic.com/)                            |
+| **OpenAI**      | GPT API documentation                      | [platform.openai.com/docs](https://platform.openai.com/docs/)                |
