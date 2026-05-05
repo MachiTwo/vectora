@@ -102,6 +102,11 @@
   <url><loc>https://vectora.github.io/storage/postgresql.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/storage/redis-memory.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/storage/pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/testing/e2e-tests.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/testing/integration-tests.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/testing/mocking.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/testing/performance-testing.pt/</loc><lastmod>2026-05-04</lastmod></url>
+  <url><loc>https://vectora.github.io/testing/unit-tests.pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/testing/pt/</loc><lastmod>2026-05-04</lastmod></url>
   <url><loc>https://vectora.github.io/troubleshooting/pt/</loc><lastmod>2026-05-04</lastmod></url>
 </urlset>
