@@ -79,21 +79,9 @@ ACP ainda não tem documentação pública completa. Para early access:
 
 ## External Linking
 
-| Concept              | Resource                             | Link                                                                                   |
-| -------------------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
-| **MCP**              | Model Context Protocol Specification | [modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification) |
-| **MCP Go SDK**       | Go SDK for MCP (mark3labs)           | [github.com/mark3labs/mcp-go](https://github.com/mark3labs/mcp-go)                     |
-| **Anthropic Claude** | Claude Documentation                 | [docs.anthropic.com/](https://docs.anthropic.com/)                                     |
-| **JWT**              | RFC 7519: JSON Web Token Standard    | [datatracker.ietf.org/doc/html/rfc7519](https://datatracker.ietf.org/doc/html/rfc7519) |
-
----
-
-**Vectora v0.1.0** · [GitHub](https://github.com/Kaffyn/Vectora) · [Licença (MIT)](https://github.com/Kaffyn/Vectora/blob/master/LICENSE) · [Contribuidores](https://github.com/Kaffyn/Vectora/graphs/contributors)
-
-_Parte do ecossistema Vectora AI Agent. Construído com [ADK](https://adk.dev/), [Claude](https://claude.ai/) e [Go](https://golang.org/)._
-
-© 2026 Contribuidores do Vectora. Todos os direitos reservados.
-
----
-
-_Parte do ecossistema Vectora_ · [Open Source (MIT)](https://github.com/Kaffyn/Vectora) · [Contribuidores](https://github.com/Kaffyn/Vectora/graphs/contributors)
+| Conceito             | Recurso                              | Link                                                                                            |
+| -------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| **MCP**              | Model Context Protocol Specification | [modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification)          |
+| **Anthropic Claude** | Claude Documentation                 | [docs.anthropic.com](https://docs.anthropic.com/)                                               |
+| **JWT RFC 7519**     | JSON Web Token Standard              | [datatracker.ietf.org/doc/html/rfc7519](https://datatracker.ietf.org/doc/html/rfc7519)          |
+| **LangChain Agents** | LangChain agent docs                 | [python.langchain.com/docs/concepts/agents](https://python.langchain.com/docs/concepts/agents/) |

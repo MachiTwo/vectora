@@ -28,25 +28,25 @@ LangChain combina:
 
 LangChain fornece uma camada unificada sobre diferentes LLMs e ferramentas, permitindo que você construa aplicações complexas sem se preocupar com detalhes de implementação específicos de cada provedor.
 
-```
+```text
 Application Layer
     ↓
 LangChain Framework
     ↓
 Runnables → Tools → Memory → Retrieval
     ↓
-LLM Providers (Claude, Gemini, OpenAI, etc)
+LLM Providers (Claude, OpenAI, etc)
     ↓
 External Services
 ```
 
 ## Por que LangChain?
 
-✅ **Provedor-agnóstico** - Funciona com qualquer LLM  
-✅ **Composição flexível** - Combine chains e tools facilmente  
-✅ **Ecosistema completo** - LangGraph, LangSmith, Deep Agents  
-✅ **Production-ready** - Ferramentas para observabilidade e debugging  
-✅ **Comunidade ativa** - Milhares de contribuições e exemplos
+- **Provedor-agnóstico** — Funciona com qualquer LLM (Claude, OpenAI, local)
+- **Composição flexível** — Combine chains e tools via LCEL
+- **Ecosistema completo** — LangGraph, LangSmith, Deep Agents
+- **Production-ready** — Ferramentas para observabilidade e debugging
+- **Comunidade ativa** — Milhares de contribuições e exemplos
 
 ## Próximas Seções
 

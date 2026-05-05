@@ -91,9 +91,9 @@ IDE (Claude Code)
               │ └─→ Preconditions (verificação)
               │
               ├─→ Context Engine (busca)
-              │ ├─→ Embeddings (Voyage 4)
-              │ ├─→ Search (HNSW + MongoDB Atlas)
-              │ └─→ Reranking (Voyage 2.5)
+              │ ├─→ Embeddings (VoyageAI voyage-3-large)
+              │ ├─→ Search (LanceDB HNSW)
+              │ └─→ Reranking (XLM-RoBERTa local)
               │
               └─→ Tool Executor
                    ├─→ search_context
@@ -423,23 +423,10 @@ vectora mcp --debug
 
 ## External Linking
 
-| Concept               | Resource                             | Link                                                                                                       |
-| --------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| **MCP**               | Model Context Protocol Specification | [modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification)                     |
-| **MCP Go SDK**        | Go SDK for MCP (mark3labs)           | [github.com/mark3labs/mcp-go](https://github.com/mark3labs/mcp-go)                                         |
-| **Anthropic Claude**  | Claude Documentation                 | [docs.anthropic.com/](https://docs.anthropic.com/)                                                         |
-| **MongoDB Atlas**     | Atlas Vector Search Documentation    | [www.mongodb.com/docs/atlas/atlas-vector-search/](https://www.mongodb.com/docs/atlas/atlas-vector-search/) |
-| **Voyage AI**         | High-performance embeddings for RAG  | [www.voyageai.com/](https://www.voyageai.com/)                                                             |
-| **Voyage Embeddings** | Voyage Embeddings Documentation      | [docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings)                             |
-
----
-
-**Vectora v0.1.0** · [GitHub](https://github.com/Kaffyn/Vectora) · [Licença (MIT)](https://github.com/Kaffyn/Vectora/blob/master/LICENSE) · [Contribuidores](https://github.com/Kaffyn/Vectora/graphs/contributors)
-
-_Parte do ecossistema Vectora AI Agent. Construído com [ADK](https://adk.dev/), [Claude](https://claude.ai/) e [Go](https://golang.org/)._
-
-© 2026 Contribuidores do Vectora. Todos os direitos reservados.
-
----
-
-_Parte do ecossistema Vectora_ · [Open Source (MIT)](https://github.com/Kaffyn/Vectora) · [Contribuidores](https://github.com/Kaffyn/Vectora/graphs/contributors)
+| Conceito              | Recurso                              | Link                                                                                   |
+| --------------------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
+| **MCP**               | Model Context Protocol Specification | [modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification) |
+| **Anthropic Claude**  | Claude Documentation                 | [docs.anthropic.com](https://docs.anthropic.com/)                                      |
+| **LanceDB**           | Vector database local                | [lancedb.com/docs](https://lancedb.com/docs)                                           |
+| **VoyageAI**          | High-performance embeddings for RAG  | [voyageai.com](https://www.voyageai.com/)                                              |
+| **Voyage Embeddings** | Voyage Embeddings Documentation      | [docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings)         |

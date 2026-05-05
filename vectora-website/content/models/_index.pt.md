@@ -80,10 +80,10 @@ LangChain orquestra o fluxo de execução, gerenciando tools, prompts e memória
 
 Você pode opcionalmente integrar LLMs externos para raciocínio mais profundo:
 
-- **Claude 3 Sonnet** (recomendado) — Melhor custo/performance
-- **GPT-4 Turbo** — Mais poderoso mas mais caro
-- **Gemini 2 Flash** — Rápido, barato
-- **Qualquer LLM via OpenAI API** — Suporte genérico
+- **claude-sonnet-4-6** (recomendado) — Melhor custo/performance
+- **claude-opus-4-7** — Máxima capacidade de raciocínio
+- **GPT-4o** — Alternativa OpenAI
+- **Qualquer LLM via OpenAI-compatible API** — Suporte genérico
 
 Vectora roda **sem** LLM externo — use VCR + Deep Agents localmente para maioria das tarefas.
 
