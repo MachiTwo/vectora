@@ -90,7 +90,7 @@ Em modo offline:
 
 - Sem VoyageAI API — embeddings gerados localmente via sentence-transformers
 - Sem LLM externo — apenas busca semântica e reranking
-- Qualidade de embedding inferior ao voyage-3-large
+- Qualidade de embedding inferior ao voyage-4
 
 ## Configuração de LLM Externo
 

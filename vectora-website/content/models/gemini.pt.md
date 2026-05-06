@@ -59,7 +59,7 @@ O restante do pipeline do Vectora (busca VoyageAI + LanceDB, reranking XLM-RoBER
 
 ## Gemini e Embeddings
 
-É importante notar que o Vectora **não usa** a API de embeddings do Google (text-embedding-004 ou Gemini Embedding). Os embeddings são sempre gerados pelo VoyageAI voyage-3-large, independentemente de qual LLM está configurado.
+É importante notar que o Vectora **não usa** a API de embeddings do Google (text-embedding-004 ou Gemini Embedding). Os embeddings são sempre gerados pelo VoyageAI voyage-4, independentemente de qual LLM está configurado.
 
 Isso garante consistência do índice LanceDB: todos os vetores usam o mesmo modelo, independente da troca de LLM.
 

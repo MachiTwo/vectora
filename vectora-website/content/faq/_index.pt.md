@@ -52,7 +52,7 @@ docker compose up -d postgres redis
 
 ### Por que a busca retorna resultados sem as palavras que digitei?
 
-Porque o Vectora usa busca semântica, não por palavras-chave. "Segurança" traz resultados de `validate_token`, `bcrypt`, `jwt_verify` — mesmo sem essas palavras na query. O VoyageAI voyage-3-large entende o significado do código, não apenas os tokens.
+Porque o Vectora usa busca semântica, não por palavras-chave. "Segurança" traz resultados de `validate_token`, `bcrypt`, `jwt_verify` — mesmo sem essas palavras na query. O VoyageAI voyage-4 entende o significado do código, não apenas os tokens.
 
 ### Como limitar a busca a um diretório específico?
 

@@ -21,18 +21,18 @@ draft: false
 
 {{< section-toggle >}}
 
-O Vectora usa VoyageAI como provedor exclusivo de embeddings. O modelo voyage-3-large converte código e texto em vetores 1024D otimizados para busca semântica em codebases — incluindo múltiplas linguagens de programação.
+O Vectora usa VoyageAI como provedor exclusivo de embeddings. O modelo voyage-4 converte código e texto em vetores 1024D otimizados para busca semântica em codebases — incluindo múltiplas linguagens de programação.
 
 ## Por que VoyageAI é Fixo
 
-No Vectora, embeddings não são swappáveis no MVP por uma razão prática: **todos os vetores armazenados no LanceDB foram gerados com o mesmo modelo**. Trocar de provedor exigiria reindexar todo o codebase. VoyageAI voyage-3-large foi escolhido por:
+No Vectora, embeddings não são swappáveis no MVP por uma razão prática: **todos os vetores armazenados no LanceDB foram gerados com o mesmo modelo**. Trocar de provedor exigiria reindexar todo o codebase. VoyageAI voyage-4 foi escolhido por:
 
 - MTEB Code retrieval ranking entre os melhores modelos de código
 - Suporte nativo a múltiplas linguagens (Python, TypeScript, Go, Rust, Java)
 - Preço competitivo: $0.10 por 2M tokens
 - Dimensão 1024D — balanço ideal entre precisão e uso de disco no LanceDB
 
-## Modelo: voyage-3-large
+## Modelo: voyage-4
 
 | Especificação        | Valor                                       |
 | -------------------- | ------------------------------------------- |
@@ -63,7 +63,7 @@ def embed_query(query: str) -> list[float]:
     if cached:
         return json.loads(cached)  # < 1ms
 
-    result = voyage.embed([query], model="voyage-3-large", input_type="query")
+    result = voyage.embed([query], model="voyage-4", input_type="query")
     vector = result.embeddings[0]
 
     r.setex(key, 86400, json.dumps(vector))  # TTL 24h
@@ -86,7 +86,7 @@ def index_chunks(chunks: list[dict]) -> None:
 
         result = voyage.embed(
             texts,
-            model="voyage-3-large",
+            model="voyage-4",
             input_type="document",
         )
 
@@ -133,7 +133,7 @@ Queries repetidas dentro de 24h custam 0 tokens e retornam em < 1ms.
 
 | Conceito             | Recurso                                   | Link                                                                                     |
 | -------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **voyage-3-large**   | VoyageAI model docs                       | [docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings)           |
+| **voyage-4**         | VoyageAI model docs                       | [docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings)           |
 | **VoyageAI Pricing** | Pricing page                              | [voyageai.com/pricing](https://www.voyageai.com/pricing/)                                |
 | **MTEB Benchmark**   | Embedding benchmark leaderboard           | [huggingface.co/spaces/mteb/leaderboard](https://huggingface.co/spaces/mteb/leaderboard) |
 | **LanceDB**          | Vector storage that stores voyage vectors | [lancedb.com/docs](https://lancedb.com/docs)                                             |

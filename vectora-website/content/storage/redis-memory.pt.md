@@ -43,7 +43,7 @@ if cached:
     return vector
 
 # Se não encontrou, chamar VoyageAI
-result = voyage.embed([query], model="voyage-3-large", input_type="query")
+result = voyage.embed([query], model="voyage-4", input_type="query")
 vector = result.embeddings[0]
 
 # Guardar no cache com TTL de 24h

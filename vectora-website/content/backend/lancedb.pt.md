@@ -85,7 +85,7 @@ def index_chunks(chunks: list[dict]) -> None:
         batch = chunks[i : i + BATCH_SIZE]
         embeddings = voyage.embed(
             [c["content"] for c in batch],
-            model="voyage-3-large",
+            model="voyage-4",
         ).embeddings
 
         records = [

@@ -34,7 +34,7 @@ O motor de busca é composto por camadas especializadas que filtram e refinam in
 
 ### Embeddings (VoyageAI)
 
-Representação vetorial 1024D de código usando VoyageAI API (voyage-3-large). Resultados são cacheados em Redis por 24h para reduzir latência e custos.
+Representação vetorial 1024D de código usando VoyageAI API (voyage-4). Resultados são cacheados em Redis por 24h para reduzir latência e custos.
 
 **[Ver Embeddings](./embeddings.md)**
 

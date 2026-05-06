@@ -50,7 +50,7 @@ Esquema de cada vetor armazenado:
     "start_line": 42,
     "end_line": 67,
     "content": "def verify_token(token: str) -> dict: ...",
-    "embedding": [0.123, -0.456, 0.789, ...],  # 1024D do voyage-3-large
+    "embedding": [0.123, -0.456, 0.789, ...],  # 1024D do voyage-4
     "bucket_id": "bucket-abc-123",
     "language": "python",
     "metadata": {
@@ -103,7 +103,7 @@ Buscar por similarity:
 # Query vetor (1024D)
 query_embedding = voyage.embed(
     ["how to verify tokens"],
-    model="voyage-3-large",
+    model="voyage-4",
     input_type="query"
 )[0]
 
@@ -169,7 +169,7 @@ for i in range(0, len(chunks), BATCH_SIZE):
     batch = chunks[i : i + BATCH_SIZE]
     embeddings = voyage.embed(
         [c["content"] for c in batch],
-        model="voyage-3-large",
+        model="voyage-4",
         input_type="document"
     )
 
@@ -278,4 +278,4 @@ vectora import ./my-repo.parquet --bucket "my-repo-restored"
 | **HNSW Paper**          | Hierarchical Navigable Small World | [arxiv.org/abs/1802.02413](https://arxiv.org/abs/1802.02413)                               |
 | **LanceDB Python**      | Python API reference               | [lancedb.com/docs/integrations/python](https://lancedb.com/docs/integrations/python)       |
 | **Vector Similarity**   | Understanding similarity metrics   | [en.wikipedia.org/wiki/Cosine_similarity](https://en.wikipedia.org/wiki/Cosine_similarity) |
-| **VoyageAI Embeddings** | voyage-3-large model info          | [docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings)             |
+| **VoyageAI Embeddings** | voyage-4 model info                | [docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings)             |

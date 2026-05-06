@@ -59,7 +59,7 @@ Query é convertida para embedding 1024D via VoyageAI API. Resultados são cache
 # Pseudocódigo
 embedding = redis.get(f"query_embedding:{query_hash}")
 if not embedding:
-    embedding = voyageai.embed(query, model="voyage-3-large")
+    embedding = voyageai.embed(query, model="voyage-4")
     redis.setex(f"query_embedding:{query_hash}", 86400, embedding)
 ```
 
@@ -115,7 +115,7 @@ Combina semântica + estrutura com BM25 (busca léxica). Ideal para refatoraçã
 context_engine:
   embeddings:
     provider: "voyageai"
-    model: "voyage-3-large"
+    model: "voyage-4"
     dimension: 1024
     cache_ttl: 86400
   search:

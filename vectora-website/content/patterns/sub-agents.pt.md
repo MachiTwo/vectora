@@ -61,7 +61,7 @@ A escolha de construir o Vectora como um Sub-Agent deliberado permite que ele as
 
 ### Camada de Orquestração Agentic
 
-O Vectora utiliza LangChain + LangGraph como motor de orquestração e VoyageAI (voyage-3-large) para embeddings, com reranking local via XLM-RoBERTa. O VCR intercepta chamadas, valida permissões e sanitiza saídas antes de retornar contexto.
+O Vectora utiliza LangChain + LangGraph como motor de orquestração e VoyageAI (voyage-4) para embeddings, com reranking local via XLM-RoBERTa. O VCR intercepta chamadas, valida permissões e sanitiza saídas antes de retornar contexto.
 
 ### Vantagens do Modelo Sub-Agent
 

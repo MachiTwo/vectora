@@ -87,7 +87,7 @@ def embed_with_cache(texts: list[str]) -> list[list[float]]:
         indices, fetch_texts = zip(*to_fetch)
         embeddings = voyage.embed(
             list(fetch_texts),
-            model="voyage-3-large",
+            model="voyage-4",
         ).embeddings
 
         pipe = r.pipeline()

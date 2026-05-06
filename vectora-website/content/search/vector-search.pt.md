@@ -38,7 +38,7 @@ Imagine que você quer encontrar no seu código onde o sistema lida com "cancela
 
 ### 1. Embedding (VoyageAI)
 
-VoyageAI (voyage-3-large) processa um trecho de código e gera um vetor de 1024 números que representam o significado semântico:
+VoyageAI (voyage-4) processa um trecho de código e gera um vetor de 1024 números que representam o significado semântico:
 
 - Código sobre "Auth" terá padrões altos nas dimensões de segurança.
 - Código sobre "Database" terá padrões altos nas dimensões de persistência.
@@ -92,7 +92,7 @@ table.create_index(
 ### Busca Semântica
 
 ```python
-query_embedding = voyageai.embed(["Como validar JWT?"], model="voyage-3-large").embeddings[0]
+query_embedding = voyageai.embed(["Como validar JWT?"], model="voyage-4").embeddings[0]
 
 results = (
     table.search(query_embedding)
@@ -146,7 +146,7 @@ Porque busca pelo significado, não pela palavra. "Segurança" traz `Bcrypt`, `J
 
 ### O Vectora entende código de qualquer linguagem?
 
-Sim. VoyageAI (voyage-3-large) foi treinado em múltiplas linguagens. Python, TypeScript, Java, Go, Rust — todos produzem embeddings comparáveis.
+Sim. VoyageAI (voyage-4) foi treinado em múltiplas linguagens. Python, TypeScript, Java, Go, Rust — todos produzem embeddings comparáveis.
 
 ### Qual é o limite de vetores?
 

@@ -53,4 +53,4 @@ Query → Redis (cache)
 | **Redis**             | Redis data structures and commands  | [redis.io/docs/data-types](https://redis.io/docs/data-types)                   |
 | **LanceDB**           | Vector database for AI applications | [lancedb.com/docs](https://lancedb.com/docs)                                   |
 | **HNSW Algorithm**    | Hierarchical Navigable Small World  | [arxiv.org/abs/1802.02413](https://arxiv.org/abs/1802.02413)                   |
-| **Voyage Embeddings** | voyage-3-large model specs          | [docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings) |
+| **Voyage Embeddings** | voyage-4 model specs                | [docs.voyageai.com/docs/embeddings](https://docs.voyageai.com/docs/embeddings) |

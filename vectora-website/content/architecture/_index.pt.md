@@ -72,7 +72,7 @@ O Vectora é composto por camadas ortogonais com responsabilidades bem definidas
 | **FastAPI Backend** | FastAPI + Pydantic              | REST/MCP/JSON-RPC, auth, RBAC | < 5ms overhead              |
 | **VCR**             | XLM-RoBERTa-small + LoRA + INT8 | Intent analysis, faithfulness | < 10ms p99                  |
 | **Context Engine**  | LangChain + LangGraph           | Orquestração do pipeline RAG  | < 500ms p95                 |
-| **Embeddings**      | VoyageAI voyage-3-large         | Geração de vetores 1024D      | ~200ms (API) / <1ms (cache) |
+| **Embeddings**      | VoyageAI voyage-4               | Geração de vetores 1024D      | ~200ms (API) / <1ms (cache) |
 | **Vector Search**   | LanceDB HNSW                    | Busca top-100 candidatos      | < 50ms                      |
 | **Reranking**       | XLM-RoBERTa (VCR)               | Filtrar top-10 relevantes     | < 10ms                      |
 | **PostgreSQL**      | pg8000                          | Usuários, sessões, RBAC, logs | < 5ms                       |

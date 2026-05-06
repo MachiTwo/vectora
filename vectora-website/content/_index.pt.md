@@ -98,7 +98,7 @@ O Vectora é construído com tecnologias **comprovadas, de código aberto** e ot
 | **Orquestração + Planejamento** | LangChain + LangGraph        | Abstração limpa sobre LLMs, planning nativo, estado persistido           |
 | **Pré-Pensamento (VCR)**        | PyTorch + XLM-RoBERTa-small  | Inferência local (<10ms p99), LoRA fine-tuning, zero dependência de rede |
 | **API Backend**                 | FastAPI (Python 3.12)        | Async nativo, validação Pydantic, REST/MCP/JSON-RPC em um servidor       |
-| **Embeddings**                  | VoyageAI (voyage-3-large)    | 1024D, otimizado para código, $0.10/2M tokens                            |
+| **Embeddings**                  | VoyageAI (voyage-4)          | 1024D, otimizado para código, $0.10/2M tokens                            |
 | **Reranking Local**             | XLM-RoBERTa via VCR          | Cross-encoder (<10ms p99), zero chamadas externas                        |
 | **Vector Storage**              | LanceDB                      | Nativo, sem servidor, índices HNSW, busca rápida, local-first            |
 | **Dados Estruturados**          | PostgreSQL (pg8000)          | Metadados, sessões, histórico, RBAC, totalmente local                    |

@@ -89,7 +89,7 @@ def embed_with_cache(texts: list[str]) -> list[list[float]]:
             results.append(None)
 
     if uncached:
-        embeddings = voyage.embed(uncached, model="voyage-3-large").embeddings
+        embeddings = voyage.embed(uncached, model="voyage-4").embeddings
         for i, embedding in zip(uncached_indices, embeddings):
             cache_key = f"embed:{hash(uncached[i - len(uncached_indices)])}"
             r.setex(cache_key, 86400, json.dumps(embedding))

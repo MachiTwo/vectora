@@ -22,7 +22,7 @@ tags:
 
 {{< section-toggle >}}
 
-O Vectora usa VoyageAI (modelo voyage-3-large) para converter código e texto em vetores 1024D. Resultados são cacheados em Redis por 24h para reduzir custos e latência. Embeddings genéricas falham com código — VoyageAI foi otimizado especificamente para código estruturado e documentação técnica.
+O Vectora usa VoyageAI (modelo voyage-4) para converter código e texto em vetores 1024D. Resultados são cacheados em Redis por 24h para reduzir custos e latência. Embeddings genéricas falham com código — VoyageAI foi otimizado especificamente para código estruturado e documentação técnica.
 
 ## O Problema das Embeddings Genéricas
 
@@ -34,11 +34,11 @@ Embeddings treinadas apenas em texto não capturam conceitos fundamentais de pro
 
 VoyageAI foi treinado em um corpus massivo de código real, capturando a semântica intrínseca de estruturas de programação.
 
-## Especificações: voyage-3-large
+## Especificações: voyage-4
 
 | Aspecto               | Detalhe                        |
 | --------------------- | ------------------------------ |
-| **Modelo**            | voyage-3-large                 |
+| **Modelo**            | voyage-4                       |
 | **Dimensionalidade**  | 1024 dimensões                 |
 | **Custo**             | ~$0.10 por 2M tokens           |
 | **Latência (API)**    | ~200ms por request             |
@@ -86,7 +86,7 @@ def embed(texts: list[str]) -> list[list[float]]:
             results.append(None)
 
     if to_fetch:
-        embeddings = voyage.embed(to_fetch, model="voyage-3-large").embeddings
+        embeddings = voyage.embed(to_fetch, model="voyage-4").embeddings
         for idx, embedding in zip(indices, embeddings):
             cache_key = f"embed:{hashlib.sha256(to_fetch[indices.index(idx)].encode()).hexdigest()}"
             r.setex(cache_key, 86400, json.dumps(embedding))
@@ -125,7 +125,7 @@ for i in range(0, len(chunks), BATCH_SIZE):
     batch = chunks[i:i + BATCH_SIZE]
     embeddings = voyage.embed(
         [c["content"] for c in batch],
-        model="voyage-3-large"
+        model="voyage-4"
     ).embeddings
     # Inserir no LanceDB
 ```

@@ -47,7 +47,7 @@ O Vectora resolve esses problemas com um pipeline sequencial onde cada etapa fil
 ```text
 Query
   |
-  +-> [1] Embed (VoyageAI voyage-3-large)
+  +-> [1] Embed (VoyageAI voyage-4)
   |       -> vetor 1024D, cacheado no Redis por 24h
   |
   +-> [2] Vector Search (LanceDB HNSW)
@@ -65,7 +65,7 @@ Query
 
 ## Etapa 1: Embedding com VoyageAI
 
-A query é convertida em vetor 1024D pelo modelo voyage-3-large, com cache Redis para evitar chamadas repetidas.
+A query é convertida em vetor 1024D pelo modelo voyage-4, com cache Redis para evitar chamadas repetidas.
 
 ```python
 import voyageai
@@ -82,7 +82,7 @@ def embed_query(query: str) -> list[float]:
     if cached:
         return json.loads(cached)
 
-    embedding = voyage.embed([query], model="voyage-3-large").embeddings[0]
+    embedding = voyage.embed([query], model="voyage-4").embeddings[0]
     r.setex(cache_key, 86400, json.dumps(embedding))
     return embedding
 ```

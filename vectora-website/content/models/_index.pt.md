@@ -49,7 +49,7 @@ VoyageAI é o provedor exclusivo de embeddings no Vectora. Não é swappável no
 
 | Especificação    | Valor                       |
 | ---------------- | --------------------------- |
-| **Modelo**       | voyage-3-large              |
+| **Modelo**       | voyage-4                    |
 | **Dimensões**    | 1024D                       |
 | **Preço**        | $0.10 / 2M tokens           |
 | **Cache Redis**  | TTL 24h, < 1ms em cache hit |

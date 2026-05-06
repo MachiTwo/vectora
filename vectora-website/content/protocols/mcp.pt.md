@@ -91,7 +91,7 @@ IDE (Claude Code)
               │ └─→ Preconditions (verificação)
               │
               ├─→ Context Engine (busca)
-              │ ├─→ Embeddings (VoyageAI voyage-3-large)
+              │ ├─→ Embeddings (VoyageAI voyage-4)
               │ ├─→ Search (LanceDB HNSW)
               │ └─→ Reranking (XLM-RoBERTa local)
               │
